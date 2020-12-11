@@ -1,0 +1,160 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link type="image/x-icon" rel="shortcut icon" href="../favicon.ico">
+  <link type="text/css" rel="stylesheet" href="../js9support.css">
+  <link type="text/css" rel="stylesheet" href="../js9.css">
+  <script type="text/javascript" src="../js9prefs.js"></script>
+  <script type="text/javascript" src="../js9support.js"></script>
+  <script type="text/javascript" src="../js9.js"></script>
+  <script type="text/javascript" src="../js9plugins.js"></script>
+  <style type="text/css">
+      #div {
+	  width: 512px;
+	  margin-left: auto ;
+	  margin-right: auto ;
+      }
+  </style>
+  <title>JS9 hz</title>
+</head>
+<body>
+    <center><font size="+1">
+    <b>JS9 Demo: image refresh rate</b>
+    </font></center>
+    <p>
+    Data aquisition systems try to display new image data as quickly
+    as possible. Bespoke systems with full access to underlying
+    operating system resources can use special techniques such as
+    shared memory and tailored data formats.  Generic systems will
+    access FITS files to extract an image array and convert to RGB
+    pixels for display.  In this vein, the
+    <a href="../help/publicapi.html#JS9.RefreshImage" target="_blank">
+    JS9.RefreshImage()</a> routine accepts a FITS file contained in a
+    JavaScript object or array, a typed array, a blob, or string. The
+    refresh rate thus depends on the speed of the host CPU and the
+    dimensions of the image. Use this demo to test the JS9 refresh
+    rate with data of your choosing.
+    <p>
+    Click the <b>Choose Files</b> button and select two or more local
+    FITS files to load as <b>file blobs</b>. Choose the number of
+    refreshes and click <b>Run Test</b>. Once the first FITS file is
+    displayed, <b>JS9.RefreshImage()</b> will be called repeatedly on
+    each file blob in turn. The blob will be read asynchronously by a
+    <a href="https://developer.mozilla.org/en-US/docs/Web/API/FileReader"
+    target="_blank">FileReader</a> and then processed for display.  On
+    completion, the refresh rate is displayed.
+    <p>
+    The
+    <a href="https://js9.si.edu/downloads/squares.tar.gz">squares.tar.gz</a>
+    file contains two FITS images of size 512x512, 1024x1024, and 2048x2048,
+    respectively, which might be useful for purposes of comparison.
+    <div id="div">
+    <input type="file" multiple="true" onchange="getBlobs(this.files)">
+    <select name="nrefresh" onchange="ntries=parseInt($(this).val(), 10)">
+      <option value="100">100 refreshes</option>
+      <option value="250">250 refreshes</option>
+      <option value="500">500 refreshes</option>
+      <option value="1000">1000 refreshes</option>
+    </select>
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    <input type="button" value="Run Test" onclick="startTest()">
+    <p>
+    <div class="JS9Menubar"></div>
+    <div class="JS9Toolbar"></div>
+    <div class="JS9"></div>
+    <div style="margin-top: 2px;"><div class="JS9Statusbar"></div></div>
+    </div>
+    <script type="text/javascript">
+      let blobs, nfiles, start, end, dur, hz;
+      let ntries = 100;
+      function getBlobs(files){
+	  // array of blobs (hopefully FITS files)
+	  blobs = files;
+	  nfiles = blobs.length;
+      }
+      // refresh test
+      function startTest(){
+          if( !blobs || blobs.length < 2 ){
+              JS9.error("please choose 2 or more images to refresh");
+	  }
+	  // load first file, then refresh
+	  JS9.Load(blobs[0], {onload: () => {
+              refreshTest(ntries, 1);
+	  }});
+      }
+      function refreshTest(nn, ii){
+          if( ii === 1 ){
+	      start = Date.now();
+          }
+          JS9.RefreshImage(blobs[ii%nfiles],
+			   {onrefresh: () => {
+			       if( ii++ <= nn ){
+				   refreshTest(nn, ii);
+			       } else {
+				   end = Date.now();
+				   dur = (end - start) / 1000;
+				   hz = ntries / dur;
+				   alert(`${ntries} refreshes in ${dur.toFixed(1)} sec: ${hz.toFixed(1)} hz`);
+			       }
+			   }});
+      }
+      $(document).ready(function(){
+          $("#div").draggable({
+            handle: "#JS9Menubar",
+            opacity: 0.35
+          });
+      });
+    </script>
+<p>
+<h4>JS9 Demos:</h4>
+<b>web page configuration:</b>
+<ul class="js9demo">
+<li><a href='js9basics.html'>the basics</a>
+<li><a href='js9sizes.html'>setting the size of the JS9 display</a>
+<li><a href='js9menustyles.html'>menubar styles</a>
+<li><a href='js9bespoke.html'>web page control</a>
+<li><a href='js9preload.html'>preloading images into JS9</a>
+</ul>
+<b>multiple displays:</b>
+<ul class="js9demo">
+<li><a href='js9multi.html'>multiple instances of JS9</a> 
+<li><a href='js9super.html'>control multiple displays with one menu</a>
+<li><a href='js9create.html'>creating a JS9 instance dynamically</a> 
+<li><a href='js9sync.html'>syncing images in multiple displays</a> 
+</ul>
+<b>plugins:</b>
+<ul class="js9demo">
+<li><a href='js9plugins.html'>adding plugins to JS9</a> 
+<li><a href='js9imexam.html'>the imexam plugin</a> 
+<li><a href='js9panzoom.html'>pan and zoom</a> 
+<li><a href='js9cat.html'>overlaying catalogs</a>
+<li><a href='js9dysel.html'>dynamic selection of displays</a> 
+</ul>
+<b>colors:</b>
+<ul class="js9demo">
+<li><a href='js9blend.html'>image blending</a> 
+<li><a href='js9rgb.html'>RGB composite images</a> 
+<li><a href='js9cmaps.html'>creating new colormaps</a>
+<li><a href='js9masks.html'>masks and opacity</a>
+</ul>
+<b>data analysis:</b>
+<ul class="js9demo">
+<li><a href='js9analysis.html'>remote data analysis</a> 
+<li><a href='js9onchange.html'>running tasks when a region changes</a>
+<li><a href='js9refresh.html'>image refresh rate for data acquisition</a>
+</ul>
+<b>FITS support:</b>
+<ul class="js9demo">
+<li><a href='js9bitpix.html'>displaying different FITS datatypes</a> 
+<li><a href='js9large.html'>support for large FITS files</a>
+</ul>
+<b>not often needed:</b>
+<ul class="js9demo">
+<li><a href='js9allinone.html'>using the all-in-one files</a> 
+</ul>
+</body>
+</html>
