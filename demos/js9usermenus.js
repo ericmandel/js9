@@ -197,49 +197,49 @@ JS9.globalOpts.userMenuBar = [
 	"options": [
 	    {
 		"name": "annulus",
-		"cmd": "AddRegions",
+		"cmd": "MaybeAddRegions",
 		"image": "../images/voyager/regions_annulus.svg",
 		"args": ["annulus"]
 	    },
 	    {
 		"name": "box",
-		"cmd": "AddRegions",
+		"cmd": "MaybeAddRegions",
 		"image": "../images/voyager/regions_box.svg",
 		"args": ["box"]
 	    },
 	    {
 		"name": "circle",
-		"cmd": "AddRegions",
+		"cmd": "MaybeAddRegions",
 		"image": "../images/voyager/regions_circle.svg",
 		"args": ["circle"]
 	    },
 	    {
 		"name": "ellipse",
-		"cmd": "AddRegions",
+		"cmd": "MaybeAddRegions",
 		"image": "../images/voyager/regions_ellipse.svg",
 		"args": ["ellipse"]
 	    },
 	    {
 		"name": "line",
-		"cmd": "AddRegions",
+		"cmd": "MaybeAddRegions",
 		"image": "../images/voyager/regions_line.svg",
 		"args": ["line"]
 	    },
 	    {
 		"name": "point",
-		"cmd": "AddRegions",
+		"cmd": "MaybeAddRegions",
 		"image": "../images/voyager/regions_point.svg",
 		"args": ["point"]
 	    },
 	    {
 		"name": "polygon",
-		"cmd": "AddRegions",
+		"cmd": "MaybeAddRegions",
 		"image": "../images/voyager/regions_polygon.svg",
 		"args": ["polygon"]
 	    },
 	    {
 		"name": "text",
-		"cmd": "AddRegions",
+		"cmd": "MaybeAddRegions",
 		"image": "../images/voyager/regions_text.svg",
 		"args": ["text"]
 	    },
@@ -279,3 +279,10 @@ JS9.globalOpts.userMenuBar = [
 	]
     }
 ];
+
+JS9.mkPublic("MaybeAddRegions", (reg) => {
+    JS9.globalOpts.regMenuSelected = reg;
+    if( JS9.globalOpts.regMenuCreate ){
+	JS9.AddRegions(reg);
+    }
+});
