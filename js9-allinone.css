@@ -2864,6 +2864,13 @@ canvas.surfacePlotCanvas {
     width: 250px;
 }
 
+.column_R4L {
+    position: absolute;
+    top: 0;
+    left: 450px;
+    width: 350px;
+}
+
 .column_R5 {
     position: absolute;
     top: 0;

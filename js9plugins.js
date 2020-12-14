@@ -11103,7 +11103,7 @@ JS9.RegisterPlugin(JS9.PanZoom.CLASS, JS9.PanZoom.NAME,
 JS9.Prefs = {};
 JS9.Prefs.CLASS = "JS9";        // class of plugins (1st part of div class)
 JS9.Prefs.NAME = "Preferences"; // name of this plugin (2nd part of div class)
-JS9.Prefs.WIDTH =  750;         // default width of window
+JS9.Prefs.WIDTH =  800;         // default width of window
 JS9.Prefs.HEIGHT = 400;	        // default height of window
 
 JS9.Prefs.imagesSchema = {
@@ -11554,14 +11554,6 @@ JS9.Prefs.globalsSchema = {
 	    "type": "string",
 	    "helper": "can messages fallback to display win?"
 	},
-	"regDisplay": {
-	    "type": "string",
-	    "helper": "show regions in 'lightwin' or 'display'"
-	},
-	"regConfigSize": {
-	    "type": "string",
-	    "helper": "size of region dialog: small, medium"
-	},
 	"lightWinClose": {
 	    "type": "string",
 	    "helper": "ask,close,move when closing lightwin"
@@ -11573,6 +11565,14 @@ JS9.Prefs.globalsSchema = {
 	"dynamicSelect": {
 	    "type": "string",
 	    "helper": "select display: click, move, false"
+	},
+	"regDisplay": {
+	    "type": "string",
+	    "helper": "show regions in 'lightwin' or 'display'"
+	},
+	"regMenuCreate": {
+	    "type": "boolean",
+	    "helper": "region menu selections create regions?"
 	},
 	"metaClickPan": {
 	    "type": "boolean",
@@ -11812,7 +11812,7 @@ JS9.Prefs.init = function(){
 		    } else {
 			s = "";
 		    }
-		    html += `<div class='linegroup'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2'><input type='checkbox' name='${key}' value='true' ${s}></span><span class='column_R4l'>${obj.helper}</span></div>`;
+		    html += `<div class='linegroup'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2'><input type='checkbox' name='${key}' value='true' ${s}></span><span class='column_R4L'>${obj.helper}</span></div>`;
 		    break;
 		default:
 		    if( typeof source.data[key] === "object" ){
@@ -11825,9 +11825,9 @@ JS9.Prefs.init = function(){
 			s = source.data[key];
 		    }
 		    if( obj.type === "mobject" ){
-			html += `<div class='linegroup' style='height:64px'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2l'><textarea name='${key}' class='text_R' rows='5' style='overflow-x: hidden; resize: none'>${s}</textarea></span><span class='column_R4l'>${obj.helper}</span></div>`;
+			html += `<div class='linegroup' style='height:64px'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2l'><textarea name='${key}' class='text_R' rows='5' style='overflow-x: hidden; resize: none'>${s}</textarea></span><span class='column_R4L'>${obj.helper}</span></div>`;
 		    } else {
-			html += `<div class='linegroup'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2l'><input type='text' name='${key}' class='text_R' value='${s}'></span><span class='column_R4l'>${obj.helper}</span></div>`;
+			html += `<div class='linegroup'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2l'><input type='text' name='${key}' class='text_R' value='${s}'></span><span class='column_R4L'>${obj.helper}</span></div>`;
 		    }
 		    break;
 		}
