@@ -280,9 +280,14 @@ JS9.globalOpts.userMenuBar = [
     }
 ];
 
-JS9.mkPublic("MaybeAddRegions", (reg) => {
-    JS9.globalOpts.regMenuSelected = reg;
-    if( JS9.globalOpts.regMenuCreate ){
-	JS9.AddRegions(reg);
+JS9.mkPublic("MaybeAddRegions", (...args) => {
+    const obj = JS9.parsePublicArgs(args);
+    const display = JS9.lookupDisplay(obj.display);
+    const reg = obj.argv[0];
+    if( reg ){
+	JS9.globalOpts.regMenuSelected = reg;
+	if( JS9.globalOpts.regMenuCreate ){
+	    JS9.AddRegions(reg, {display: display});
+	}
     }
 });
