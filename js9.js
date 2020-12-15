@@ -11719,8 +11719,10 @@ JS9.Helper = function(){
     if( !document.domain || document.domain === "localhost" ){
 	JS9.globalOpts.htimeout = JS9.globalOpts.lhtimeout;
     }
-    // add suffix
-    JS9.globalOpts.helperProtocol += "//";
+    // add suffix, if necessary
+    if( !JS9.globalOpts.helperProtocol.match(/\/\/$/) ){
+	JS9.globalOpts.helperProtocol += "//";
+    }
     // assume the worst
     this.connected = false;
     this.helper = false;
