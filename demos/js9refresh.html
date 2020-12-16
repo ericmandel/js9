@@ -9,7 +9,7 @@
   <link type="text/css" rel="stylesheet" href="../js9support.css">
   <link type="text/css" rel="stylesheet" href="../js9.css">
   <script type="text/javascript" src="../js9prefs.js"></script>
-  <script type="text/javascript" src="../js9support.js"></script>
+  <script type="text/javascript" src="../js9support.min.js"></script>
   <script type="text/javascript" src="../js9.js"></script>
   <script type="text/javascript" src="../js9plugins.js"></script>
   <style type="text/css">
@@ -39,15 +39,11 @@
     dimensions of the image. Use this demo to test the JS9 refresh
     rate on your host with data of your choosing.
     <p>
-    Click the <b>Choose Files</b> (aka <b>Browse</b>) button and
-    select two or more local FITS files to load as <b>file
-    blobs</b>. Choose the number of refreshes and click <b>Run
-    Test</b>. Once the first FITS file is
-    displayed, <b>JS9.RefreshImage()</b> will be called repeatedly on
-    each file blob in turn. The blob will be read asynchronously by a
-    <a href="https://developer.mozilla.org/en-US/docs/Web/API/FileReader"
-    target="_blank">FileReader</a> and then processed for display.  On
-    completion, the refresh rate is displayed.
+    Click the <b>Choose Files</b> (aka <b>Browse</b>) button and select
+    two or more local FITS files to load. Choose the number of refreshes
+    and click <b>Run Test</b>. The <b>JS9.RefreshImage()</b> routine will be
+    called repeatedly to update the current display with the image pixels
+    from each file in turn. On completion, the refresh rate is displayed.
     <p>
     The
     <a href="https://js9.si.edu/downloads/squares.tar.gz">squares.tar.gz</a>
@@ -70,31 +66,54 @@
     <div style="margin-top: 2px;"><div class="JS9Statusbar"></div></div>
     </div>
     <script type="text/javascript">
-      let blobs, nfiles, start, end, dur, hz;
+      let start, end, dur, hz;
+      let dmode = true;
+      let delay = 1;
+      let nobjs = 0;
+      let objs = [];
       let ntries = 100;
       function getBlobs(files){
-	  // array of blobs (hopefully FITS files)
-	  blobs = files;
-	  nfiles = blobs.length;
+	  // load blobs
+	  nobjs = files.length;
+	  for(let i=0; i<nobjs; i++){
+	      JS9.Load(files[i], {onload: (im) => {
+		  im.displayMode = dmode;
+		  // we will refresh the raw data from successive images
+		  objs[i] = {
+		      naxis1: im.raw.width,
+		      naxis2: im.raw.height,
+		      bitpix: im.raw.bitpix,
+		      dmin: im.raw.datamin,
+		      dmax: im.raw.datamax,
+		      image: im.raw.data
+		  }
+		  console.log("file %s: %s x %s",
+			      im.id, objs[i].naxis1, objs[i].naxis1);
+	      }});
+	  }
       }
       // refresh test
       function startTest(){
-          if( !blobs || blobs.length < 2 ){
+          if( nobjs < 2 ){
               JS9.error("please choose 2 or more images to refresh");
 	  }
 	  // load first file, then refresh
-	  JS9.Load(blobs[0], {onload: () => {
-              refreshTest(ntries, 1);
-	  }});
+          refreshTest(ntries, 0);
       }
       function refreshTest(nn, ii){
-          if( ii === 1 ){
+          if( ii === 0 ){
 	      start = Date.now();
           }
-          JS9.RefreshImage(blobs[ii%nfiles],
+          JS9.RefreshImage(objs[ii%nobjs],
 			   {onrefresh: () => {
 			       if( ii++ <= nn ){
-				   refreshTest(nn, ii);
+				   if( delay ){
+				       window.setTimeout(() => {
+					   refreshTest(nn, ii);
+				       }, delay);
+				   } else {
+				       refreshTest(nn, ii);
+				   }
 			       } else {
 				   end = Date.now();
 				   dur = (end - start) / 1000;
