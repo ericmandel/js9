@@ -11798,7 +11798,7 @@ JS9.Prefs.init = function(){
 	    break;
 	}
 	html += `<div id='${id}Div' class='tabcontent'>`;
-	html += `<form id='${id}Form' class='js9AnalysisForm' style='max-height: ${this.height-90}px; overflow: hidden'>`;
+	html += `<form id='${id}Form' class='js9AnalysisForm' style='overflow: hidden'>`;
 	html += `<center><b>${source.schema.description}</b></center><p>`;
 	props = source.schema.properties;
 	for( key in props ){
