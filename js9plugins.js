@@ -11574,6 +11574,14 @@ JS9.Prefs.globalsSchema = {
 	    "type": "boolean",
 	    "helper": "region menu selections create regions?"
 	},
+	"regToClipboard": {
+	    "type": "boolean",
+	    "helper": "region mods to pseudo-clipboard?"
+	},
+	"regListDCoords": {
+	    "type": "boolean",
+	    "helper": "list regions preserving dcoords? "
+	},
 	"metaClickPan": {
 	    "type": "boolean",
 	    "helper": "meta-click pans to mouse position?"
@@ -11589,10 +11597,6 @@ JS9.Prefs.globalsSchema = {
 	"valposDCoords": {
 	    "type": "boolean",
 	    "helper": "valpos shows display coords?"
-	},
-	"regListDCoords": {
-	    "type": "boolean",
-	    "helper": "list regions preserving dcoords? "
 	},
 	"toolbarTooltips": {
 	    "type": "boolean",
@@ -11613,10 +11617,6 @@ JS9.Prefs.globalsSchema = {
 	"reloadRefreshReg": {
 	    "type": "boolean",
 	    "helper": "reloading regions file removes prev?"
-	},
-	"regionsToClipboard": {
-	    "type": "boolean",
-	    "helper": "region mods to pseudo-clipboard?"
 	},
 	"syncReciprocate": {
 	    "type": "boolean",
@@ -11905,8 +11905,10 @@ JS9.Prefs.saveForm = function(){
 	}
 	return false;
     }
-    try{ localStorage.setItem(source.name, JSON.stringify(source.data,null,2));
-	 JS9.userOpts[source.name] = localStorage.getItem(source.name); }
+    try{
+	localStorage.setItem(source.name, JSON.stringify(source.data,null,2));
+	JS9.userOpts[source.name] = localStorage.getItem(source.name);
+    }
     catch(e){ JS9.error(`could not save prefs: ${source.name}`); }
     return false;
 };
@@ -12019,7 +12021,8 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	default:
 	    break;
 	}
-	if( obj[key] !== val ){
+	if( obj[key] !== val                               &&
+	    String(obj[key]).trim() !== String(val).trim() ){
 	    switch( source.name ){
 	    case "images":
 		// set new option value
