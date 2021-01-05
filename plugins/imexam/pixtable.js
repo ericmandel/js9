@@ -109,6 +109,7 @@
 	    toolbarSeparate: true,
 
             onmousemove: pxtablUpdate,
+            onarrowkey: pxtablUpdate,
             winDims: [625, 240],
     });
 }());

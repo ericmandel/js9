@@ -5585,6 +5585,9 @@ JS9.Keyboard.Actions["move region/position up"] = function(im, ipos, evt){
     }
     JS9.Keyboard.arrowKey(im, evt, {x: 0, y: inc * -1}, active);
     canvas.fire("mouse:up");
+    if( JS9.globalOpts.extendedPlugins ){
+	im.xeqPlugins("keydown", "onarrowkey", evt);
+    }
 };
 
 JS9.Keyboard.Actions["move region/position down"] = function(im, ipos, evt){
@@ -5608,6 +5611,9 @@ JS9.Keyboard.Actions["move region/position down"] = function(im, ipos, evt){
     }
     JS9.Keyboard.arrowKey(im, evt, {x: 0, y: inc * -1}, active);
     canvas.fire("mouse:up");
+    if( JS9.globalOpts.extendedPlugins ){
+	im.xeqPlugins("keydown", "onarrowkey", evt);
+    }
 };
 
 JS9.Keyboard.Actions["move region/position left"] = function(im, ipos, evt){
@@ -5631,6 +5637,9 @@ JS9.Keyboard.Actions["move region/position left"] = function(im, ipos, evt){
     }
     JS9.Keyboard.arrowKey(im, evt, {x: inc, y: 0}, active);
     canvas.fire("mouse:up");
+    if( JS9.globalOpts.extendedPlugins ){
+	im.xeqPlugins("keydown", "onarrowkey", evt);
+    }
 };
 
 JS9.Keyboard.Actions["move region/position right"] = function(im, ipos, evt){
@@ -5654,6 +5663,9 @@ JS9.Keyboard.Actions["move region/position right"] = function(im, ipos, evt){
     }
     JS9.Keyboard.arrowKey(im, evt, {x: inc, y: 0}, active);
     canvas.fire("mouse:up");
+    if( JS9.globalOpts.extendedPlugins ){
+	im.xeqPlugins("keydown", "onarrowkey", evt);
+    }
 };
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["remove selected region"] = function(im, ipos, evt){
@@ -17506,6 +17518,7 @@ module.exports = template;
 	    toolbarSeparate: true,
 
             onmousemove: pxtablUpdate,
+            onarrowkey: pxtablUpdate,
             winDims: [625, 240],
     });
 }());
