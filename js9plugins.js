@@ -11238,21 +11238,25 @@ JS9.Prefs.regionsSchema = {
 	    "type": "number",
 	    "helper": "ellipse: initial radius2"
 	},
+	"angle": {
+	    "type": "number",
+	    "helper": "box, ellipse: initial angle in degrees"
+	},
+	"polypoints": {
+	    "type": "mobject",
+	    "helper": "polygon: x,y relative positions"
+	},
+	"linepoints": {
+	    "type": "mobject",
+	    "helper": "line: x,y relative positions"
+	},
 	"ptshape": {
 	    "type": "string",
 	    "helper": "point shape: box, circle, ellipse"
 	},
 	"ptsize": {
 	    "type": "number",
-	    "helper": "point size"
-	},
-	"points": {
-	    "type": "string",
-	    "helper": "array of x,y relative positions"
-	},
-	"angle": {
-	    "type": "number",
-	    "helper": "box, ellipse: initial angle in degrees"
+	    "helper": "point: size"
 	},
 	"tags": {
 	    "type": "string",
@@ -11821,6 +11825,8 @@ JS9.Prefs.init = function(){
 			} else {
 			    s = JSON.stringify(source.data[key]);
 			}
+		    } else if( JS9.isNull(source.data[key]) ){
+			s = "";
 		    } else {
 			s = source.data[key];
 		    }
@@ -11886,9 +11892,11 @@ JS9.Prefs.applyForm = function(){
 
 // action for Save in Form
 JS9.Prefs.saveForm = function(){
+    let props, key;
     const form = $(this).closest("form");
     const source = form.data("source");
     const opts = {cmd: "desktop", mode: "save"};
+    const saveobj = {};
     JS9.Prefs.applyForm.call(this);
     // desktop handled specially
     if( source.name === "desktop" ){
@@ -11906,7 +11914,14 @@ JS9.Prefs.saveForm = function(){
 	return false;
     }
     try{
-	localStorage.setItem(source.name, JSON.stringify(source.data,null,2));
+	// only save props in the schema: e.g., don't save all of globalOpts
+	props = source.schema.properties;
+	for( key in props ){
+	    if( props.hasOwnProperty(key) ){
+		saveobj[key] = source.data[key];
+	    }
+	}
+	localStorage.setItem(source.name, JSON.stringify(saveobj, null, 2));
 	JS9.userOpts[source.name] = localStorage.getItem(source.name);
     }
     catch(e){ JS9.error(`could not save prefs: ${source.name}`); }
