@@ -14247,7 +14247,7 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 	    } else if( opts.prevselect === "or" || opts.prevselect === "add" ){
 		selection = `($prevselect) || ${selection}`;
 	    }
-	    selection = selection.replace("$prevselect", this.regSelect);
+	    selection = selection.replace(/\$prevselect/g, this.regSelect);
 	}
 	// boolean selection is passed through the regSelect parser
 	// (which will change the selection into an array of region ids)
