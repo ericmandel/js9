@@ -158,7 +158,7 @@ PLCSSFILES =	plugins/core/blend.css plugins/core/blink.css \
 		plugins/core/syncui.css plugins/core/toolbar.css \
 		plugins/core/zoomcontrols.css
 
-JSFILES =	 js/winmod.js js/jquery.min.js js/jquery-ui.min.js js/jquery.contextMenu.min.js js/jquery.flot.min.js js/jquery.flot.errorbars.min.js js/jquery.flot.navigate.min.js js/jquery.flot.resize.min.js js/jquery.flot.selection.min.js js/flot-zoom.min.js js/sprintf.min.js js/dhtmlwindow.min.js js/dhtmlwindow_blurb.js js/fabric.min.js js/pako_inflate.min.js js/FileSaver.min.js js/canvas-toBlob.js js/tabcontent.js js/arrive.min.js js/jquery.doubletap.min.js js/jquery.flot.axislabels.js js/spin.js js/ElementQueries.js js/ResizeSensor.js js/gaussblur.js js/imagefilters.js js/jquery.ui.touch-punch.js js/js9inline.js js/spectrum.min.js js/tinycolor.min.js js/jquery.mark.es6.min.js js/jquery.caret.min.js
+JSFILES =	 js/winmod.js js/jquery.min.js js/jquery-ui.min.js js/jquery.contextMenu.min.js js/jquery.flot.min.js js/jquery.flot.errorbars.min.js js/jquery.flot.navigate.min.js js/jquery.flot.resize.min.js js/jquery.flot.selection.min.js js/flot-zoom.min.js js/sprintf.min.js js/dhtmlwindow.min.js js/dhtmlwindow_blurb.js js/fabric.min.js js/pako_inflate.min.js js/FileSaver.min.js js/canvas-toBlob.js js/tabcontent.js js/arrive.min.js js/jquery.doubletap.min.js js/jquery.flot.axislabels.js js/spin.js js/ElementQueries.js js/ResizeSensor.js js/gaussblur.js js/imagefilters.js js/jquery.ui.touch-punch.js js/js9inline.js js/spectrum.min.js js/tinycolor.min.js js/jquery.mark.es6.min.js js/jquery.caret.min.js js/regSelect.js
 
 JSLINT =	js9.js js9worker.js js9Helper.js js9Msg.js \
 		js9Electron.js js9ElectronPreload.js js9ElectronMainMenu.js \
@@ -244,6 +244,11 @@ helper:		FORCE
 		  if [ x"$(USEHELPER)" = x"yes" ]; then \
 		    $(BSCR)/mkjs9 "$(WEBDIR)"; \
 		  fi;)
+
+regSelect:	FORCE
+		@(echo "remaking js9 region selection parser ..."; \
+		  jison src/regSelect.jison && mv regSelect.js js/.; \
+		  $(MAKE) js9support;)
 
 js9min:		FORCE
 		@(echo "remaking js9.min.js ..."; \

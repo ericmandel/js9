@@ -10,7 +10,7 @@
  *
  */
 
-/*global JS9Prefs, JS9Inline, $, jQuery, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters, Plotly, tinycolor */
+/*global JS9Prefs, JS9Inline, $, jQuery, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters, Plotly, tinycolor, regSelect */
 
 "use strict";
 
@@ -563,6 +563,7 @@ JS9.publics = {};		// object containing defined public API calls
 JS9.helper = {};		// only one helper per page, please
 JS9.fits = {};			// object holding FITS access routines
 JS9.userOpts = {};		// object to hold localStorage opts
+JS9.tmp = {};			// global temp area
 
 // misc params
 // list of scales in mkScaledCells
@@ -3883,7 +3884,7 @@ JS9.Image.prototype.displaySection = function(opts, func){
 	const {xdim, ydim} = this.fileDimensions();
 	opts = {xdim: xdim, ydim: ydim, xcen: 0, ycen: 0};
     } else if( opts === "selected" ){
-	this._selectShapes("regions", "selected", (obj) => {
+	this._selectShapes("regions", "selected", null, (obj) => {
 	    topts = reg2sect(obj.pub);
 	    topts.from = "virtualFile";
 	    topts.separate = true;
@@ -14185,38 +14186,105 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 
 // select one of more shapes by id or tag and execute a callback
 // call using image context
-JS9.Fabric._selectShapes = function(layerName, id, cb){
-    let i, group, ginfo, sobj, canvas, objects, olen, obj, ocolor, tag, ao;
+JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
+    let i, j, objects, olen, aobjects, alen;
+    let id, group, ginfo, canvas, ocolor, tag, obj;
+    const used = [];
+    const xcb = (obj, ginfo) => {
+	if( $.inArray(obj, used) < 0 ){
+	    cb.call(this, obj, ginfo);
+	    used.push(obj);
+	}
+    }
+    const xparser = (selection) => {
+	// NB: the JS9.tmp.regSelect values are used directly in the parser
+	JS9.tmp.regSelect = { layer: layerName, im: this, all: [] };
+	canvas.getObjects().forEach( (o) => {
+	    if( o.params ){ JS9.tmp.regSelect.all.push(o.params.id); }
+	});
+	try{
+	    regSelect.parse(selection);
+	}
+	catch(e){
+	    JS9.error(`parsing selection filter: ${selection}`, e);
+	}
+	this.regSelect = selection;
+	selection = JS9.tmp.regSelect.ids;
+	delete JS9.tmp.regSelect;
+	return selection;
+   };
     // sanity check
     if( !this.layers || !layerName || !this.layers[layerName] ){
 	return null;
     }
-    // if id is a positive int in string format, convert it to it now
-    // so we can process it as a region id coming from the command line
-    if( (typeof id === "string") && /^[1-9]\d*$/.test(id) ){
-	id = parseInt(id, 10);
+    if( typeof cb !== "function" ){
+	JS9.error("selectShapes requires a callback");
     }
+    // opts is optional
+    opts = opts || {};
     // convenience variable(s)
     canvas = this.layers[layerName].canvas;
+    // no selection means "selected" if there are selected shapes, else all
+    // (can be turned off by a global for backward compatibility)
+    if( !selection ){
+	if( canvas.getActiveObject()                  &&
+	    JS9.globalOpts.regWhichDefault === "auto" ){
+	    selection = "selected";
+	} else {
+	    selection = "all";
+	}
+    }
+    // look for string represtation of array selection
+    if( typeof selection === "string" && selection.startsWith("[") ){
+	try{ selection = JSON.parse(selection); }
+	catch(e){ JS9.error("can't parse array selection"); }
+    }
+    // see if we are adding to the previous selection filter
+    if( typeof selection === "string" ){
+	if( this.regSelect ){
+	    if( opts.prevselect === "and" ){
+		selection = `($prevselect) && ${selection}`;
+	    } else if( opts.prevselect === "or" || opts.prevselect === "add" ){
+		selection = `($prevselect) || ${selection}`;
+	    }
+	    selection = selection.replace("$prevselect", this.regSelect);
+	}
+	// boolean selection is passed through the regSelect parser
+	// (which will change the selection into an array of region ids)
+	if( selection.match(/&|\||!/) ){
+	    selection = xparser(selection);
+	}
+    }
+    // selection can be a single selection or an array of selections
+    if( !$.isArray(selection) ){
+	selection = [selection];
+    }
+    // process all selections
+    for(j=0; j<selection.length; j++){
+    // convenience variables that might be reset inside this loop
+    // list of objects
+    objects = canvas.getObjects();
+    olen = objects.length;
+    // list of active objects
+    aobjects = canvas.getActiveObjects();
+    alen = aobjects.length;
     // see if we have an active group
     if( fabric.major_version === 1 ){
 	group = canvas.getActiveGroup();
     } else {
-	ao = canvas.getActiveObject();
-	if( ao && ao.type === "activeSelection" ){
-	    group = ao;
+	obj = canvas.getActiveObject();
+	if( obj && obj.type === "activeSelection" ){
+	    group = obj;
 	} else {
 	    group = null;
 	}
     }
-    // no id usually means "selected" if there are selected regions, else all
-    // (can be turned off by a global for backward compatibility)
-    if( !id ){
-	if( ao && JS9.globalOpts.regWhichDefault === "auto" ){
-	    id = "selected";
-	} else {
-	    id = "all";
-	}
+    // this selection
+    id = selection[j];
+    // if id is a positive int in string format, convert it to it now
+    // so we can process it as a region id coming from the command line
+    if( (typeof id === "string") && /^[1-9]\d*$/.test(id) ){
+	id = parseInt(id, 10);
     }
     // but an active group does not mean selected regions are inside it
     ginfo = {group: null, canvas: canvas, layer: layerName};
@@ -14224,16 +14292,13 @@ JS9.Fabric._selectShapes = function(layerName, id, cb){
     switch( typeof id ){
     case "object":
 	if( id.params ){
-            if( group && group.contains(id) ){
+	    if( group && group.contains(id) ){
 	        ginfo.group = group;
 	    }
-	    // specific shape
-	    cb.call(this, id, ginfo);
+	    xcb(id, ginfo);
 	}
 	break;
     case "number":
-	objects = canvas.getObjects();
-        olen = objects.length;
 	while( olen-- ){
 	    obj = objects[olen];
 	    if( obj.params && (id === obj.params.id) ){
@@ -14242,7 +14307,7 @@ JS9.Fabric._selectShapes = function(layerName, id, cb){
 		} else {
 		    ginfo.group = null;
 		}
-		cb.call(this, obj, ginfo);
+		xcb(obj, ginfo);
 	    }
 	}
 	break;
@@ -14253,45 +14318,41 @@ JS9.Fabric._selectShapes = function(layerName, id, cb){
 	    if( fabric.major_version === 1 ){
 		if( canvas.getActiveObject() ){
 		    // make sure its a region
-		    sobj = canvas.getActiveObject();
-		    if( sobj.params ){
+		    obj = canvas.getActiveObject();
+		    if( obj.params ){
 			ginfo.group = null;
 			// selected object
-			cb.call(this, sobj, ginfo);
+			xcb(obj, ginfo);
 		    }
 		} else if( group ){
 		    ginfo.group = group;
-		    objects = group.getObjects();
-		    olen = objects.length;
 		    while( olen-- ){
 			obj = objects[olen];
 			// don't process shapes with parents in a group
 			if( obj.params && !obj.params.parent ){
-			    cb.call(this, obj, ginfo);
+			    xcb(obj, ginfo);
 			}
 		    }
 		}
 	    } else {
 		ginfo.group = group;
-		objects = canvas.getActiveObjects();
-		olen = objects.length;
-		while( olen-- ){
-		    obj = objects[olen];
+		while( alen-- ){
+		    obj = aobjects[alen];
 		    // don't process shapes with parents in a group
 		    if( obj.params && !obj.params.parent ){
-			cb.call(this, obj, ginfo);
+			xcb(obj, ginfo);
 		    }
 		}
 	    }
 	} else {
 	    // can't use forEachObject, which loops in ascending order,
 	    // because a "remove" cb changes the array destructively!
-	    objects = canvas.getObjects();
-            olen = objects.length;
 	    while( olen-- ){
 		obj = objects[olen];
 		// make sure its a valid region
 		if( !obj.params ){ continue; }
+		// convenience variables
+		ocolor = obj.stroke.toLowerCase();
 		// no text children unless explicity specified
 		if( obj.params.parent && id !== "child" && id !== "All" ){
 		    continue;
@@ -14300,63 +14361,65 @@ JS9.Fabric._selectShapes = function(layerName, id, cb){
 		if( id === "child" && !obj.params.parent ){
 		    continue;
 		}
-		ocolor = obj.stroke.toLowerCase();
+		// set group info
 		if( group && group.contains(obj) ){
 		    ginfo.group = group;
 		} else {
 		    ginfo.group = null;
 		}
+		// try to match this id in various ways
 		if( id.toLowerCase() === "all" ){
 		    // all
-		    cb.call(this, obj, ginfo);
+		    xcb(obj, ginfo);
 		} else if( (id.toLowerCase() === ocolor) ||
 			   (JS9.colorToHex(id).toLowerCase() === ocolor) ){
 		    // color
-		    cb.call(this, obj, ginfo);
+		    xcb(obj, ginfo);
 		} else if( id === obj.params.shape ){
 		    // shape
-		    cb.call(this, obj, ginfo);
+		    xcb(obj, ginfo);
 		} else if( id === obj.params.file ){
 		    // origin filename
-		    cb.call(this, obj, ginfo);
+		    xcb(obj, ginfo);
 		} else if( typeof obj.params.data === "object" &&
 			   id === obj.params.data.syncid       ){
 		    // sync id (see sync plugin)
-		    cb.call(this, obj, ginfo);
+		    xcb(obj, ginfo);
 		} else if( id === "child" && obj.params.parent ){
 		    // all
-		    cb.call(this, obj, ginfo);
+		    xcb(obj, ginfo);
 		} else if( id === "dcoords" && obj.params.preservedcoords ){
 		    // all
-		    cb.call(this, obj, ginfo);
+		    xcb(obj, ginfo);
 		} else if( id === "nodcoords" && !obj.params.preservedcoords ){
 		    // all
-		    cb.call(this, obj, ginfo);
+		    xcb(obj, ginfo);
 		} else if( id === "parent"            &&
 			   obj.params.children        &&
 			   obj.params.children.length ){
 		    // all
-		    cb.call(this, obj, ginfo);
+		    xcb(obj, ginfo);
 		} else if( $.inArray(id, JS9.wcssyss) >= 0    &&
 			   obj.params.wcsconfig               &&
 			   obj.params.wcsconfig.wcssys === id ){
 		    // original wcs
-		    cb.call(this, obj, ginfo);
+		    xcb(obj, ginfo);
 		} else if( obj.params.tags ){
 		    // tags
 		    for(i=0; i<obj.params.tags.length; i++){
 			tag = obj.params.tags[i];
 			if( id.match(/^\/.*\/$/) &&
 			    tag.match(new RegExp(id.slice(1,-1)))){
-			    cb.call(this, obj, ginfo);
+			    xcb(obj, ginfo);
 			} else if( id === tag ){
-			    cb.call(this, obj, ginfo);
+			    xcb(obj, ginfo);
 			}
 		    }
 		}
 	    }
-	}
-	break;
+	    }
+	    break;
+    }
     }
     return this;
 };
@@ -14380,8 +14443,10 @@ JS9.Fabric.selectShapes = function(layerName, shape, opts){
     // deselect current active object, if necessary
     canvas.discardActiveObject();
     // collect the specified shapes
-    this._selectShapes(layerName, shape, (obj) => {
-	arr.push(obj);
+    this._selectShapes(layerName, shape, opts, (obj) => {
+	if( $.inArray(obj, arr) < 0 ){
+	    arr.push(obj);
+	}
     });
     // create selection
     selection = new fabric.ActiveSelection(arr, {
@@ -14399,7 +14464,7 @@ JS9.Fabric.selectShapes = function(layerName, shape, opts){
 // call using image context
 JS9.Fabric.updateShapes = function(layerName, shape, mode, opts){
     // process the specified shapes
-    this._selectShapes(layerName, shape, (obj, ginfo) => {
+    this._selectShapes(layerName, shape, null, (obj, ginfo) => {
 	this._updateShape(layerName, obj, ginfo, mode, opts);
     });
     return this;
@@ -14865,7 +14930,7 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
 	}
     }
     // process the specified shapes
-    this._selectShapes(layerName, shape, (obj, ginfo) => {
+    this._selectShapes(layerName, shape, opts, (obj, ginfo) => {
 	let i, child, parent;
 	if( (obj.params.removable !== false || opts.overrideRemovable) &&
 	    (!obj.params.sticky || opts.sticky !== false)  	       ){
@@ -14955,7 +15020,7 @@ JS9.Fabric.getShapes = function(layerName, shape, opts){
 	return s;
     }
     // process the specified shapes
-    this._selectShapes(layerName, shape, (obj) => {
+    this._selectShapes(layerName, shape, opts, (obj) => {
 	// public part of the shape
 	myshape = obj.pub || {};
 	// might need shape object itself
@@ -14999,7 +15064,7 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
     // active object
     ao = canvas.getActiveObject();
     // process the specified shapes
-    this._selectShapes(layerName, shape, (obj, ginfo) => {
+    this._selectShapes(layerName, shape, opts, (obj, ginfo) => {
 	// set scaling based on zoom factor
 	if( this.display.layers[layerName].dtype === "main" &&
 	    !obj.params.preservedcoords                     ){
