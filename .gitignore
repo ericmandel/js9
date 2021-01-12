@@ -13,6 +13,7 @@ config.status
 config.log
 config.cache
 debug*.html
+debug*.py
 TODO
 BUGS
 tpos
