@@ -543,6 +543,15 @@ smoke:		FORCE
 		  python3 tests/smoke.py)
 
 smoke2:		FORCE
+		@(X=`js9 targets`; 					\
+	          echo "$$X" | egrep -q -s '^ERROR|^0$$|^$$';		\
+		  if [ $$? = 0 ]; then					\
+			js9 -a -v --webpage tests/smoke.html --width 1060 --height 670 & \
+			sleep 3;					\
+		  fi;							\
+		  python3 tests/smoke2.py)
+
+smokescript:	FORCE
 		@(echo "testing js9 shell scripting ...";               \
 		  tests/ebands;                                         \
 		  echo "testing hostfs support ...";                    \
