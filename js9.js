@@ -14196,7 +14196,7 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 	    used.push(obj);
 	}
     }
-    const xparser = (selection) => {
+    const xparser = (selection, opts) => {
 	// NB: the JS9.tmp.regSelect values are used directly in the parser
 	JS9.tmp.regSelect = { layer: layerName, im: this, all: [] };
 	canvas.getObjects().forEach( (o) => {
@@ -14208,6 +14208,9 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 	catch(e){
 	    JS9.error(`parsing selection filter: ${selection}`, e);
 	}
+	if( opts.setSelection ){
+	    this.layers[layerName].selection = selection;
+	}
 	selection = JS9.tmp.regSelect.ids;
 	delete JS9.tmp.regSelect;
 	return selection;
@@ -14216,6 +14219,12 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
     if( !this.layers || !layerName || !this.layers[layerName] ){
 	return null;
     }
+    // reset => remove selection property for this layer
+    if( selection === "reset" ){
+	delete this.layers[layerName].selection;
+	return this;
+    }
+    // for real selections, we need a callback
     if( typeof cb !== "function" ){
 	JS9.error("selectShapes requires a callback");
     }
@@ -14240,19 +14249,21 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
     }
     // see if we are adding to the previous selection filter
     if( typeof selection === "string" ){
-	if( this.regSelect ){
+	if( this.layers[layerName].selection ){
 	    if( opts.prev === "and" ){
 		selection = `(previous) && (${selection})`;
 	    } else if( opts.prev === "or" || opts.prev === "add" ){
 		selection = `(previous) || (${selection})`;
 	    }
-	    selection = selection.replace(/previous/gi, this.regSelect);
+	    selection = selection.replace(/previous/gi,
+					  this.layers[layerName].selection);
 	}
-	this.regSelect = selection;
 	// boolean selection is passed through the regSelect parser
 	// (which will change the selection into an array of region ids)
 	if( selection.match(/&|\||!/) ){
-	    selection = xparser(selection);
+	    selection = xparser(selection, opts);
+	} else if( opts.setSelection ){
+	    this.layers[layerName].selection = selection;
 	}
     }
     // selection can be a single selection or an array of selections
@@ -14438,6 +14449,8 @@ JS9.Fabric.selectShapes = function(layerName, shape, opts){
     }
     // opts is optional
     opts = opts || {};
+    // this selection is usually saved
+    if( JS9.isNull(opts.setSelection) ){ opts.setSelection = true; }
     // convenience variable
     canvas = layer.canvas;
     // deselect current active object, if necessary
@@ -15063,6 +15076,8 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
     canvas = layer.canvas;
     // active object
     ao = canvas.getActiveObject();
+    // this selection is usually saved
+    if( JS9.isNull(opts.setSelection) ){ opts.setSelection = true; }
     // process the specified shapes
     this._selectShapes(layerName, shape, opts, (obj, ginfo) => {
 	// set scaling based on zoom factor
