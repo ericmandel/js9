@@ -14208,7 +14208,6 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 	catch(e){
 	    JS9.error(`parsing selection filter: ${selection}`, e);
 	}
-	this.regSelect = selection;
 	selection = JS9.tmp.regSelect.ids;
 	delete JS9.tmp.regSelect;
 	return selection;
@@ -14242,13 +14241,14 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
     // see if we are adding to the previous selection filter
     if( typeof selection === "string" ){
 	if( this.regSelect ){
-	    if( opts.prevselect === "and" ){
-		selection = `($prevselect) && ${selection}`;
-	    } else if( opts.prevselect === "or" || opts.prevselect === "add" ){
-		selection = `($prevselect) || ${selection}`;
+	    if( opts.prev === "and" ){
+		selection = `(previous) && (${selection})`;
+	    } else if( opts.prev === "or" || opts.prev === "add" ){
+		selection = `(previous) || (${selection})`;
 	    }
-	    selection = selection.replace(/\$prevselect/g, this.regSelect);
+	    selection = selection.replace(/previous/gi, this.regSelect);
 	}
+	this.regSelect = selection;
 	// boolean selection is passed through the regSelect parser
 	// (which will change the selection into an array of region ids)
 	if( selection.match(/&|\||!/) ){
