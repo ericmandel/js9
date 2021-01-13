@@ -14219,12 +14219,7 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
     if( !this.layers || !layerName || !this.layers[layerName] ){
 	return null;
     }
-    // reset => remove selection property for this layer
-    if( selection === "reset" ){
-	delete this.layers[layerName].selection;
-	return this;
-    }
-    // for real selections, we need a callback
+    // for all selections, we need a callback
     if( typeof cb !== "function" ){
 	JS9.error("selectShapes requires a callback");
     }
@@ -14455,6 +14450,14 @@ JS9.Fabric.selectShapes = function(layerName, shape, opts){
     canvas = layer.canvas;
     // deselect current active object, if necessary
     canvas.discardActiveObject();
+    // reset => remove selection for this layer
+    if( shape === "reset" ){
+	// no last selection
+	delete layer.selection;
+	// re-display so we don't see the old group
+	canvas.renderAll();
+	return this;
+    }
     // collect the specified shapes
     this._selectShapes(layerName, shape, opts, (obj) => {
 	if( $.inArray(obj, arr) < 0 ){
