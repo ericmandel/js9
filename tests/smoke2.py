@@ -47,8 +47,8 @@ def regSelectTest(j, file):
         rtn("(circle && foo2) || (ellipse && foo1)", {"color": "red"})
         displayMessage(j, "(circle && foo2) || (ellipse && foo1): red");
         xwait(j)
-        rtn("(circle && !foo2) || (ellipse && !foo1)", {"color": "white"})
-        displayMessage(j, "(circle && !foo2) || (ellipse && !foo1): white");
+        rtn("(circle && !foo2) || (ellipse && !foo1)", {"color": "orange"})
+        displayMessage(j, "(circle && !foo2) || (ellipse && !foo1): orange");
         xwait(j)
         rtn("/foo*/", {"color": "red"})
         displayMessage(j, "/foo*/: red");
