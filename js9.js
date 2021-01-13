@@ -14261,73 +14261,83 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
     }
     // process all selections
     for(j=0; j<selection.length; j++){
-    // convenience variables that might be reset inside this loop
-    // list of objects
-    objects = canvas.getObjects();
-    olen = objects.length;
-    // list of active objects
-    aobjects = canvas.getActiveObjects();
-    alen = aobjects.length;
-    // see if we have an active group
-    if( fabric.major_version === 1 ){
-	group = canvas.getActiveGroup();
-    } else {
-	obj = canvas.getActiveObject();
-	if( obj && obj.type === "activeSelection" ){
-	    group = obj;
+	// convenience variables that might be reset inside this loop
+	// list of objects
+	objects = canvas.getObjects();
+	olen = objects.length;
+	// list of active objects
+	aobjects = canvas.getActiveObjects();
+	alen = aobjects.length;
+	// see if we have an active group
+	if( fabric.major_version === 1 ){
+	    group = canvas.getActiveGroup();
 	} else {
-	    group = null;
-	}
-    }
-    // this selection
-    id = selection[j];
-    // if id is a positive int in string format, convert it to it now
-    // so we can process it as a region id coming from the command line
-    if( (typeof id === "string") && /^[1-9]\d*$/.test(id) ){
-	id = parseInt(id, 10);
-    }
-    // but an active group does not mean selected regions are inside it
-    ginfo = {group: null, canvas: canvas, layer: layerName};
-    // select on the id
-    switch( typeof id ){
-    case "object":
-	if( id.params ){
-	    if( group && group.contains(id) ){
-	        ginfo.group = group;
+	    obj = canvas.getActiveObject();
+	    if( obj && obj.type === "activeSelection" ){
+		group = obj;
+	    } else {
+		group = null;
 	    }
-	    xcb(id, ginfo);
 	}
-	break;
-    case "number":
-	while( olen-- ){
-	    obj = objects[olen];
-	    if( obj.params && (id === obj.params.id) ){
-		if( group && group.contains(obj) ){
-		    ginfo.group = group;
-		} else {
-		    ginfo.group = null;
+	// this selection
+	id = selection[j];
+	// if id is a positive int in string format, convert it to it now
+	// so we can process it as a region id coming from the command line
+	if( (typeof id === "string") && /^[1-9]\d*$/.test(id) ){
+	    id = parseInt(id, 10);
+	}
+	// but an active group does not mean selected regions are inside it
+	ginfo = {group: null, canvas: canvas, layer: layerName};
+	// select on the id
+	switch( typeof id ){
+	case "object":
+	    if( id.params ){
+		if( group && group.contains(id) ){
+	            ginfo.group = group;
 		}
-		xcb(obj, ginfo);
+		xcb(id, ginfo);
 	    }
-	}
-	break;
-    case "string":
-	// string id can be a region tag, color, shape, or tag
-	// look for id in various ways
-        if( id === "selected" ){
-	    if( fabric.major_version === 1 ){
-		if( canvas.getActiveObject() ){
-		    // make sure its a region
-		    obj = canvas.getActiveObject();
-		    if( obj.params ){
+	    break;
+	case "number":
+	    while( olen-- ){
+		obj = objects[olen];
+		if( obj.params && (id === obj.params.id) ){
+		    if( group && group.contains(obj) ){
+			ginfo.group = group;
+		    } else {
 			ginfo.group = null;
-			// selected object
-			xcb(obj, ginfo);
 		    }
-		} else if( group ){
+		    xcb(obj, ginfo);
+		}
+	    }
+	    break;
+	case "string":
+	    // string id can be a region tag, color, shape, or tag
+	    // look for id in various ways
+            if( id === "selected" ){
+		if( fabric.major_version === 1 ){
+		    if( canvas.getActiveObject() ){
+			// make sure its a region
+			obj = canvas.getActiveObject();
+			if( obj.params ){
+			    ginfo.group = null;
+			    // selected object
+			    xcb(obj, ginfo);
+			}
+		    } else if( group ){
+			ginfo.group = group;
+			while( olen-- ){
+			    obj = objects[olen];
+			    // don't process shapes with parents in a group
+			    if( obj.params && !obj.params.parent ){
+				xcb(obj, ginfo);
+			    }
+			}
+		    }
+		} else {
 		    ginfo.group = group;
-		    while( olen-- ){
-			obj = objects[olen];
+		    while( alen-- ){
+			obj = aobjects[alen];
 			// don't process shapes with parents in a group
 			if( obj.params && !obj.params.parent ){
 			    xcb(obj, ginfo);
@@ -14335,91 +14345,81 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 		    }
 		}
 	    } else {
-		ginfo.group = group;
-		while( alen-- ){
-		    obj = aobjects[alen];
-		    // don't process shapes with parents in a group
-		    if( obj.params && !obj.params.parent ){
-			xcb(obj, ginfo);
+		// can't use forEachObject, which loops in ascending order,
+		// because a "remove" cb changes the array destructively!
+		while( olen-- ){
+		    obj = objects[olen];
+		    // make sure its a valid region
+		    if( !obj.params ){ continue; }
+		    // convenience variables
+		    ocolor = obj.stroke.toLowerCase();
+		    // no text children unless explicity specified
+		    if( obj.params.parent && id !== "child" && id !== "All" ){
+			continue;
 		    }
-		}
-	    }
-	} else {
-	    // can't use forEachObject, which loops in ascending order,
-	    // because a "remove" cb changes the array destructively!
-	    while( olen-- ){
-		obj = objects[olen];
-		// make sure its a valid region
-		if( !obj.params ){ continue; }
-		// convenience variables
-		ocolor = obj.stroke.toLowerCase();
-		// no text children unless explicity specified
-		if( obj.params.parent && id !== "child" && id !== "All" ){
-		    continue;
-		}
-		// children should always have a parent
-		if( id === "child" && !obj.params.parent ){
-		    continue;
-		}
-		// set group info
-		if( group && group.contains(obj) ){
-		    ginfo.group = group;
-		} else {
-		    ginfo.group = null;
-		}
-		// try to match this id in various ways
-		if( id.toLowerCase() === "all" ){
-		    // all
-		    xcb(obj, ginfo);
-		} else if( (id.toLowerCase() === ocolor) ||
-			   (JS9.colorToHex(id).toLowerCase() === ocolor) ){
-		    // color
-		    xcb(obj, ginfo);
-		} else if( id === obj.params.shape ){
-		    // shape
-		    xcb(obj, ginfo);
-		} else if( id === obj.params.file ){
-		    // origin filename
-		    xcb(obj, ginfo);
-		} else if( typeof obj.params.data === "object" &&
-			   id === obj.params.data.syncid       ){
-		    // sync id (see sync plugin)
-		    xcb(obj, ginfo);
-		} else if( id === "child" && obj.params.parent ){
-		    // all
-		    xcb(obj, ginfo);
-		} else if( id === "dcoords" && obj.params.preservedcoords ){
-		    // all
-		    xcb(obj, ginfo);
-		} else if( id === "nodcoords" && !obj.params.preservedcoords ){
-		    // all
-		    xcb(obj, ginfo);
-		} else if( id === "parent"            &&
-			   obj.params.children        &&
-			   obj.params.children.length ){
-		    // all
-		    xcb(obj, ginfo);
-		} else if( $.inArray(id, JS9.wcssyss) >= 0    &&
-			   obj.params.wcsconfig               &&
-			   obj.params.wcsconfig.wcssys === id ){
-		    // original wcs
-		    xcb(obj, ginfo);
-		} else if( obj.params.tags ){
-		    // tags
-		    for(i=0; i<obj.params.tags.length; i++){
-			tag = obj.params.tags[i];
-			if( id.match(/^\/.*\/$/) &&
-			    tag.match(new RegExp(id.slice(1,-1)))){
-			    xcb(obj, ginfo);
-			} else if( id === tag ){
-			    xcb(obj, ginfo);
+		    // children should always have a parent
+		    if( id === "child" && !obj.params.parent ){
+			continue;
+		    }
+		    // set group info
+		    if( group && group.contains(obj) ){
+			ginfo.group = group;
+		    } else {
+			ginfo.group = null;
+		    }
+		    // try to match this id in various ways
+		    if( id.toLowerCase() === "all" ){
+			// all
+			xcb(obj, ginfo);
+		    } else if( (id.toLowerCase() === ocolor) ||
+			       (JS9.colorToHex(id).toLowerCase() === ocolor) ){
+			// color
+			xcb(obj, ginfo);
+		    } else if( id === obj.params.shape ){
+			// shape
+			xcb(obj, ginfo);
+		    } else if( id === obj.params.file ){
+			// origin filename
+			xcb(obj, ginfo);
+		    } else if( typeof obj.params.data === "object" &&
+			       id === obj.params.data.syncid       ){
+			// sync id (see sync plugin)
+			xcb(obj, ginfo);
+		    } else if( id === "child" && obj.params.parent ){
+			// all
+			xcb(obj, ginfo);
+		    } else if( id === "dcoords" && obj.params.preservedcoords ){
+			// all
+			xcb(obj, ginfo);
+		    } else if( id === "nodcoords" && !obj.params.preservedcoords ){
+			// all
+			xcb(obj, ginfo);
+		    } else if( id === "parent"            &&
+			       obj.params.children        &&
+			       obj.params.children.length ){
+			// all
+			xcb(obj, ginfo);
+		    } else if( $.inArray(id, JS9.wcssyss) >= 0    &&
+			       obj.params.wcsconfig               &&
+			       obj.params.wcsconfig.wcssys === id ){
+			// original wcs
+			xcb(obj, ginfo);
+		    } else if( obj.params.tags ){
+			// tags
+			for(i=0; i<obj.params.tags.length; i++){
+			    tag = obj.params.tags[i];
+			    if( id.match(/^\/.*\/$/) &&
+				tag.match(new RegExp(id.slice(1,-1)))){
+				xcb(obj, ginfo);
+			    } else if( id === tag ){
+				xcb(obj, ginfo);
+			    }
 			}
 		    }
 		}
 	    }
-	    }
 	    break;
-    }
+	}
     }
     return this;
 };
