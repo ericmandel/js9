@@ -29,58 +29,62 @@ def regSelectTest(j, file):
     for rtn in rtns:
         j.AddRegions(regions)
         xwait(j)
-        rtn("circle", {"color": "orange"})
         displayMessage(j, "circle: orange");
+        rtn("circle", {"color": "orange"})
         xwait(j)
-        rtn("ellipse", {"color": "magenta"})
         displayMessage(j, "ellipse: magenta");
+        rtn("ellipse", {"color": "magenta"})
         xwait(j)
-        rtn("circle && foo1", {"color": "red"})
         displayMessage(j, "circle && foo1: red");
+        rtn("circle && foo1", {"color": "red"})
         xwait(j)
-        rtn("ellipse && !foo2", {"color": "red"})
         displayMessage(j, "ellipse && !foo2: red");
+        rtn("ellipse && !foo2", {"color": "red"})
         xwait(j)
-        rtn("circle || ellipse", {"color": "yellow"})
         displayMessage(j, "circle || ellipse: yellow");
+        rtn("circle || ellipse", {"color": "yellow"})
         xwait(j)
-        rtn("(circle && foo2) || (ellipse && foo1)", {"color": "red"})
         displayMessage(j, "(circle && foo2) || (ellipse && foo1): red");
+        rtn("(circle && foo2) || (ellipse && foo1)", {"color": "red"})
         xwait(j)
-        rtn("(circle && !foo2) || (ellipse && !foo1)", {"color": "orange"})
         displayMessage(j, "(circle && !foo2) || (ellipse && !foo1): orange");
+        rtn("(circle && !foo2) || (ellipse && !foo1)", {"color": "orange"})
         xwait(j)
-        rtn("/foo*/", {"color": "red"})
         displayMessage(j, "/foo*/: red");
+        rtn("/foo*/", {"color": "red"})
         xwait(j)
-        rtn("circle && foo1", {"color": "magenta"})
         displayMessage(j, "circle && foo1: magenta");
+        rtn("circle && foo1", {"color": "magenta"})
         xwait(j)
-        rtn("circle && foo2", {"prev": "add", "color": "orange"})
         displayMessage(j, "circle && foo2 + prev: orange");
+        rtn("circle && foo2", {"prev": "add", "color": "orange"})
         xwait(j)
-        rtn("ellipse && foo1", {"prev": "or", "color": "yellow"})
         displayMessage(j, "ellipse && foo1 + prev: yellow");
+        rtn("ellipse && foo1", {"prev": "or", "color": "yellow"})
         xwait(j)
-        rtn("ellipse && foo2", {"prev": "add", "color": "cyan"})
         displayMessage(j, "ellipse && foo2 + prev: cyan");
+        rtn("ellipse && foo2", {"prev": "add", "color": "cyan"})
         xwait(j)
-        rtn("previous", {"color": "red"})
         displayMessage(j, "previous: red");
+        rtn("previous", {"color": "red"})
         xwait(j)
-        rtn("!foo1 && !circle", {"color": "orange"})
         displayMessage(j, "!foo1 && !circle: orange");
+        rtn("!foo1 && !circle", {"color": "orange"})
         xwait(j)
-        rtn("previous || (!foo2 && !circle)", {"color": "yellow"})
         displayMessage(j, "previous || (!foo2 && !circle): yellow");
+        rtn("previous || (!foo2 && !circle)", {"color": "yellow"})
         xwait(j)
-        rtn("previous || (!foo1 && !ellipse)", {"color": "orange"})
         displayMessage(j, "previous || (!foo1 && !ellipse): orange");
+        rtn("previous || (!foo1 && !ellipse)", {"color": "orange"})
         xwait(j)
-        rtn("previous || (!foo2 && !ellipse)", {"color": "magenta"})
         displayMessage(j, "previous || (!foo2 && !ellipse): magenta");
+        rtn("previous || (!foo2 && !ellipse)", {"color": "magenta"})
         sleep(timeout)
-        j.RemoveRegions("all")
+        displayMessage(j, "reset selection");
+        j.SelectRegions("reset")
+        sleep(timeout)
+        displayMessage(j, "circle + previous (i.e. none)");
+        j.SelectRegions("circle", {"prev":"add"})
 
 # end of new tests
 
