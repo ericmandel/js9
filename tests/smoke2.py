@@ -56,35 +56,35 @@ def regSelectTest(j, file):
         displayMessage(j, "circle && foo1: magenta");
         rtn("circle && foo1", {"color": "magenta"})
         xwait(j)
-        displayMessage(j, "circle && foo2 + prev: orange");
-        rtn("circle && foo2", {"prev": "add", "color": "orange"})
+        displayMessage(j, "circle && foo2 + saved: orange");
+        rtn("circle && foo2", {"saved": True, "color": "orange"})
         xwait(j)
-        displayMessage(j, "ellipse && foo1 + prev: yellow");
-        rtn("ellipse && foo1", {"prev": "or", "color": "yellow"})
+        displayMessage(j, "ellipse && foo1 + saved: yellow");
+        rtn("ellipse && foo1", {"saved": "or", "color": "yellow"})
         xwait(j)
-        displayMessage(j, "ellipse && foo2 + prev: cyan");
-        rtn("ellipse && foo2", {"prev": "add", "color": "cyan"})
+        displayMessage(j, "ellipse && foo2 + saved: cyan");
+        rtn("ellipse && foo2", {"saved": True, "color": "cyan"})
         xwait(j)
-        displayMessage(j, "previous: red");
-        rtn("previous", {"color": "red"})
+        displayMessage(j, "saved: red");
+        rtn("saved", {"color": "red"})
         xwait(j)
         displayMessage(j, "!foo1 && !circle: orange");
         rtn("!foo1 && !circle", {"color": "orange"})
         xwait(j)
-        displayMessage(j, "previous || (!foo2 && !circle): yellow");
-        rtn("previous || (!foo2 && !circle)", {"color": "yellow"})
+        displayMessage(j, "saved || (!foo2 && !circle): yellow");
+        rtn("saved || (!foo2 && !circle)", {"color": "yellow"})
         xwait(j)
-        displayMessage(j, "previous || (!foo1 && !ellipse): orange");
-        rtn("previous || (!foo1 && !ellipse)", {"color": "orange"})
+        displayMessage(j, "saved || (!foo1 && !ellipse): orange");
+        rtn("saved || (!foo1 && !ellipse)", {"color": "orange"})
         xwait(j)
-        displayMessage(j, "previous || (!foo2 && !ellipse): magenta");
-        rtn("previous || (!foo2 && !ellipse)", {"color": "magenta"})
+        displayMessage(j, "saved || (!foo2 && !ellipse): magenta");
+        rtn("saved || (!foo2 && !ellipse)", {"color": "magenta"})
         sleep(timeout)
         displayMessage(j, "reset selection");
         j.SelectRegions("reset")
         sleep(timeout)
-        displayMessage(j, "circle + previous (i.e. none)");
-        j.SelectRegions("circle", {"prev":"add"})
+        displayMessage(j, "circle + saved (i.e. none)");
+        j.SelectRegions("circle", {"saved":"add"})
 
 # end of new tests
 

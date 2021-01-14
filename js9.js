@@ -14242,15 +14242,15 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 	try{ selection = JSON.parse(selection); }
 	catch(e){ JS9.error("can't parse array selection"); }
     }
-    // see if we are adding to the previous selection filter
+    // see if we are adding to the saved selection filter
     if( typeof selection === "string" ){
 	if( this.layers[layerName].selection ){
-	    if( opts.prev === "and" ){
-		selection = `(previous) && (${selection})`;
-	    } else if( opts.prev === "or" || opts.prev === "add" ){
-		selection = `(previous) || (${selection})`;
+	    if( opts.saved === "and" ){
+		selection = `(saved) && (${selection})`;
+	    } else if( opts.saved === "or" || opts.saved === true ){
+		selection = `(saved) || (${selection})`;
 	    }
-	    selection = selection.replace(/previous/gi,
+	    selection = selection.replace(/saved/gi,
 					  this.layers[layerName].selection);
 	}
 	// boolean selection is passed through the regSelect parser
