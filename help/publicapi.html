@@ -2575,20 +2575,7 @@ or background region:
 If the string "$sregions" ("$bregions") is
 specified, the source (background) regions are taken from the
 currently displayed image. You also can specify a region selector
-using any of the following:
-<ul>
-<li><b>all</b>: all regions not including child text regions
-<li><b>All</b>: all regions including child text regions
-<li><b>[id]</b>: a specific region id returned by <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
-<li><b>selected</b>: the selected region (or regions in a selected group)
-<li><b>[color]</b>: regions of the specified color
-<li><b>[shape]</b>: regions of the specified shape
-<li><b>[wcs]</b>:  regions whose initial wcs matches the specified wcs
-<li><b>[tag]</b>:  regions having the specified tag
-<li><b>/[regexp]/</b>: regions with a tag matching the specified regexp
-<li><b>child</b>: a child region (i.e. text child of another region)
-<li><b>parent</b>: a region that has a child (i.e. has a text child)
-</ul>
+using a <a href="#selectregions"><b>regions selection</b></a> string.
 For example:
 <pre>
     # all regions
@@ -3265,37 +3252,133 @@ as needed.
   
 <p>
 Spatial regions of interest are a crucial part of astronomical data
-analysis. The regions layer is a special case of the more generalized
-<b><a href="#shapes">Shape</a></b> layers, automatically created by
+analysis, especially X-ray analysis. Programs having spatial region
+support can select parts of a FITS image or binary table using simple
+geometric shapes, so that only pixels found within these shapes are
+processed. See
+<a href="https://js9.si.edu/regions/regions.html" target="_blank">regions</a>
+for a general discussion of spatial region filtering in astronomy, and
+<a href="https://js9.si.edu/regions/regcnts.html" target="_blank">regcnts</a>
+for an example program using spatial regions.
+
+<p>
+JS9's support for spatial regions allows you to create and delete
+regions, load them from an external file, change characteristics such as
+size and color, use them as selection criteria in local analysis or
+pass them to remote analysis, and export them a file.
+
+<p>
+The regions layer in JS9 is a special case of the more generalized
+<b><a href="#shapes">Shape</a></b> layers, but it is automatically created by
 JS9 to support the options in the <b>Regions</b> menu, as well as
-local and server-side data analysis using regions. As such, these
+local and server-side data analysis using regions. As such, the
 region routines are just a thin layer on top of the Shape routines,
 calling the equivalent Shape routine with "region" as the first argument.
 
-<p>
-Note that the
-<b><a href="#JS9.GetRegions">JS9.GetRegions()</a>,
-<a href="#JS9.ChangeRegions">JS9.ChangeRegions()</a>,
-<a href="#JS9.RemoveRegions">JS9.RemoveRegions()</a></b>,
-<a href="#JS9.ListRegions">JS9.ListRegions()</a></b> calls
-all take a regions specification as the second argument, which can be
-any of the following (in order of precedence):
+<h5 id="selectregions">Selecting Regions</h5>
+
+One of the most important aspects of using regions is the ability to assign
+different characteristics to regions and then make selections based on
+these characteristics. The
+<b><a href="#JS9.ChangeRegions">JS9.ChangeRegions()</a></b>,
+<b><a href="#JS9.GetRegions">JS9.GetRegions()</a></b>,
+<b><a href="#JS9.ListRegions">JS9.ListRegions()</a></b>,
+<b><a href="#JS9.RemoveRegions">JS9.RemoveRegions()</a></b>,
+and
+<b><a href="#JS9.SelectRegions">JS9.SelectRegions()</a></b>
+calls all take a region selection specification as the first argument,
+which can be any of the following (in order of precedence):
 <ul>
 <li><b>selected</b>: the selected region (or all regions in selected group)
 <li><b>all</b>: all regions, but not including child text regions (default)
 <li><b>All</b>: all regions, including child text regions
-<li><b>[id]</b>: a specific region id returned by
-  <a href="#JS9.AddRegions"><b>JS9.AddRegions()</b></a>
+<li><b>[id]</b>: a integer region id (or an array of ids), as
+returned by <a href="#JS9.AddRegions"><b>JS9.AddRegions()</b></a>
 <li><b>[color]</b>: all regions having the specified color (e.g., "red")
 <li><b>[shape]</b>: all regions having the specified shape (e.g., "circle")
 <li><b>child</b>: a child region (i.e. text child of another region)
 <li><b>parent</b>: a region that has a child (i.e. has a text child)
 <li><b>[wcs]</b>:  regions whose initial wcs matches the specified wcs
 <li><b>[tag]</b>: all regions containing the specified tag (e.g., "source")
+<li><b>/[regexp]/</b>: all regions whose tags match the regexp (e.g. "/foo[1-4]/")
 <li><b>dcoords</b>: a region that preserves display coordinates
 <li><b>nodcoords</b>: a region that does not preserve display coordinates
 </ul>
-Thus, it is possible to act on multiple regions at the same time.
+Of these, <b>all</b>, <b>selected</b>, <b>[color]</b>, <b>[shape]</b>, and
+<b>[tag]</b> are probably the most often used. Selections make it
+possible to act on multiple regions at the same time. For example:
+<pre>
+    # all currently selected regions
+    JS9.SelectRegions("selected");
+
+    # all circles
+    JS9.ChangeRegions("circle", {"color": "red"});
+
+    # all red regions
+    JS9.SelectRegions("red");
+  
+    # all regions with the tag 'foo1'
+    JS9.ChangeRegions("foo1", {"color": "red"});
+  
+    # all regions with a tag matching the regular expression foo.*
+    JS9.SelectRegions("/foo.*/");
+
+    # region with id 7
+    JS9.ChangeRegions(7, {"color": "red"});
+</pre>
+In addition, you can combine selections using the boolean operators,
+with the usual precedence and associativity rules holding sway:
+<pre>
+  Operator                                Associativity
+  --------                                -------------
+  !  (bitwise not)                        right to left
+  && (logical and)                        left to right
+  || (logical or)                         left to right
+</pre>
+For example:
+<pre>
+    # circles or ellipses
+    JS9.ChangeRegions("circle || ellipse", {"color": "red"});
+
+    # circles or red regions
+    JS9.SelectRegions("circle || red");
+
+    # circles having tag 'foo1'
+    JS9.ChangeRegions("circle && foo1", {"color": "red"});
+
+    # circles not having tag 'foo2'
+    JS9.SelectRegions("circle && !foo2");
+
+    # all regions except red ones
+    JS9.ChangeRegions("!red", {"color": "cyan"});
+</pre>
+When a region selection is made using the
+<b><a href="#JS9.ChangeRegions">JS9.ChangeRegions()</a></b> or
+<b><a href="#JS9.SelectRegions">JS9.SelectRegions()</a></b> calls, the
+selection is saved so that you can use it as part of subsequent selection
+calls. You can specify use of the saved selection either in the opts object
+or directly in the selection string:
+<pre>
+    # select circle regions and save selection filter
+    JS9.SelectRegions("circle")
+
+    # select saved regions, along with ellipses that have a "foo1" tag
+    JS9.SelectRegions("ellipse && foo1", {"saved": true})
+
+    # select saved regions, along with ellipses that have a "foo1" tag
+    JS9.SelectRegions("ellipse && foo1", {"saved": "or"})
+
+    # select saved regions, along with ellipses that have a "foo1" tag
+    JS9.SelectRegions("saved || (ellipse && foo1)")
+
+    # select saved regions if they are ellipses that have a "foo1" tag
+    JS9.SelectRegions("ellipse && foo1", {"saved": "and"})
+
+    # select saved regions if they are ellipses that have a "foo1" tag
+    JS9.SelectRegions("saved && ellipse && foo1")
+</pre>
+Calling <b><a href="#JS9.SelectRegions">JS9.SelectRegions("reset")</a></b>
+will clear the saved selection.
 
 <h5 id="JS9.AddRegions">Add one or more regions to the regions layer</h5>
 <p>
@@ -3483,24 +3566,9 @@ returns:
 </ul>
 <p>
 Get information about one or more regions.
-If the <b>regions</b> argument is not specified, it defaults to
-"selected" if there are selected regions, otherwise "all".
-You can specify regions using any of the following:
-<ul>
-<li><b>all</b>: all regions not including child text regions
-<li><b>All</b>: all regions including child text regions
-<li><b>[id]</b>: a specific region id returned by <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
-<li><b>selected</b>: the selected region (or regions in a selected group)
-<li><b>[color]</b>: regions of the specified color
-<li><b>[shape]</b>: regions of the specified shape
-<li><b>[wcs]</b>:  regions whose initial wcs matches the specified wcs
-<li><b>[tag]</b>:  regions having the specified tag
-<li><b>/[regexp]/</b>: regions with a tag matching the specified regexp
-<li><b>child</b>: a child region (i.e. text child of another region)
-<li><b>parent</b>: a region that has a child (i.e. has a text child)
-</ul>
-In this context, a regexp is a string enclosed between slashes.e.g.,
-"/foo[1-4]/" will match regions with tags "foo1", "foo2", "foo3", or "foo4";
+The first argument is the <a href="#selectregions"><b>regions selection</b></a>.
+If not specified, it defaults to "selected" if there are selected regions,
+otherwise "all".
 
 <p>
 Each returned region object contains the following properties:
@@ -3661,24 +3729,9 @@ where:
 <li><b>opts</b>: object containing options to change in each region
 </ul>
 Change one or more regions. 
-If the <b>regions</b> argument is not specified, it defaults to
-"selected" if there are selected regions, otherwise "all".
-You can specify a region selector using any of the following:
-<ul>
-<li><b>all</b>: all regions not including child text regions
-<li><b>All</b>: all regions including child text regions
-<li><b>[id]</b>: a specific region id returned by <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
-<li><b>selected</b>: the selected region (or regions in a selected group)
-<li><b>[color]</b>: regions of the specified color
-<li><b>[shape]</b>: regions of the specified shape
-<li><b>[wcs]</b>:  regions whose initial wcs matches the specified wcs
-<li><b>[tag]</b>:  regions having the specified tag
-<li><b>/[regexp]/</b>: regions with a tag matching the specified regexp
-<li><b>child</b>: a child region (i.e. text child of another region)
-<li><b>parent</b>: a region that has a child (i.e. has a text child)
-</ul>
-In this context, a regexp is a string enclosed between "/"
-slashes.e.g., "/foo[1-4]/" will match "foo1", "foo2", "foo3", "foo4";
+The first argument is the <a href="#selectregions"><b>regions selection</b></a>.
+If not specified, it defaults to "selected" if there are selected regions,
+otherwise "all".
 
 <p>
 The opts object can contain the parameters 
@@ -3700,24 +3753,9 @@ where:
 Copy regions to a different image. If <b>to</b> is "all", then the regions are
 copied to all images.
 <p>
-If the <b>regions</b> argument is not specified, it defaults to
-"selected" if there are selected regions, otherwise "all".
-You can specify a region selector using any of the following:
-<ul>
-<li><b>all</b>: all regions not including child text regions
-<li><b>All</b>: all regions including child text regions
-<li><b>[id]</b>: a specific region id returned by <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
-<li><b>selected</b>: the selected region (or regions in a selected group)
-<li><b>[color]</b>: regions of the specified color
-<li><b>[shape]</b>: regions of the specified shape
-<li><b>[wcs]</b>:  regions whose initial wcs matches the specified wcs
-<li><b>[tag]</b>:  regions having the specified tag
-<li><b>/[regexp]/</b>: regions with a tag matching the specified regexp
-<li><b>child</b>: a child region (i.e. text child of another region)
-<li><b>parent</b>: a region that has a child (i.e. has a text child)
-</ul>
-In this context, a regexp is a string enclosed between "/"
-slashes.e.g., "/foo[1-4]/" will match "foo1", "foo2", "foo3", "foo4";
+The first argument is the <a href="#selectregions"><b>regions selection</b></a>.
+If not specified, it defaults to "selected" if there are selected regions,
+otherwise "all".
 
 <h5 id="JS9.RemoveRegions">Remove one or more regions from the region layer</h5>
 <p>
@@ -3728,24 +3766,10 @@ where:
 <li><b>regions</b>: which regions to remove
 </ul>
 The selected regions are removed.
-If the <b>regions</b> argument is not specified, it defaults to
-"selected" if there are selected regions, otherwise "all".
-You can specify a region selector using any of the following:
-<ul>
-<li><b>all</b>: all regions not including child text regions
-<li><b>All</b>: all regions including child text regions
-<li><b>[id]</b>: a specific region id returned by <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
-<li><b>selected</b>: the selected region (or regions in a selected group)
-<li><b>[color]</b>: regions of the specified color
-<li><b>[shape]</b>: regions of the specified shape
-<li><b>[wcs]</b>:  regions whose initial wcs matches the specified wcs
-<li><b>[tag]</b>:  regions having the specified tag
-<li><b>/[regexp]/</b>: regions with a tag matching the specified regexp
-<li><b>child</b>: a child region (i.e. text child of another region)
-<li><b>parent</b>: a region that has a child (i.e. has a text child)
-</ul>
-In this context, a regexp is a string enclosed between "/"
-slashes.e.g., "/foo[1-4]/" will match "foo1", "foo2", "foo3", "foo4";
+The first argument is the <a href="#selectregions"><b>regions selection</b></a>.
+If not specified, it defaults to "selected" if there are selected regions,
+otherwise "all".
+
 <p>
 If <b>JS9.globalOpts.resetEmptyShapeId</b> is set to <b>true</b> (default
 is <b>false</b>), the region id counter will be reset to 0 whenever all the
@@ -3873,22 +3897,10 @@ This routine allows you to create a group selection programmatically by
 specifying which regions make up the selection.
 
 <p>
-If the <b>regions</b> argument is not specified, it defaults to
-"selected" if there are selected regions, otherwise "all".
-You can specify a selector using any of the following:
-<ul>
-<li><b>all</b>: all regions not including child text regions
-<li><b>All</b>: all regions including child text regions
-<li><b>[id]</b>: a specific region id returned by <a href="#JS9.AddRegions"><b>JS9.AddRegions()</b></a>
-<li><b>selected</b>: the selected region (or regions in a selected group)
-<li><b>[color]</b>: regions of the specified color
-<li><b>[shape]</b>: regions of the specified shape
-<li><b>[wcs]</b>:  regions whose initial wcs matches the specified wcs
-<li><b>[tag]</b>:  regions having the specified tag
-<li><b>/[regexp]/</b>: regions with a tag matching the specified regexp
-<li><b>child</b>: a child region (i.e. text child of another region)
-<li><b>parent</b>: a region that has a child (i.e. has a text child)
-</ul>
+The first argument is the <a href="#selectregions"><b>regions selection</b></a>.
+If not specified, it defaults to "selected" if there are selected regions,
+otherwise "all". If the first argument is "reset", the current selection
+and the saved selection will be cleared.
 
 <p>
 The result of the call will be a selected group which can be moved as one unit.
@@ -3967,35 +3979,25 @@ while users can change this via the <b>Global</b> tab of the
 <h4 id="shapes">Working with Shape Layers</h4>
   
 <p>
-JS9 supports individual layers for drawing 2D graphics. The regions
-layer is a special case of a shape layer, created automatically by
-JS9. The Catalog plugin creates a separate layer for each catalog.
-You can define your own shape layer using the <b>NewShapeLayer()</b>
-call and then add geometric shapes to it.
-<p>
-Note that the
-<b><a href="#JS9.GetShapes">JS9.GetShapes()</a>,
-<a href="#JS9.ChangeShapes">JS9.ChangeShapes()</a>,
-<a href="#JS9.RemoveShapes">JS9.RemoveShapes()</a></b> 
-calls all take a shape specification as the second argument, which can
-be any of the following (in order of precedence):
-<ul>
-<li><b>all</b>: all shapes not including child text shapes
-<li><b>All</b>: all shapes including child text shapes
-<li><b>[id]</b>: a specific region id returned by <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
-<li><b>selected</b>: the selected shape (or shapes in a selected group)
-<li><b>[color]</b>: shapes of the specified color
-<li><b>[shape]</b>: shapes of the specified shape
-<li><b>[wcs]</b>:  shapes whose initial wcs matches the specified wcs
-<li><b>[tag]</b>:  shapes having the specified tag
-<li><b>/[regexp]/</b>: shapes with a tag matching the specified regexp
-<li><b>child</b>: a child shape (i.e. text child of another shape)
-<li><b>parent</b>: a shape that has a child (i.e. has a text child)
-<li><b>dcoords</b>: a shape that preserves display coordinates
-<li><b>nodcoords</b>: a shape that does not preserve display coordinates
+JS9 supports individual layers for drawing 2D graphics. The ubiquitous
+<a href="#regions">Regions</a> layer is a special case of a shape
+layer, created automatically by JS9.  The Catalog plugin creates a
+separate layer for each catalog.  You can define your own shape layer
+using the <b>NewShapeLayer()</b> call and then add geometric shapes to it.
 
-</ul>
-Thus, it is possible to act on multiple shapes at the same time.
+<p>
+One of the most important aspects of using shapes is the ability to assign
+different characteristics to shapes and then make selections based on
+these characteristics. The
+<b><a href="#JS9.ChangeShapes">JS9.ChangeShapes()</a></b>,
+<b><a href="#JS9.GetShapes">JS9.GetShapes()</a></b>,
+<b><a href="#JS9.RemoveShapes">JS9.RemoveShapes()</a></b>,
+and
+<b><a href="#JS9.SelectShapes">JS9.SelectShapes()</a></b>
+calls all take a
+<a href="#selectregions"><b>regions selection</b></a>
+as the second argument, which functions identically to the way in which
+<a href="#regions">Regions</a> selections are made.
 
 <h5 id="JS9.NewShapeLayer">Create a new shape layer</h5>
 <p>
@@ -4254,24 +4256,10 @@ where:
 <li><b>layer</b>: name of layer
 <li><b>shapes</b>: which shapes to remove
 </ul>
-The selected shapes are removed from this layer. If the <b>shapes</b>
-argument is not specified, it defaults to "all". You can specify a
-selector using any of the following:
-<ul>
-<li><b>all</b>: all shapes not including child text shapes
-<li><b>All</b>: all shapes including child text shapes
-<li><b>[id]</b>: a specific region id returned by <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
-<li><b>selected</b>: the selected shape (or shapes in a selected group)
-<li><b>[color]</b>: shapes of the specified color
-<li><b>[shape]</b>: shapes of the specified shape
-<li><b>[wcs]</b>:  shapes whose initial wcs matches the specified wcs
-<li><b>[tag]</b>:  shapes having the specified tag
-<li><b>/[regexp]/</b>: shapes with a tag matching the specified regexp
-<li><b>child</b>: a child shape (i.e. text child of another shape)
-<li><b>parent</b>: a shape that has a child (i.e. has a text child)
-</ul>
-In this context, a regexp is a string enclosed between "/"
-slashes.e.g., "/foo[1-4]/" will match "foo1", "foo2", "foo3", "foo4";
+The selected shapes are removed from the specified layer.
+The second argument is the <a href="#selectregions"><b>regions
+selection</b></a>. If not specified, it defaults to "all".
+
 <p>
 If <b>JS9.globalOpts.resetEmptyShapeId</b> is set to <b>true</b> (default
 is <b>false</b>), the shape id counter will be reset to 0 whenever all the
@@ -4319,28 +4307,15 @@ where:
 <li><b>shapes</b>: which shapes to change
 <li><b>opts</b>: object containing options to change in each shape
 </ul>
-Change one or more shapes. The opts object can contain the parameters 
-described in the
+Change one or more shapes in the specified layer. The opts object can
+contain the parameters described in the
 <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
 section. However, you cannot (yet)
 change the shape itself (e.g., from "box" to "circle".)
 
 <p>
-If the <b>shapes</b> argument is not specified, it defaults to
-"all". You can specify a selector using any of the following:
-<ul>
-<li><b>all</b>: all shapes not including child text shapes
-<li><b>All</b>: all shapes including child text shapes
-<li><b>[id]</b>: a specific region id returned by <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
-<li><b>selected</b>: the selected shape (or shapes in a selected group)
-<li><b>[color]</b>: shapes of the specified color
-<li><b>[shape]</b>: shapes of the specified shape
-<li><b>[wcs]</b>:  shapes whose initial wcs matches the specified wcs
-<li><b>[tag]</b>:  shapes having the specified tag
-<li><b>/[regexp]/</b>: shapes with a tag matching the specified regexp
-<li><b>child</b>: a child shape (i.e. text child of another shape)
-<li><b>parent</b>: a shape that has a child (i.e. has a text child)
-</ul>
+The second argument is the <a href="#selectregions"><b>regions
+selection</b></a>. If not specified, it defaults to "all".
 
 <h5 id="JS9.CopyShapes">Copy a shape layer to another image</h5>
 <p>
@@ -4376,21 +4351,8 @@ This routine allows you to create a group selection programmatically by
 specifying which shapes make up the selection.
 
 <p>
-If the <b>shapes</b> argument is not specified, it defaults to
-"all". You can specify a selector using any of the following:
-<ul>
-<li><b>all</b>: all shapes not including child text shapes
-<li><b>All</b>: all shapes including child text shapes
-<li><b>[id]</b>: a specific region id returned by <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
-<li><b>selected</b>: the selected shape (or shapes in a selected group)
-<li><b>[color]</b>: shapes of the specified color
-<li><b>[shape]</b>: shapes of the specified shape
-<li><b>[wcs]</b>:  shapes whose initial wcs matches the specified wcs
-<li><b>[tag]</b>:  shapes having the specified tag
-<li><b>/[regexp]/</b>: shapes with a tag matching the specified regexp
-<li><b>child</b>: a child shape (i.e. text child of another shape)
-<li><b>parent</b>: a shape that has a child (i.e. has a text child)
-</ul>
+The second argument is the <a href="#selectregions"><b>regions
+selection</b></a>. If not specified, it defaults to "all".
 
 <p>
 The result of the call will be a selected group which can be moved as one unit.
