@@ -3351,6 +3351,9 @@ For example:
 
     # all regions except red ones
     JS9.ChangeRegions("!red", {"color": "cyan"});
+
+    # circles having tag 'foo1' and ellipses having tag 'foo2'
+    JS9.SelectRegions("(circle && foo1) || (ellipse && foo2)");
 </pre>
 When a region selection is made using the
 <b><a href="#JS9.ChangeRegions">JS9.ChangeRegions()</a></b> or
