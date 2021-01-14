@@ -14208,7 +14208,7 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 	catch(e){
 	    JS9.error(`parsing selection filter: ${selection}`, e);
 	}
-	if( opts.setSelection ){
+	if( opts.saveselection ){
 	    this.layers[layerName].selection = selection;
 	}
 	selection = JS9.tmp.regSelect.ids;
@@ -14257,7 +14257,7 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 	// (which will change the selection into an array of region ids)
 	if( selection.match(/&|\||!/) ){
 	    selection = xparser(selection, opts);
-	} else if( opts.setSelection ){
+	} else if( opts.saveselection ){
 	    this.layers[layerName].selection = selection;
 	}
     }
@@ -14438,6 +14438,8 @@ JS9.Fabric.selectShapes = function(layerName, shape, opts){
     const arr = [];
     // get layer
     layer = this.getShapeLayer(layerName);
+    // convenience variable
+    canvas = layer.canvas;
     // sanity check
     if( !layer ){
 	return;
@@ -14445,17 +14447,18 @@ JS9.Fabric.selectShapes = function(layerName, shape, opts){
     // opts is optional
     opts = opts || {};
     // this selection is usually saved
-    if( JS9.isNull(opts.setSelection) ){ opts.setSelection = true; }
-    // convenience variable
-    canvas = layer.canvas;
-    // deselect current active object, if necessary
-    canvas.discardActiveObject();
+    if( JS9.isNull(opts.saveselection) ){ opts.saveselection = true; }
     // reset => remove selection for this layer
     if( shape === "reset" ){
-	// no last selection
+	// remove last selection
 	delete layer.selection;
-	// re-display so we don't see the old group
-	canvas.renderAll();
+	// change selection to none?
+	if( opts.activateselection !== false ){
+	    // deselect current active object, if necessary
+	    canvas.discardActiveObject();
+	    // re-display so we don't see the old group
+	    canvas.renderAll();
+	}
 	return this;
     }
     // collect the specified shapes
@@ -14464,14 +14467,19 @@ JS9.Fabric.selectShapes = function(layerName, shape, opts){
 	    arr.push(obj);
 	}
     });
-    // create selection
-    selection = new fabric.ActiveSelection(arr, {
-	canvas: canvas
-    });
-    // make this the active group selection
-    canvas.setActiveObject(selection);
-    // display the new group
-    canvas.renderAll();
+    // change selection?
+    if( opts.activateselection !== false ){
+	// deselect current active object, if necessary
+	canvas.discardActiveObject();
+	// create selection
+	selection = new fabric.ActiveSelection(arr, {
+	    canvas: canvas
+	});
+	// make this the active group selection
+	canvas.setActiveObject(selection);
+	// display the new group
+	canvas.renderAll();
+    }
     return this;
 };
 
@@ -15080,7 +15088,7 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
     // active object
     ao = canvas.getActiveObject();
     // this selection is usually saved
-    if( JS9.isNull(opts.setSelection) ){ opts.setSelection = true; }
+    if( JS9.isNull(opts.saveselection) ){ opts.saveselection = true; }
     // process the specified shapes
     this._selectShapes(layerName, shape, opts, (obj, ginfo) => {
 	// set scaling based on zoom factor
