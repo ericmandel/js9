@@ -470,6 +470,18 @@ $(this).prop('selectedIndex', 0);
 <input type="text" class="val rconfigtext_R2" name="strokeDashes" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke dash/line pattern, e.g. 3 1">
 </span>
 
+<span class="rconfigcol_R rconfigcol_R7">
+<input name="Clear" type="button" class="JS9Button2" value="Clear"
+onclick="
+const form = $(this).closest('form');
+$(form).find(`input[name='color']`).val('');
+$(form).find(`input[name='strokeWidth']`).val('');
+$(form).find(`input[name='strokeDashes']`).val('');
+// $(form).data('colorpicker', '');
+$(form).data('strokewidth', '');
+$(form).data('strokedashes', '');
+">
+</span>
 </div>
 </div>
 

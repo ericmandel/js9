@@ -17608,9 +17608,13 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	    }
 	    break;
 	case "selectfilter":
-	    if( val ){
+	    if( val && val !== $(form).data('selectfilter') ){
+		// save current filter
 		$(form).data('selectfilter', val);
+		// make selection
 		this.selectShapes(layer, val);
+		// don't do anything else when making a new filter selection
+		return;
 	    }
 	    break;
 	case "strokeDashes":
