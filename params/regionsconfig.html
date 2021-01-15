@@ -474,12 +474,12 @@ $(this).prop('selectedIndex', 0);
 <input name="Clear" type="button" class="JS9Button2" value="Clear"
 onclick="
 const form = $(this).closest('form');
-$(form).find(`input[name='color']`).val('');
-$(form).find(`input[name='strokeWidth']`).val('');
-$(form).find(`input[name='strokeDashes']`).val('');
-// $(form).data('colorpicker', '');
-$(form).data('strokewidth', '');
-$(form).data('strokedashes', '');
+form.find(`input[name='color']`).val('');
+form.find(`input[name='strokeWidth']`).val('');
+form.find(`input[name='strokeDashes']`).val('');
+// form.data('colorpicker', '');
+form.data('strokewidth', '');
+form.data('strokedashes', '');
 ">
 </span>
 </div>
