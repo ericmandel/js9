@@ -3309,22 +3309,22 @@ Of these, <b>all</b>, <b>selected</b>, <b>[color]</b>, <b>[shape]</b>, and
 possible to act on multiple regions at the same time. For example:
 <pre>
     # all currently selected regions
-    JS9.SelectRegions("selected");
+    JS9.ListRegions("selected");
 
     # all circles
     JS9.ChangeRegions("circle", {"color": "red"});
 
     # all red regions
-    JS9.SelectRegions("red");
+    JS9.GetRegions("red");
   
     # all regions with the tag 'foo1'
     JS9.ChangeRegions("foo1", {"color": "red"});
   
     # all regions with a tag matching the regular expression foo.*
-    JS9.SelectRegions("/foo.*/");
+    JS9.ListRegions("/foo.*/");
 
     # region with id 7
-    JS9.ChangeRegions(7, {"color": "red"});
+    JS9.SelectRegions(7, {"color": "red"});
 </pre>
 In addition, you can combine selections using the boolean operators,
 with the usual precedence and associativity rules holding sway:
@@ -3341,7 +3341,7 @@ For example:
     JS9.ChangeRegions("circle || ellipse", {"color": "red"});
 
     # circles or red regions
-    JS9.SelectRegions("circle || red");
+    JS9.ListRegions("circle || red");
 
     # circles having tag 'foo1'
     JS9.ChangeRegions("circle && foo1", {"color": "red"});
@@ -3353,7 +3353,7 @@ For example:
     JS9.ChangeRegions("!red", {"color": "cyan"});
 
     # circles having tag 'foo1' and ellipses having tag 'foo2'
-    JS9.SelectRegions("(circle && foo1) || (ellipse && foo2)");
+    JS9.GetRegions("(circle && foo1) || (ellipse && foo2)");
 </pre>
 When a region selection is made using the
 <b><a href="#JS9.ChangeRegions">JS9.ChangeRegions()</a></b> or
@@ -3379,6 +3379,9 @@ or directly in the selection string:
 
     # select saved regions if they are ellipses that have a "foo1" tag
     JS9.SelectRegions("saved && ellipse && foo1")
+
+    # retrieve currently saved regions
+    JS9.ListRegions('saved')
 </pre>
 Calling <b><a href="#JS9.SelectRegions">JS9.SelectRegions("reset")</a></b>
 will clear the saved selection.
