@@ -14448,6 +14448,8 @@ JS9.Fabric.selectShapes = function(layerName, shape, opts){
     opts = opts || {};
     // this selection is usually saved
     if( JS9.isNull(opts.saveselection) ){ opts.saveselection = true; }
+    // shape defaults to "all"
+    shape = shape || "all";
     // reset => remove selection for this layer
     if( shape === "reset" ){
 	// remove last selection
@@ -14483,6 +14485,24 @@ JS9.Fabric.selectShapes = function(layerName, shape, opts){
     return this;
 };
 
+// remove shapes from a group selection
+// call using image context
+// eslint-disable-next-line no-unused-vars
+JS9.Fabric.unselectShapes = function(layerName, shape, opts){
+    let layer, unshape, selection;
+    layer = this.getShapeLayer(layerName);
+    // sanity checks
+    if( !layer || !this.layers[layerName] ){
+	return;
+    }
+    // default is to unselect everything
+    if( !shape || shape === "all" || shape === "selected" ){
+	return this.selectShapes(layerName, "reset");
+    }
+    selection = this.layers[layerName].selection || "selected";
+    unshape = `${selection} && !(${shape})`;
+    return this.selectShapes(layerName, unshape, opts);
+};
 
 // update public object in shapes
 // call using image context
@@ -15945,6 +15965,7 @@ JS9.Fabric.initGraphics = function(){
     JS9.Image.prototype.refreshShapes = JS9.Fabric.refreshShapes;
     JS9.Image.prototype.copyShapes = JS9.Fabric.copyShapes;
     JS9.Image.prototype.selectShapes = JS9.Fabric.selectShapes;
+    JS9.Image.prototype.unselectShapes = JS9.Fabric.unselectShapes;
     // shape layer methods
     JS9.Image.prototype.getShapeLayer = JS9.Fabric.getShapeLayer;
     JS9.Image.prototype.showShapeLayer = JS9.Fabric.showShapeLayer;
@@ -24583,6 +24604,7 @@ JS9.mkPublic("GetShapes", "getShapes");
 JS9.mkPublic("ChangeShapes", "changeShapes");
 JS9.mkPublic("CopyShapes", "copyShapes");
 JS9.mkPublic("SelectShapes", "selectShapes");
+JS9.mkPublic("UnselectShapes", "unselectShapes");
 JS9.mkPublic("DisplayCoordGrid", "displayCoordGrid");
 JS9.mkPublic("Print", "print");
 JS9.mkPublic("SavePNG", "savePNG");
@@ -26367,6 +26389,20 @@ JS9.mkPublic("SelectRegions", function(...args){
     opts = obj.argv[1];
     if( im ){
 	return im.selectShapes("regions", region, opts);
+    }
+    return null;
+});
+
+// unselect one or more regions
+// eslint-disable-next-line no-unused-vars
+JS9.mkPublic("UnselectRegions", function(...args){
+    let region, opts;
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    region = obj.argv[0];
+    opts = obj.argv[1];
+    if( im ){
+	return im.unselectShapes("regions", region, opts);
     }
     return null;
 });
