@@ -6,7 +6,7 @@
 %%
 
 \s+                   /* skip whitespace */
-[a-zA-Z0-9_]+         return 'WORD'
+[a-zA-Z0-9_@#%^;:.*+/-]+     return 'WORD'
 \"([^"]*)\"           return 'DSTRING'
 \'([^']*)\'           return 'SSTRING'
 \/([^\/]*)\/          return 'REGEXP'
