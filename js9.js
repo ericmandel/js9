@@ -154,9 +154,11 @@ JS9.globalOpts = {
     regSaveFormat: "reg",	// def format for saving regions (reg,cvs,svg)
     regSaveWhich1: "all",	// def 'which' for saving regions (all,selected)
     regSaveWhich2: "selected",	// def 'which' for saving in configure dialog
-    regMenuCreate: true,	// menu select a region creates it immediately>
+    regMenuCreate: true,	// menu select a region creates it immediately
     regMenuSelection: "circle",	// region selected during last menu select
     regToClipboard: false,	// copy all region changes to pseudo-clipboard?
+    regGroupConflict: "skip",	// group conflicts: error or skip
+    regConfigAddParens: true,	// does the reg configure gui try to add parens?
     regDisplay: "lightwin",	// "lightwin" or "display"
     reConfigSize: "medium",	// "small", "medium"
     htimeout:  10000,		// connection timeout for the helper connect
@@ -3476,7 +3478,7 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error(`can't parse refresh opts: ${opts}`, e); }
+	catch(e){ JS9.error(`can't parse refreshImage opts: ${opts}`, e); }
     }
     // no obj or obj is a string, this is a load with refresh turned on
     if( !obj || typeof obj === "string" ){
@@ -3895,7 +3897,7 @@ JS9.Image.prototype.displaySection = function(opts, func){
 	return;
     } else if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error(`can't parse section opts: ${opts}`, e); }
+	catch(e){ JS9.error(`can't parse displaySection opts: ${opts}`, e); }
     }
     if( opts.separate ){
 	// if we are generating a separate image, copy the hdu
@@ -4187,7 +4189,7 @@ JS9.Image.prototype.displayExtension = function(extid, opts, func){
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error(`can't parse extension opts: ${opts}`, e); }
+	catch(e){ JS9.error(`can't parse displayExtension opts: ${opts}`, e); }
     }
     opts.waiting = false;
     // only makes sense if we have hdus
@@ -4273,7 +4275,7 @@ JS9.Image.prototype.displaySlice = function(slice, opts, func){
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error(`can't parse slice opts: ${opts}`, e); }
+	catch(e){ JS9.error(`can't parse displaySlice opts: ${opts}`, e); }
     }
     opts.waiting = false;
     // sanity check
@@ -4978,7 +4980,7 @@ JS9.Image.prototype.setRotate = function(...args){
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error(`can't parse rot opts: ${opts}`, e); }
+	catch(e){ JS9.error(`can't parse setRotate opts: ${opts}`, e); }
     }
     // save this routine so it can be reconstituted in a restored session
     this.xeqStashSave("setRotate", [rot]);
@@ -6056,7 +6058,7 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error(`can't parse analysis opts: ${opts}`, e); }
+	catch(e){ JS9.error(`can't parse runAnalysis opts: ${opts}`, e); }
     }
     // func can be passed, or it can be global
     func = func || JS9.globalOpts.analysisFunc;
@@ -6286,7 +6288,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error(`can't parse display opts: ${opts}`, e); }
+	catch(e){ JS9.error(`can't parse displayAnalysis opts: ${opts}`, e); }
     }
     // window format ...
     winFormat = opts.winformat;
@@ -10585,6 +10587,11 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	return this;
     }
     opts = opts || {};
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error(`can't parse resize opts: ${opts}`, e); }
+    }
     // get resize parameters relative to current display
     nwidth = width;
     nheight = height;
@@ -11290,6 +11297,11 @@ JS9.Display.prototype.loadSession = function(file, opts){
     };
     // opts is optional
     opts = opts || {};
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error(`can't parse loadSession opts: ${opts}`, e); }
+    }
     // change the cursor to show the waiting status
     JS9.waiting(true, this);
     if( typeof file === "object" ){
@@ -11384,6 +11396,11 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
     };
     // opts is optional
     opts = opts || {};
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error(`can't parse createMosaic opts: ${opts}`, e); }
+    }
     // reduce can be taken from the global value
     opts.reduce = opts.reduce || JS9.globalOpts.reduceMosaic;
     // same for reduction dims
@@ -12306,11 +12323,35 @@ fabric.Object.prototype.rescaleEvenly = JS9.Fabric.rescaleEvenly;
 JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
     let id, dlayer;
     const display = this;
+    const shupdate = (obj, s) => {
+	let i, o, objs;
+	let im = dlayer.display.image;
+	let ao = dlayer.canvas.getActiveObject();
+	let opts = {};
+	// sanity check
+	if( !im ){ return; }
+	if( obj.params ){
+	    if( ao.type === "activeSelection" ){
+		opts.group = ao;
+	    }
+	    im._updateShape(layerName, obj, opts, s);
+	} else if( (obj.type === "activeSelection")      ||
+		   (obj.type === "group" && !obj.params) ){
+	    objs = obj.getObjects();
+	    for(i=0; i<objs.length; i++){
+		o = objs[i];
+		if( o.params ){
+		    opts.group = obj;
+		    im._updateShape(layerName, o, opts, s);
+		}
+	    }
+	}
+    };
     const seldialog = (setmode) => {
 	// sanity check
-	if( !this.image ){ return; }
+	if( !display.image ){ return; }
 	// update multiselect dialog box for this image, if necessary
-	this.image._updateMultiDialogs(setmode);
+	dlayer.display.image._updateMultiDialogs(setmode);
     }
     const seloff = (dlayer, obj) => {
 	// reset currently selected
@@ -12332,25 +12373,21 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 		break;
 	    }
 	    // region updates
-	    if( dlayer.display.image && obj.type !== "activeSelection" ){
-		dlayer.display.image.updateShapes(layerName, obj, "unselect");
-	    }
+	    shupdate(obj, "unselect");
+	    // update multi-select dialog
+	    seldialog(-1);
 	}
     };
     // eslint-disable-next-line no-unused-vars
     const selmultioff = (dlayer, activeObject, opts) => {
-	let i, obj;
-	const activeObjects = dlayer.canvas.getActiveObjects();
-	for(i=0; i<activeObjects.length; i++){
-	    obj = activeObjects[i];
+	let i, obj, aobjects;
+	aobjects = dlayer.canvas.getActiveObjects();
+	for(i=0; i<aobjects.length; i++){
+	    obj = aobjects[i];
 	    seloff(dlayer, obj);
 	}
-	// redraw everything
-	// renderAll() throws an error, might be related to:
-	// http://fabricjs.com/v2-breaking-changes-2
-	// dlayer.canvas.renderAll();
 	// update multi-select dialog
-	seldialog(opts.e ? -1 : 0);
+	seldialog(-1);
     };
     const selon = (dlayer, obj) => {
 	// turn off previous selection, if necessary
@@ -12378,32 +12415,33 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 		dlayer.params.sel = obj;
 	    }
 	    // region updates
-	    if( dlayer.display.image && obj.type !== "activeSelection" ){
-		dlayer.display.image.updateShapes(layerName, obj, "select");
-	    }
+	    shupdate(obj, "select");
 	    // update multi-select dialog
 	    seldialog(1);
 	}
     };
     // eslint-disable-next-line no-unused-vars
     const selmultion = (dlayer, activeObject, opts) => {
-	let i, j, obj, parent, child;
-	const activeObjects = dlayer.canvas.getActiveObjects();
-	for(i=0; i<activeObjects.length; i++){
-	    obj = activeObjects[i];
-	    if( !obj.params ){ continue; }
+	let i, j, obj, parent, child, objs;
+	// turn off previous selection, if necessary
+	if( dlayer.params.sel && (dlayer.params.sel !== activeObject) ){
+	    seloff(dlayer, dlayer.params.sel);
+	}
+	objs = dlayer.canvas.getActiveObjects();
+	for(i=0; i<objs.length; i++){
+	    obj = objs[i];
 	    // add parent, if not already added
-	    if( obj.params.parent && obj.params.parent.obj ){
+	    if( obj.params && obj.params.parent && obj.params.parent.obj ){
 		parent = obj.params.parent.obj;
-		if( $.inArray(parent, activeObjects) < 0 ){
+		if( $.inArray(parent, objs) < 0 ){
 		    activeObject.addWithUpdate(parent);
 		}
 	    }
 	    // add children, if not already added
-	    if( obj.params.children ){
+	    if( obj.params && obj.params.children ){
 		for(j=0; j<obj.params.children.length; j++){
 		    child = obj.params.children[j].obj;
-		    if( $.inArray(child, activeObjects) < 0 ){
+		    if( $.inArray(child, objs) < 0 ){
 			activeObject.addWithUpdate(child);
 		    }
 		}
@@ -12411,13 +12449,12 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    switch(obj.type){
 	    case "polyline":
 	    case "polygon":
-		JS9.Fabric.removePolygonAnchors(dlayer, obj);
+		if( obj.params ){
+		    JS9.Fabric.removePolygonAnchors(dlayer, obj);
+		}
 		break;
 	    }
-	    // plugin callbacks
-	    if( obj && dlayer.display.image ){
-		dlayer.display.image.updateShapes(layerName, obj, "select");
-	    }
+	    shupdate(obj, "select");
 	}
 	// redraw everything
 	dlayer.canvas.renderAll();
@@ -12620,6 +12657,16 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 		}
 	    });
 	}
+	if( dlayer.opts.onmousedblclick ){
+	    dlayer.canvas.on("mouse:dblclick", (opts) => {
+		if( dlayer.display.image && opts.target ){
+		    dlayer.opts.onmousedblclick.call(dlayer.canvas,
+						     dlayer.display.image,
+						     opts.target.pub,
+						     opts.e, opts.target);
+		}
+	    });
+	}
 	if( dlayer.opts.tooltip ){
 	    dlayer.canvas.on("mouse:over", (opts) => {
 		if( dlayer.display.image && opts.target ){
@@ -12696,13 +12743,8 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 		    return;
 		}
 		if( o.intersectsWithObject(obj) ){
-		    if( fabric.major_version === 1 ){
-			myWidth = obj.getWidth();
-			myHeight = obj.getHeight();
-		    } else {
-			myWidth = obj.getScaledWidth();
-			myHeight = obj.getScaledHeight();
-		    }
+		    myWidth = obj.getScaledWidth();
+		    myHeight = obj.getScaledHeight();
 		    objs.push({obj: obj, siz: myWidth * myHeight});
 		}
 	    });
@@ -12710,13 +12752,8 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    if( !objs.length ){
 		return;
 	    }
-	    if( fabric.major_version === 1 ){
-		myWidth = o.getWidth();
-		myHeight = o.getHeight();
-	    } else {
-		myWidth = o.getScaledWidth();
-		myHeight = o.getScaledHeight();
-	    }
+	    myWidth = o.getScaledWidth();
+	    myHeight = o.getScaledHeight();
 	    // add current shape to array
 	    objs.push({obj: o, siz: myWidth * myHeight});
 	    // sort in order of increasing size
@@ -12760,46 +12797,49 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	o = opts.target;
 	JS9.Fabric.updateChildren(dlayer, o, "rotating");
     });
-    if( fabric.major_version === 1 ){
-	// object selected: add anchors to polygon
-	dlayer.canvas.on("object:selected", (opts) => {
-	    // sanity check
-	    if( !opts.target ){ return; }
-	    selon(dlayer, opts.target);
-	});
-	// selection cleared
-	dlayer.canvas.on("before:selection:cleared", (opts) => {
-	    // sanity check
-	    if( !opts.target ){ return; }
-	    seloff(dlayer, opts.target);
-	});
-    } else {
-	// selection created: add anchors to polygon
-	dlayer.canvas.on("selection:created", (opts) => {
-	    // sanity check
-	    if( !opts.target ){	return; }
-	    selon(dlayer, opts.target);
-	});
-	// selection updated (adding a region to the current selection):
-	// add anchors to polygon
-	dlayer.canvas.on("selection:updated", (opts) => {
-	    const activeObject = dlayer.canvas.getActiveObject();
-	    if( activeObject.type === "activeSelection" ){
-		selmultion(dlayer, activeObject, opts);
-	    } else {
-		selon(dlayer, activeObject);
-	    }
-	});
-	// selection cleared
-	dlayer.canvas.on("before:selection:cleared", (opts) => {
-	    const activeObject = dlayer.canvas.getActiveObject();
-	    if( activeObject.type === "activeSelection" ){
-		selmultioff(dlayer, activeObject, opts);
-	    } else {
-		seloff(dlayer, activeObject);
-	    }
-	});
-    }
+    // selection created: add anchors to polygon
+    dlayer.canvas.on("selection:created", (opts) => {
+	let obj;
+	// sanity check
+	if( !opts.target ){	return; }
+	if( JS9.globalOpts.skipSelectionProcessing ){ return; }
+	obj = opts.target;
+	if(  obj.type === "activeSelection"      ||
+	     (obj.type === "group" && !obj.params) ){
+	    selmultion(dlayer, obj, opts);
+	} else {
+	    selon(dlayer, obj);
+	}
+    });
+    // selection updated (adding a region to the current selection):
+    // add anchors to polygon
+    dlayer.canvas.on("selection:updated", (opts) => {
+	let obj;
+	// sanity check
+	if( !opts.target ){	return; }
+	if( JS9.globalOpts.skipSelectionProcessing ){ return; }
+	obj = opts.target;
+	if( obj.type === "activeSelection"       ||
+	    (obj.type === "group" && !obj.params) ){
+	    selmultion(dlayer, obj, opts);
+	} else {
+	    selon(dlayer, obj);
+	}
+    });
+    // selection cleared
+    dlayer.canvas.on("before:selection:cleared", (opts) => {
+	let obj;
+	// sanity check
+	if( !opts.target ){	return; }
+	if( JS9.globalOpts.skipSelectionProcessing ){ return; }
+	obj = opts.target;
+	if(  obj.type === "activeSelection"      ||
+	     (obj.type === "group" && !obj.params) ){
+	    selmultioff(dlayer, obj, opts);
+	} else {
+	    seloff(dlayer, obj);
+	}
+    });
     // if canvas moves (e.g. light window), calcOffset must be called ...
     // there is no good cross-browser way to track an element changing,
     // (advice is to set a timer!) so we just check when the mouse enters the
@@ -12832,6 +12872,11 @@ JS9.Fabric.showShapeLayer = function(layerName, mode, opts){
     }
     // opts is optional
     opts = opts || {};
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error(`can't parse showShapeLayer opts: ${opts}`, e); }
+    }
     canvas = layer.canvas;
     dlayer = this.display.layers[layerName];
     // no args: return show mode
@@ -12888,7 +12933,9 @@ JS9.Fabric.showShapeLayer = function(layerName, mode, opts){
 				if( obj ){
 				    JS9.Fabric.removePolygonAnchors(tdlayer,
 								    obj);
-				    tdlayer.canvas.discardActiveObject();
+				    if( tdlayer.canvas.getActiveObject() ){
+					tdlayer.canvas.discardActiveObject();
+				    }
 				}
 			    }
 			}
@@ -12918,7 +12965,7 @@ JS9.Fabric.showShapeLayer = function(layerName, mode, opts){
 	// save and hide layer
 	if( layer.show ){
 	    // can't use forEachObject, which loops in ascending order,
-	    // because removing anchors changes the array destructively!
+	    // because removing anchors changes the array destructively
 	    objects = canvas.getObjects();
 	    olen = objects.length;
 	    while( olen-- ){
@@ -13666,6 +13713,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    case "lineHeight":
 	    case "textBackgroundColor":
 	    case "textOpts":
+	    case "groupid":
 		nopts[key] = opts[key];
 		break;
 	    case "shape":
@@ -13743,6 +13791,7 @@ JS9.Fabric._exportShapeOptions = function(opts){
 	case "left":
 	case "width":
 	case "height":
+	case "radii":
 	case "radius":
 	case "rx":
 	case "ry":
@@ -13876,10 +13925,11 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 // call using image context
 JS9.Fabric.addShapes = function(layerName, shape, myopts){
     let i, sobj, sarr, carr, ns, s, bopts, opts, layer, canvas, dlayer;
-    let zoom, ttop, tleft, tangle, w2, h2;
+    let zoom, ttop, tleft, tangle, w2, h2, key;
     let params = {};
     let rarr = [], parr = [];
     const objs = [];
+    const grp = {};
     // is this core service disabled?
     if( $.inArray("regions", this.params.disable) >= 0 &&
 	layerName === "regions" ){
@@ -14167,6 +14217,18 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	}
 	// save public object in object array, might be needed in return
 	objs.push(s);
+	// save grouped objects
+	if( opts.groupid ){
+	    grp[opts.groupid] = grp[opts.groupid] || [];
+	    grp[opts.groupid].push(s);
+	}
+    }
+    // construct groups, if necessary
+    for( key in grp ){
+	if( grp.hasOwnProperty(key) ){
+	    this.groupShapes(layerName, grp[key],
+			     {groupid: key, select: false});
+	}
     }
     // redraw (unless explicitly specified otherwise)
     if( (params.redraw === undefined) || params.redraw ){
@@ -14184,11 +14246,50 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
     return params.id;
 };
 
+// call regSelect parser on a selection
+// call using image context
+JS9.Fabric._parseShapes = function(layerName, selection, opts){
+    let canvas;
+    // sanity check
+    if( !this.layers || !layerName || !this.layers[layerName] ){
+	return null;
+    }
+    // convenience variable(s)
+    canvas = this.layers[layerName].canvas;
+    // opts is optional
+    opts = opts || {};
+    // NB: the JS9.tmp.regSelect values are used directly in the parser
+    JS9.tmp.regSelect = { layer: layerName, im: this, all: [] };
+    canvas.getObjects().forEach( (o) => {
+	let groupid;
+	if( o.params ){
+	    JS9.tmp.regSelect.all.push(o.params.id);
+	} else if( o.type === "group" ){
+	    groupid = this.lookupGroup(o);
+	    if( groupid ){
+		JS9.tmp.regSelect.all.push(groupid);
+	    }
+	}
+    });
+    try{
+	regSelect.parse(selection);
+    }
+    catch(e){
+	JS9.error(`parsing selection filter: ${selection}`, e);
+    }
+    if( opts && opts.saveselection ){
+	this.layers[layerName].selection = selection;
+    }
+    selection = JS9.tmp.regSelect.ids;
+    delete JS9.tmp.regSelect;
+    return selection;
+};
+
 // select one of more shapes by id or tag and execute a callback
 // call using image context
 JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
-    let i, j, objects, olen, aobjects, alen;
-    let id, group, ginfo, canvas, ocolor, tag, obj;
+    let i, j, objects, olen, aobjects, alen, groups;
+    let id, ginfo, canvas, ocolor, tag, obj;
     const used = [];
     const xcb = (obj, ginfo) => {
 	if( $.inArray(obj, used) < 0 ){
@@ -14196,25 +14297,71 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 	    used.push(obj);
 	}
     }
-    const xparser = (selection, opts) => {
-	// NB: the JS9.tmp.regSelect values are used directly in the parser
-	JS9.tmp.regSelect = { layer: layerName, im: this, all: [] };
-	canvas.getObjects().forEach( (o) => {
-	    if( o.params ){ JS9.tmp.regSelect.all.push(o.params.id); }
-	});
-	try{
-	    regSelect.parse(selection);
+    const getshapes = (objects) => {
+	let got, obj, olen;
+	// sanity check
+	if( !objects ){ return []; }
+	// get objects, including objects inside groups, which themselves
+	// can be within groups ... (hence the do/while loop)
+	olen = objects.length;
+	do{
+	    got = 0
+	    while( olen-- ){
+		obj = objects[olen];
+		// replace group with objects inside the group
+		if( obj.type === "group" && !obj.params ){
+		    objects.splice(olen, 1, ...obj.getObjects());
+		    got++;
+		}
+	    }
+	    olen = objects.length;
+	} while( got );
+	return objects;
+    };
+    const getgroups = (canvas, objects) => {
+	let i, j, obj, grp, olen, ao;
+	let groups = [];
+	olen = objects.length;
+	for(i=0; i<olen; i++){
+	    obj = objects[i];
+	    for(j=0; j<olen; j++){
+		grp = objects[j];
+		if( (grp.type === "activeSelection")      ||
+		    (grp.type === "group" && !grp.params) ){
+		   if( grp.contains(obj) ){
+		       groups[i] = grp;
+		   }
+		}
+	    }
+	    if( !groups[i] ){
+		ao = canvas.getActiveObject();
+		if( ao ){
+		    if( (ao.type === "activeSelection")      ||
+			(ao.type === "group" && !ao.params) ){
+			if( ao.contains(obj) ){
+			    groups[i] = ao;
+			}
+		    }
+		}
+	    }
 	}
-	catch(e){
-	    JS9.error(`parsing selection filter: ${selection}`, e);
+	return groups;
+    };
+    const lookupgroup = (obj) => {
+	let i, tobj;
+	for(i=0; i<objects.length; i++){
+	    tobj = objects[i];
+	    if( (tobj.type === "activeSelection")       ||
+		(tobj.type === "group" && !tobj.params) ){
+		if( tobj.contains(obj) ){
+		    return tobj;
+		}
+	    } else if( tobj.params && tobj === obj ){
+		return groups[i];
+	    }
 	}
-	if( opts.saveselection ){
-	    this.layers[layerName].selection = selection;
-	}
-	selection = JS9.tmp.regSelect.ids;
-	delete JS9.tmp.regSelect;
-	return selection;
-   };
+	return null;
+    };
     // sanity check
     if( !this.layers || !layerName || !this.layers[layerName] ){
 	return null;
@@ -14256,7 +14403,7 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 	// boolean selection is passed through the regSelect parser
 	// (which will change the selection into an array of region ids)
 	if( selection.match(/&|\||!/) ){
-	    selection = xparser(selection, opts);
+	    selection = this._parseShapes(layerName, selection, opts);
 	} else if( opts.saveselection ){
 	    this.layers[layerName].selection = selection;
 	}
@@ -14271,20 +14418,8 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 	// list of objects
 	objects = canvas.getObjects();
 	olen = objects.length;
-	// list of active objects
-	aobjects = canvas.getActiveObjects();
-	alen = aobjects.length;
-	// see if we have an active group
-	if( fabric.major_version === 1 ){
-	    group = canvas.getActiveGroup();
-	} else {
-	    obj = canvas.getActiveObject();
-	    if( obj && obj.type === "activeSelection" ){
-		group = obj;
-	    } else {
-		group = null;
-	    }
-	}
+	// list of groups for each object
+	groups = getgroups(canvas, objects);
 	// this selection
 	id = selection[j];
 	// if id is a positive int in string format, convert it to it now
@@ -14297,23 +14432,22 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 	// select on the id
 	switch( typeof id ){
 	case "object":
-	    if( id.params ){
-		if( group && group.contains(id) ){
-	            ginfo.group = group;
+	    while( olen-- ){
+		obj = objects[olen];
+		if( obj === id ){
+		    ginfo.group = groups[olen];
+		    xcb(obj, ginfo);
+		    break;
 		}
-		xcb(id, ginfo);
 	    }
 	    break;
 	case "number":
 	    while( olen-- ){
 		obj = objects[olen];
 		if( obj.params && (id === obj.params.id) ){
-		    if( group && group.contains(obj) ){
-			ginfo.group = group;
-		    } else {
-			ginfo.group = null;
-		    }
+		    ginfo.group = groups[olen];
 		    xcb(obj, ginfo);
+		    break;
 		}
 	    }
 	    break;
@@ -14321,40 +14455,56 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 	    // string id can be a region tag, color, shape, or tag
 	    // look for id in various ways
             if( id === "selected" ){
-		if( fabric.major_version === 1 ){
-		    if( canvas.getActiveObject() ){
-			// make sure its a region
-			obj = canvas.getActiveObject();
-			if( obj.params ){
-			    ginfo.group = null;
-			    // selected object
-			    xcb(obj, ginfo);
-			}
-		    } else if( group ){
-			ginfo.group = group;
-			while( olen-- ){
-			    obj = objects[olen];
-			    // don't process shapes with parents in a group
-			    if( obj.params && !obj.params.parent ){
-				xcb(obj, ginfo);
-			    }
-			}
-		    }
-		} else {
-		    ginfo.group = group;
-		    while( alen-- ){
-			obj = aobjects[alen];
-			// don't process shapes with parents in a group
-			if( obj.params && !obj.params.parent ){
-			    xcb(obj, ginfo);
-			}
+		// list of active objects
+		aobjects = getshapes(canvas.getActiveObjects());
+		alen = aobjects.length;
+		// process all active objects
+		while( alen-- ){
+		    obj = aobjects[alen];
+		    // find the group for this object
+		    ginfo.group = lookupgroup(obj);
+		    // don't process shapes with parents in a group
+		    if( obj.params && !obj.params.parent ){
+			xcb(obj, ginfo);
 		    }
 		}
 	    } else {
 		// can't use forEachObject, which loops in ascending order,
-		// because a "remove" cb changes the array destructively!
+		// because a "remove" cb changes the array destructively
 		while( olen-- ){
 		    obj = objects[olen];
+		    // groups are handled specially: they have no params obj
+		    // but when matching the group itself, we execute the
+		    // callback on each object within the group
+		    if( obj.type === "group" && !obj.params ){
+			if( id === this.lookupGroup(obj) ||
+			    id.toLowerCase() === "all"   ){
+			    ginfo.group = obj;
+			    if( opts.transparentgroup !== false ){
+				// usual case: process each object in the group
+				obj.forEachObject((o) => {
+				    // but no text children
+				    if( o.params && !o.params.parent ){
+					xcb(o, ginfo);
+				    }
+				});
+			    } else {
+				// dangerous case: pass the group object
+				// you'd better know what you are doing!
+				xcb(obj, ginfo);
+			    }
+			} else {
+			    // for some types of selections, we do need to
+			    // look inside the group
+			    obj.forEachObject((o) => {
+				if( o.params && id === o.params.file ){
+				    xcb(o, ginfo);
+				}
+			    });
+			}
+			// that's the entirety of processing we do on a group
+			continue;
+		    }
 		    // make sure its a valid region
 		    if( !obj.params ){ continue; }
 		    // convenience variables
@@ -14368,11 +14518,7 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 			continue;
 		    }
 		    // set group info
-		    if( group && group.contains(obj) ){
-			ginfo.group = group;
-		    } else {
-			ginfo.group = null;
-		    }
+		    ginfo.group = groups[olen];
 		    // try to match this id in various ways
 		    if( id.toLowerCase() === "all" ){
 			// all
@@ -14446,6 +14592,13 @@ JS9.Fabric.selectShapes = function(layerName, shape, opts){
     }
     // opts is optional
     opts = opts || {};
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error(`can't parse selectShapes opts: ${opts}`, e); }
+    }
+    // we want to be able to select entire groups, not the underlying shapes
+    if( JS9.isNull(opts.transparentgroup) ){ opts.transparentgroup = false; }
     // this selection is usually saved
     if( JS9.isNull(opts.saveselection) ){ opts.saveselection = true; }
     // shape defaults to "all"
@@ -14457,7 +14610,9 @@ JS9.Fabric.selectShapes = function(layerName, shape, opts){
 	// change selection to none?
 	if( opts.activateselection !== false ){
 	    // deselect current active object, if necessary
-	    canvas.discardActiveObject();
+	    if( canvas.getActiveObject() ){
+		canvas.discardActiveObject();
+	    }
 	    // re-display so we don't see the old group
 	    canvas.renderAll();
 	}
@@ -14465,14 +14620,16 @@ JS9.Fabric.selectShapes = function(layerName, shape, opts){
     }
     // collect the specified shapes
     this._selectShapes(layerName, shape, opts, (obj) => {
-	if( $.inArray(obj, arr) < 0 ){
+	// only select once, don't select shapes in groups
+	if( $.inArray(obj, arr) < 0 && (!obj.params || !obj.params.groupid) ){
 	    arr.push(obj);
 	}
     });
-    // change selection?
-    if( opts.activateselection !== false ){
+    if( arr && arr.length ){
 	// deselect current active object, if necessary
-	canvas.discardActiveObject();
+	if( canvas.getActiveObject() ){
+	    canvas.discardActiveObject();
+	}
 	// create selection
 	selection = new fabric.ActiveSelection(arr, {
 	    canvas: canvas
@@ -14523,7 +14680,9 @@ JS9.Fabric._updateMultiDialogs = function(setmode){
 	const winid = $(element).data("winid");
 	const im = $(element).data("im");
 	if(  multi && winid && im === this ){
-	    im.initRegionsForm(null, {winid, multi, setmode});
+	    if( im.tmp.updateMulti !== false ){
+		im.initRegionsForm(null, {winid, multi, setmode});
+	    }
 	}
     });
 };
@@ -14533,7 +14692,7 @@ JS9.Fabric._updateMultiDialogs = function(setmode){
 JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     let i, xname, s, scalex, scaley, px, py, tval1, tval2, angstr;
     let bin, zoom, tstr, dpos, gpos, ipos, npos, objs, olen, radius, oangle;
-    let opos, dist, txeq, owcssys, imforce;
+    let opos, dist, txeq, owcssys, imforce, agroup, apos;
     const pub ={};
     const layer = this.layers[layerName];
     const moderexp = /^(child||export|unexport|move|mouseout)$/;
@@ -14602,6 +14761,10 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    }
 	}
     };
+    // sanity check
+    if( !obj || !obj.params ){
+	return;
+    }
     ginfo = ginfo || {};
     opts = opts || {};
     mode = mode || "update";
@@ -14615,6 +14778,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     // fill in the blanks
     pub.mode = mode;
     pub.id = obj.params.id;
+    pub.groupid = obj.params.groupid;
     pub.shape = obj.params.shape;
     pub.layer = layerName;
     pub.color = obj.color || obj.stroke;
@@ -14638,10 +14802,33 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	// in a group, the display pos is relative to group pos,
 	// so we need to add them together
 	gpos = ginfo.group.getCenterPoint();
-	dpos = {x: dpos.x + gpos.x, y: dpos.y + gpos.y};
+	dpos = {x: gpos.x + (dpos.x * ginfo.group.scaleX),
+		y: gpos.y + (dpos.y * ginfo.group.scaleY)};
 	// also need to rotate the position by the group angle
 	if( ginfo.group.angle ){
 	    dpos = JS9.rotatePoint(dpos, ginfo.group.angle, gpos);
+	}
+	// is the group contained in an active selection??
+	if( ginfo.group.type !== "activeSelection" ){
+	    agroup = layer.canvas.getActiveObject();
+	    if( agroup && agroup.type === "activeSelection" ){
+		objs = agroup.getObjects();
+		olen = objs.length;
+		for(i=0; i<olen; i++){
+		    if( objs[i] === ginfo.group ){
+			apos = agroup.getCenterPoint();
+			break;
+		    }
+		}
+	    }
+	    if( !apos ){ agroup = null; }
+	    if( agroup ){
+		dpos = {x: apos.x + (dpos.x * agroup.scaleX),
+			y: apos.y + (dpos.y * agroup.scaleY)};
+		if( agroup.angle ){
+		    dpos = JS9.rotatePoint(dpos, agroup.angle, apos);
+		}
+	    }
 	}
     }
     // display position
@@ -14680,6 +14867,9 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     // remove group angle
     if( ginfo.group ){
 	pub.angle -= ginfo.group.angle;
+    }
+    if( agroup ){
+	pub.angle -= agroup.angle;
     }
     // save pure fabric angle angle
     oangle = pub.angle;
@@ -14952,12 +15142,243 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     return pub;
 };
 
+// lookup a group, either by name or by object
+// groupObj = this.lookupGroup(groupID)
+// groupID  = this.lookupGroup(groupObj)
+JS9.Fabric.lookupGroup = function(group, layerName){
+    let i, j, objs, obj, sobjs, sobj, layer, canvas;
+    layerName = layerName||"regions";
+    layer = this.getShapeLayer(layerName);
+    // sanity check
+    if( !layer ){
+	return null;
+    }
+    canvas = this.layers[layerName].canvas;
+    if( typeof group === "string" ){
+	objs = canvas.getObjects();
+	for(i=0; i<objs.length; i++){
+	    obj = objs[i];
+	    if( obj.type === "group" && !obj.params ){
+		sobjs = obj.getObjects();
+		for(j=0; j<sobjs.length; j++){
+		    sobj = sobjs[j];
+		    if( sobj.params && sobj.params.groupid === group ){
+			return obj;
+		    }
+		}
+	    }
+	}
+    } else if( typeof group === "object" &&
+	       group.type === "group"    &&
+	       !group.params             ){
+	objs = group.getObjects();
+	if( objs && objs.length && objs[0] && objs[0].params ){
+	    return objs[0].params.groupid;
+	}
+    }
+    return null;
+};
+
+JS9.Fabric.listGroups = function(which, opts, layerName){
+    let i, s, objs, obj, layer, canvas, groupid;
+    let grpstr = "";
+    // default is to list groups in region layer
+    layerName = layerName || "regions";
+    // get layer
+    layer = this.getShapeLayer(layerName);
+    // sanity check
+    if( !layer ){ return grpstr; }
+    // default to all groups
+    which = which || "all";
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error(`can't parse listGroups opts: ${opts}`, e); }
+    }
+    // opts is optional
+    opts = opts || {};
+    // convenience variable
+    canvas = layer.canvas;
+    // look for groups
+    objs = canvas.getObjects();
+    for(i=0; i<objs.length; i++){
+	obj = objs[i];
+	if( obj.type !== "group" || obj.params ){ continue; }
+	groupid = obj.getObjects()[0].params.groupid;
+	if( (which !== "all") && (which !== groupid ) ){ continue; }
+	if( opts.includeregions === false ){
+	    grpstr += `${groupid};`;
+	} else {
+	    s = `${this.getShapes(layerName, groupid, {format:"text", includejson:false, includecomments:true})};;`;
+	    s = s.substring(s.indexOf(";")+1);
+	    grpstr += `${groupid}:;${s}`;
+	}
+    }
+    // display the group string, if necessary
+    if( JS9.notNull(opts.mode) && opts.mode > 0 ){
+	this.display.displayMessage("regions", grpstr);
+    }
+    return grpstr.replace(/;\s*/g, "\n").replace(/\n\n$/, "\n");
+};
+
+// create a quasi-permanent group from selected shapes
+// call using image context
+// eslint-disable-next-line no-unused-vars
+JS9.Fabric.groupShapes = function(layerName, shape, opts){
+    let  s, layer, canvas, obj, id, skip, dupid;
+    const objs = [];
+    const getid = (opts) => {
+	let i = 1;
+	let id = opts.groupid || `group_${i}`;
+	while( this.lookupGroup(id) ){
+	    i = i+1;
+	    id = id.replace(/_[0-9][0-9]*$/, "") + `_${i}`;
+	}
+	return id;
+    };
+    // get layer
+    layer = this.getShapeLayer(layerName);
+    // sanity check
+    if( !layer ){ return 0; }
+    // opts is optional
+    opts = opts || {};
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error(`can't parse groupShapes opts: ${opts}`, e); }
+    }
+    // convenience variable
+    canvas = layer.canvas;
+    // id for this group
+    id = getid(opts);
+    // collect the specified shapes
+    this._selectShapes(layerName, shape, opts, (obj) => {
+	if( $.inArray(obj, objs) < 0 ){
+	    // so far, so goodx
+	    skip = false;
+	    // look for conflicts
+	    if( obj.params.groupid ){
+		switch(JS9.globalOpts.regGroupConflict){
+		case "skip":
+		    // save id of the conflicting group
+		    dupid = obj.params.groupid;
+		    // flag to skip adding to new group
+		    skip = true;
+		    break;
+		case "error":
+		default:
+		    s = sprintf("%s can only be a member of one group [%s,%s]",
+				layerName === "regions" ? "regions" : "shapes",
+				obj.params.id, obj.params.groupid);
+		    JS9.error(s);
+		    break;
+		}
+	    }
+	    // save for group, if necessary
+	    if( !skip ){
+		obj.params.groupid = id;
+		if( $.inArray("groupid", obj.params.exports) < 0 ){
+		    obj.params.exports.push("groupid");
+		}
+		objs.push(obj);
+	    }
+	}
+    });
+    // do we have shapes in this group?
+    if( !objs.length ){
+	return dupid;
+    }
+    // change selection?
+    // deselect current active object
+    if( canvas.getActiveObject() ){
+	canvas.discardActiveObject();
+    }
+    // create selection
+    obj = new fabric.ActiveSelection(objs, {
+	canvas: canvas
+    });
+    // turn off selection processing to avoid side-effects
+    JS9.globalOpts.skipSelectionProcessing = true;
+    // make this the active group selection
+    canvas.setActiveObject(obj);
+    // create the group
+    canvas.getActiveObject().toGroup();
+    // remove active selection, if necessary
+    if( opts.select === false ){
+	if( canvas.getActiveObject() ){
+	    canvas.discardActiveObject();
+	}
+    }
+    delete JS9.globalOpts.skipSelectionProcessing;
+    // display the new group
+    canvas.renderAll();
+    // return the group id
+    return id;
+};
+
+// remove shapes from a group
+// call using image context
+// eslint-disable-next-line no-unused-vars
+JS9.Fabric.ungroupShapes = function(layerName, groupid, opts){
+    let i, j, idx, got, layer, canvas, objs, obj, shapes, shape;
+    layer = this.getShapeLayer(layerName);
+    // sanity checks
+    if( !layer || !this.layers[layerName] ){ return this; }
+    if( JS9.isNull(groupid) ){
+	JS9.error("ungroup requires a group id or selection");
+    }
+    // opts is optional
+    opts = opts || {};
+    // convenience variable
+    canvas = layer.canvas;
+    // look for groups
+    objs = canvas.getObjects();
+    for(i=0; i<objs.length; i++){
+	obj = objs[i];
+	if( obj.type === "group" && !obj.params ){
+	    shapes = obj.getObjects();
+	    for(j=0, got=0; j<shapes.length; j++){
+		shape = shapes[j];
+		if( !shape.params ){ continue; }
+		if( (groupid === "all") || (groupid === shape.params.groupid) ){
+		    if( !got ){
+			// deselect current active object
+			if( canvas.getActiveObject() ){
+			    canvas.discardActiveObject();
+			}
+			// make this the active group selection
+			// turn off selection processing to avoid side-effects
+			JS9.globalOpts.skipSelectionProcessing = true;
+			canvas.setActiveObject(obj);
+			canvas.getActiveObject().toActiveSelection();
+			// remove active selection, if necessary
+			if( !opts.select ){
+			    canvas.discardActiveObject();
+			}
+			canvas.requestRenderAll();
+			delete JS9.globalOpts.skipSelectionProcessing;
+			got++;
+		    }
+		    // remove groupid from shape
+		    delete shape.params.groupid;
+		    idx = $.inArray("groupid", shape.params.exports);
+		    if( idx >= 0 ){
+			shape.params.exports.splice(idx, 1);
+		    }
+		}
+	    }
+	}
+    }
+    return this;
+};
+
 // remove the active shape
 // eslint-disable-next-line no-unused-vars
 JS9.Fabric.removeShapes = function(layerName, shape, opts){
     let i, layer, canvas;
     const lopts = {mode: 1, includedcoords: true};
     const arr = [];
+    const grp = [];
     layer = this.getShapeLayer(layerName);
     // sanity check
     if( !layer ){
@@ -15000,20 +15421,26 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
 		// mark for removal
 		arr.push(child);
 	    }
+	    // mark group for removal
+	    if( obj.params.groupid ){
+		if( $.inArray(obj.params.groupid, grp) < 0 ){
+		    grp.push(obj.params.groupid);
+		}
+	    }
 	    // mark for removal
 	    arr.push(obj);
 	}
     });
+    // remove groups
+    for(i=0; i<grp.length; i++){
+	this.ungroupShapes(layerName, grp[i]);
+    }
     // remove marked objects
     for(i=0; i<arr.length; i++){
 	canvas.remove(arr[i]);
     }
     // handle changed selected group specially (fabric.js nuance)
-    if( fabric.major_version === 1 ){
-	if( canvas.getActiveGroup() ){
-	    canvas.discardActiveGroup();
-	}
-    } else {
+    if( canvas.getActiveObject() ){
 	canvas.discardActiveObject();
     }
     canvas.renderAll();
@@ -15144,11 +15571,15 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	    switch(sobj.opts.send){
 	    case "front":
 		canvas.sendToFront(ao);
-		canvas.discardActiveObject();
+		if( canvas.getActiveObject() ){
+		    canvas.discardActiveObject();
+		}
 		break;
 	    case "back":
 		canvas.sendToBack(ao);
-		canvas.discardActiveObject();
+		if( canvas.getActiveObject() ){
+		    canvas.discardActiveObject();
+		}
 		break;
 	    default:
 		break;
@@ -15519,22 +15950,18 @@ JS9.Fabric._addPolygonPoint = function(layerName, obj, evt){
     points.splice(newpt.i+1, 0, {x: newpt.x, y: newpt.y});
 
     // making this the active object will recreate the anchors
-    if( fabric.major_version === 1 ){
-	layer.canvas.setActiveObject(obj);
-    } else {
-	switch(obj.type){
-	case "polyline":
-	case "polygon":
-	    JS9.Fabric.addPolygonAnchors(layer.dlayer, obj);
-	    layer.dlayer.canvas.renderAll();
-	    break;
-	}
-	// set currently selected shape
-	if( obj.polyparams ){
-	    layer.dlayer.params.sel = obj.polyparams.polygon;
-	} else if( obj.params ){
-	    layer.dlayer.params.sel = obj;
-	}
+    switch(obj.type){
+    case "polyline":
+    case "polygon":
+	JS9.Fabric.addPolygonAnchors(layer.dlayer, obj);
+	layer.dlayer.canvas.renderAll();
+	break;
+    }
+    // set currently selected shape
+    if( obj.polyparams ){
+	layer.dlayer.params.sel = obj.polyparams.polygon;
+    } else if( obj.params ){
+	layer.dlayer.params.sel = obj;
     }
 };
 
@@ -15810,17 +16237,9 @@ JS9.resetPolygonCenter = function(poly){
     let i, ndx, ndy, dobj, calcDim, dx, dy;
     let tpos = {};
     // deltas to center
-    if( fabric.major_version === 1 ){
-	// fabric v1.x: results are stored in poly itself
-	poly._calcDimensions();
-	dx = (poly.minX + (poly.width  / 2)) * poly.scaleX;
-	dy = (poly.minY + (poly.height / 2)) * poly.scaleY;
-    } else {
-	// fabric 2.x: results returned in a separate object
-	dobj = poly._calcDimensions();
-	dx = (dobj.left + (dobj.width  / 2)) * poly.scaleX;
-	dy = (dobj.top  + (dobj.height / 2)) * poly.scaleY;
-    }
+    dobj = poly._calcDimensions();
+    dx = (dobj.left + (dobj.width  / 2)) * poly.scaleX;
+    dy = (dobj.top  + (dobj.height / 2)) * poly.scaleY;
     // new center
     if( poly.angle ){
 	tpos = JS9.rotatePoint(
@@ -15835,28 +16254,24 @@ JS9.resetPolygonCenter = function(poly){
 
     // move points relative to new center
     // required by polygon changes starting in fabric 1.5.x
-    if( fabric.major_version > 1 || fabric.minor_version >= 5 ){
-	ndx = dx / poly.scaleX;
-	ndy = dy / poly.scaleY;
-	for(i=0; i<poly.points.length; i++){
-	    poly.points[i].x -= ndx;
-	    poly.points[i].y -= ndy;
-	}
+    ndx = dx / poly.scaleX;
+    ndy = dy / poly.scaleY;
+    for(i=0; i<poly.points.length; i++){
+	poly.points[i].x -= ndx;
+	poly.points[i].y -= ndy;
     }
     // set new center
     poly.left = tpos.x;
     poly.top = tpos.y;
     // reset control box
-    if( fabric.major_version > 1 ){
-	// https://stackoverflow.com/questions/55025481/fabric-js-adjusting-the-size-of-the-controls-of-a-modified-polygon-v1-7-22-vs
-	calcDim = poly._calcDimensions();
-	poly.width = calcDim.width;
-	poly.height = calcDim.height;
-	poly.pathOffset = {
-            x: calcDim.left + poly.width / 2,
-            y: calcDim.top + poly.height / 2
-	};
-    }
+    // https://stackoverflow.com/questions/55025481/fabric-js-adjusting-the-size-of-the-controls-of-a-modified-polygon-v1-7-22-vs
+    calcDim = poly._calcDimensions();
+    poly.width = calcDim.width;
+    poly.height = calcDim.height;
+    poly.pathOffset = {
+        x: calcDim.left + poly.width / 2,
+        y: calcDim.top + poly.height / 2
+    };
     // new coordinates
     poly.setCoords();
 };
@@ -15949,6 +16364,7 @@ JS9.Fabric.initGraphics = function(){
     // image shape methods
     JS9.Image.prototype._selectShapes = JS9.Fabric._selectShapes;
     JS9.Image.prototype._updateShape = JS9.Fabric._updateShape;
+    JS9.Image.prototype._parseShapes = JS9.Fabric._parseShapes;
     JS9.Image.prototype._parseShapeOptions = JS9.Fabric._parseShapeOptions;
     JS9.Image.prototype._exportShapeOptions = JS9.Fabric._exportShapeOptions;
     JS9.Image.prototype._handleChildText = JS9.Fabric._handleChildText;
@@ -15964,6 +16380,10 @@ JS9.Fabric.initGraphics = function(){
     JS9.Image.prototype.copyShapes = JS9.Fabric.copyShapes;
     JS9.Image.prototype.selectShapes = JS9.Fabric.selectShapes;
     JS9.Image.prototype.unselectShapes = JS9.Fabric.unselectShapes;
+    JS9.Image.prototype.groupShapes = JS9.Fabric.groupShapes;
+    JS9.Image.prototype.ungroupShapes = JS9.Fabric.ungroupShapes;
+    JS9.Image.prototype.listGroups = JS9.Fabric.listGroups;
+    JS9.Image.prototype.lookupGroup = JS9.Fabric.lookupGroup;
     // shape layer methods
     JS9.Image.prototype.getShapeLayer = JS9.Fabric.getShapeLayer;
     JS9.Image.prototype.showShapeLayer = JS9.Fabric.showShapeLayer;
@@ -16586,29 +17006,20 @@ JS9.Regions.opts = {
 	background:         "#FFD700",
 	defcolor:           "#00FF00"
     },
+    // mouse double-click processing
+    onmousedblclick(im, xreg, evt, target){
+	let params = target.params;
+	if( (params && !params.winid && params.changeable !== false) ||
+	    (!params && target.type === "activeSelection")           ||
+	    (!params && target.type === "group")                     ){
+	    im.displayRegionsForm(target);
+	}
+	return;
+    },
     // mouse down processing
     onmousedown(im, xreg, evt, target){
-	let curtime, dblclick, poly;
+	let poly;
 	let params = target.params;
-	// look for double click
-	// fabric dblclick support is broken (loses position during scroll)
-	if( !JS9.specialKey(evt) ){
-	    if( params ){
-		curtime = (new Date()).getTime();
-		if( params.lasttime ){
-		    if( (curtime - params.lasttime) < JS9.DBLCLICK ){
-			dblclick = true;
-		    }
-		}
-		params.lasttime = curtime;
-	    }
-	}
-	if( dblclick ){
-	    if( !params.winid && params.changeable !== false ){
-		im.displayRegionsForm(target);
-	    }
-	    return;
-	}
 	// add polygon points
 	if( JS9.specialKey(evt) ){
 	    if( target.type === "polygon" || target.type === "polyline" ){
@@ -16629,14 +17040,7 @@ JS9.Regions.opts = {
 	if( this.getActiveObject() ){
 	    objs.push(this.getActiveObject());
 	}
-	if( fabric.major_version === 1 ){
-	    // group of active objects
-	    if( this.getActiveGroup() ){
-		objs = this.getActiveGroup().getObjects();
-	    }
-	} else {
-	    objs.push(this.getActiveObjects());
-	}
+	objs.push(this.getActiveObjects());
 	// re-select polygon which was just processed
 	for(i=0; i<objs.length; i++){
 	    if( objs[i].polyparams ){
@@ -16674,16 +17078,7 @@ JS9.Regions.init = function(layerName){
 	    tim = dlayer.display.image;
 	    // one active object
 	    // group of active objects
-	    if( fabric.major_version === 1 ){
-		if( dlayer.canvas.getActiveObject() ){
-		    objs.push(dlayer.canvas.getActiveObject());
-		}
-		if( dlayer.canvas.getActiveGroup() ){
-		    objs = dlayer.canvas.getActiveGroup().getObjects();
-		}
-	    } else {
-		objs.push(dlayer.canvas.getActiveObjects());
-	    }
+	    objs.push(dlayer.canvas.getActiveObjects());
 	    // process all active objects
 	    for(i=0; i<objs.length; i++){
 		if( objs[i].params ){
@@ -16742,7 +17137,9 @@ JS9.Regions.displayConfigForm = function(shape, opts){
 	} else {
 	    s = JS9.InstallDir(JS9.Regions.opts.configURL);
 	}
-	if( !shape ){
+	if( !shape                                              ||
+	    (!shape.params && shape.type === "activeSelection") ||
+	    (!shape.params && shape.type === "group")           ){
 	    opts.multi = true;
 	}
 	break;
@@ -16768,13 +17165,15 @@ JS9.Regions.displayConfigForm = function(shape, opts){
     $(JS9.lightOpts[JS9.LIGHTWIN].topid)
 	.arrive(".regionsConfigForm", {onceOnly: true}, () => {
 	    opts.firsttime = true;
-	    this.updateShapes("regions", shape, "wcsconfig");
+	    if( shape && shape.params ){
+		this.updateShapes("regions", shape, "wcsconfig");
+	    }
 	    this.initRegionsForm(shape, opts);
 	});
     // bring up display window
     opts.winid = this.displayAnalysis("regions", s, {title, winformat});
     // save winid, if possible
-    if( shape ){
+    if( shape && shape.params ){
 	shape.params.winid = opts.winid;
     }
 };
@@ -16783,7 +17182,7 @@ JS9.Regions.displayConfigForm = function(shape, opts){
 // call using image context
 JS9.Regions.initConfigForm = function(obj, opts){
     let i, key, val, el, el2, wcssys, twcssys, mover, mout, p1, p2;
-    let s, s2, s3, s4, winid, wid, form, otitle, fav, arr;
+    let s, s2, s3, s4, winid, wid, form, otitle, fav, arr, ao, grp, o, objs;
     let multi = false;
     const wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
     const defobj = {
@@ -16945,10 +17344,13 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    }
 	    break;
 	case "color":
-	    if( obj.pub.color !== undefined ){
-		val = fmt(obj.pub.color);
-	    } else if( $(form).data("colorpicker") ){
-		val = $(form).data("colorpicker");
+	    // multi: don't set color to avoid applying it to new selections
+	    if( !multi ){
+		if( obj.pub.color !== undefined ){
+		    val = fmt(obj.pub.color);
+		} else if( $(form).data("colorpicker") ){
+		    val = $(form).data("colorpicker");
+		}
 	    }
 	    break;
 	case "strokeWidth":
@@ -17132,6 +17534,13 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	case "selectfilter":
 	    val = $(form).data("selectfilter");
 	    break;
+	case "selectshape":
+	case "selectcolor":
+	case "selecttag":
+	case "selectwcs":
+	case "selectgroup":
+	    JS9.Regions.regionsConfigSetSelectMenu(this, $(form), key);
+	    break;
 	default:
 	    if( obj.pub[key] !== undefined ){
 		val = fmt(obj.pub[key]);
@@ -17165,6 +17574,8 @@ JS9.Regions.initConfigForm = function(obj, opts){
 		.text("sel");
 	    $(form).find("input[id='savecur']")
 		.data("tooltip", "save selected regions");
+	    $(form).find("[id='selectreg']")
+		.prop("checked", true);
 	} else {
 	    $(form).find(".checkboxes").removeClass("nodisplay");
 	}
@@ -17299,16 +17710,64 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	$(form).find(".multi").removeClass("nodisplay");
 	if( opts.setmode <= 0 ){
 	    $(form).find(`[name='multitext']`).val("");
+	    $(form).find(`input[name="color"]`).val("");
+	    $(form).find(`input[name="strokeWidth"]`).val("");
+	    $(form).find(`input[name="strokeDashes"]`).val("");
+	    $(form).data("strokewidth", "");
+	    $(form).data("strokedashes", "");
 	    if( opts.setmode < 0 ){
-		$(form).data("selectfilter", "");
 		$(form).find(`[name='selectfilter']`).val("");
+		$(form).data("selectfilter", "");
 	    }
 	} else {
-	    s = this.listRegions("selected", {mode: 1,
-					      includejson: false,
-					      includecomments: false})
-		.replace(/ *; */g, "\n");
-	    $(form).find(`[name='multitext']`).val(s);
+	    ao = this.layers.regions.canvas.getActiveObject();
+	    if( ao && ao.type === "group" && !ao.params ){
+		objs = ao.getObjects();
+		if( objs && objs.length && objs[0] && objs[0].params ){
+		    grp = objs[0].params.groupid;
+		}
+		if( grp ){
+		    $(form).find(`[name='selectfilter']`).val(grp);
+		    $(form).data('selectfilter', grp);
+		    s = this.listGroups(grp);
+		    s2 = s.substring(s.indexOf("\n")+1);
+		    $(form).find(`[name='multitext']`).val(s2);
+		} else {
+		    $(form).find(`[name='multitext']`).val("");
+		}
+	    } else if( ao ){
+		ao = this.layers.regions.canvas.getActiveObjects();
+		for(i=0, s=[], s2=""; i<ao.length; i++){
+		    o = ao[i];
+		    if( o.type === "group" && !o.params ){
+			s2 += `${this.lookupGroup(o)}\n`;
+		    } else {
+			s.push(o);
+		    }
+		}
+		s3 = this.listRegions(s, {mode: 1,
+					  includejson: false,
+					  includecomments: false})
+		    .replace(/ *; */g, "\n");
+		s2 = s2 + s3.substring(s3.indexOf("\n")+1);
+		if( s2 ){
+		    s4 = "selected";
+		    $(form).find(`[name='selectfilter']`).val(s4);
+		    $(form).data('selectfilter', s4);
+		    $(form).find(`[name='multitext']`).val(s2);
+		}
+	    } else {
+		s =  $(form).find(`[name='selectfilter']`).val() || "selected";
+		s2 = this.listRegions(s, {mode: 1,
+					 includejson: false,
+					 includecomments: false})
+		    .replace(/ *; */g, "\n");
+		if( s2 ){
+		    $(form).find(`[name='selectfilter']`).val(s);
+		    $(form).data('selectfilter', s);
+		    $(form).find(`[name='multitext']`).val(s2);
+		}
+	    }
 	}
     } else {
 	// grey-out read-only text
@@ -17398,7 +17857,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
 // call using image context
 JS9.Regions.processConfigForm = function(form, obj, arr){
     let i, key, nkey, val, nval, nopts, multi, layer, wcssys;
-    let cpos, p1, p2, d, x, y, ang;
+    let cpos, p1, p2, d, x, y, ang, sel;
     let bin = 1;
     const defobj = {
 	type: "multi",
@@ -17427,6 +17886,7 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	return fmt(val1) !== fmt(val2);
     };
     const newval = (obj, key, val) => {
+	let v1, v2;
 	// special keys having no public or param equivalents
 	if( key === "remove" ){
 	    return val === "selected";
@@ -17436,6 +17896,13 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 		return false;
 	    }
 	    return val !== "";
+	}
+	if( key === "strokeWidth" ){
+	    if( obj.params && obj.params.sw1 ){
+		return val !== obj.params.sw1;
+	    } else {
+		return true;
+	    }
 	}
 	if( key === "strokeDashes" ){
 	    if( obj.strokeDashArray){
@@ -17461,6 +17928,12 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	}
 	if( key === "misc" && val !== "" ){
 	    return true;
+	}
+	if( key === "radii" && obj.params.radii ){
+	    // https://stackoverflow.com/questions/1773069/using-jquery-to-compare-two-arrays-of-javascript-objects
+	    v1 = val.split(",").map((item) => {return parseFloat(item)});
+	    v2 = obj.params.radii;
+	    return $(v1).not(v2).length !== 0 || $(v2).not(v1).length !== 0;
 	}
 	if( key === "angle" ){
 	    return obj.angle !== -parseFloat(val);
@@ -17631,7 +18104,11 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 		// save current filter
 		$(form).data('selectfilter', val);
 		// make selection
-		this.selectShapes(layer, val);
+		if( this.lookupGroup(val) ){
+		    this.groupShapes(layer, val);
+		} else {
+		    this.selectShapes(layer, val);
+		}
 		// don't do anything else when making a new filter selection
 		return;
 	    }
@@ -17647,8 +18124,9 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	    }
 	    break;
 	case "strokeWidth":
+	    nval = parseInt(val, 10);
 	    if( (multi && val) || (!multi && newval(obj, key, nval)) ){
-		opts[key] = getval(val);
+		opts[key] = getval(nval);
 	    }
 	    break;
 	case "tags":
@@ -17909,12 +18387,232 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
     // change the shape(s), if necessary
     if( Object.keys(opts).length > 0 ){
 	if( multi ){
-	    this.changeShapes(layer, "selected", opts);
+	    sel = $(form).find(`[name='selectfilter']`).val() || "selected";
+	    this.changeShapes(layer, sel, opts);
 	} else {
-	    this.changeShapes(layer, obj, opts);
+	    sel = $(form).find(`[name='id']`).val() || obj;
+	    this.changeShapes(layer, sel, opts);
 	}
 	this.initRegionsForm(obj, {multi});
     }
+};
+
+// convenience routine used in regionsConfig.html
+JS9.Regions.regionsConfigSetSelectFilter = function(el, def) {
+    let i, s, curval, lastval, nval, nfilter;
+    let arr = [];
+    let defarr = [];
+    let grparr = [];
+    const form = el.closest('form');
+    const filter = form.find(`[name='selectfilter']`);
+    const im = form.data('im');
+    // sanity check
+    if( !im ){
+	return;
+    }
+    // groups
+    grparr = im.listGroups("all", {includeregions:false}).split("\n");
+    // new value from menu
+    nval =  el.val().trim();
+    // cur value from filter select
+    curval = filter.val().trim();
+    if( curval ){
+	arr = curval.split(/\s+/);
+    }
+    if( arr.length ){
+	lastval = arr[arr.length-1];
+	if( !nval.match(/[&|]/) && !lastval.match(/[&|!]/) ){
+	    // get array of possible values
+	    switch(def){
+	    case "regions":
+		defarr = JS9.regions;
+		break;
+	    case "colors":
+		break;
+	    case "tags":
+		break;
+	    case "wcssys":
+		defarr = JS9.wcssyss;
+		break;
+	    case "groups":
+		defarr = grparr;
+		break;
+	    case "ops":
+		defarr = ["!", "&&", "||"];
+		break;
+	    }
+	    if( $.inArray(lastval, defarr) >= 0 ){
+		// if new and last val is of the same type, use || for union
+		// (intersection of same types, but non-identical, is null)
+		nval = `|| ${nval}`;
+	    } else if( $.inArray(lastval, grparr) >= 0 ||
+		       $.inArray(nval, grparr) >= 0    ){
+		// if either is a group, use || for union
+		// (intersection of non-identical groups is null)
+		nval = `|| ${nval}`;
+	    } else {
+		// use && for intersection, e.g., color && shape
+		nval = `&& ${nval}`;
+	    }
+	}
+    }
+    // this is the new filter
+    nfilter = `${curval} ${nval}`;
+    // futz w/parens: split by ||, add parens around segments containing &&
+    // if you used the menus to choose these:
+    //   circle blue || box red
+    // then instead of this:
+    //   circle && blue || box && red
+    // we should end up with this:
+    //   (circle && blue) || (box && red)
+    if( JS9.globalOpts.regConfigAddParens ){
+	arr = nfilter.split("||");
+	if( arr.length >= 2 ){
+	    for(i=0; i<arr.length; i++){
+		s = arr[i].trim();
+		if( s.indexOf("&&")          > 0 &&
+		    s.charAt(0) !==          "(" &&
+		    s.charAt(s.length-1) !== ")" ){
+		    arr[i] = `(${s})`;
+		} else {
+		    arr[i] = s;
+		}
+	    }
+	}
+	nfilter = arr.join(' || ').replace(/  */g, " ");
+    }
+    // compose and set the new filter selection
+    filter.val(nfilter);
+    // reset the menu
+    el.prop('selectedIndex', 0);
+};
+
+// convenience routine used in regionsConfig.html
+JS9.Regions.regionsConfigSetSelectMenu = function(im, form, key) {
+    let i, j, s, el, objs, gots, arr;
+    const initmenu = (el) => {
+	let i;
+	// remove all but the header (0th option)
+	for(i=el.options.length-1; i>=1; i--) {
+	    el.remove(i);
+	}
+    };
+    if( !key.match(/^select/) ){
+	key = `select${key}`;
+    }
+    el = form.find(`[name='${key}']`);
+    // reinit: clear menu
+    initmenu(el[0]);
+    // add items
+    switch(key){
+    case "selectshape":
+	for(i=0; i<JS9.regions.length; i++){
+	    el.append(`<option>${JS9.regions[i]}</option>`);
+	}
+	break;
+    case "selectcolor":
+	objs = im.getShapes("regions", "all");
+	for(i=0, gots=[]; i<objs.length; i++){
+	    s = objs[i].color;
+	    if( $.inArray(s, gots) < 0 ){
+		el.append(`<option>${s}</option>`);
+		gots.push(s);
+	    }
+	}
+	break;
+    case "selecttag":
+	objs = im.getShapes("regions", "all");
+	for(i=0, gots=[]; i<objs.length; i++){
+	    s = objs[i].tags;
+	    for(j=0; j<s.length; j++){
+		if( $.inArray(s[j], gots) < 0 ){
+		    el.append(`<option>${s[j]}</option>`);
+		    gots.push(s[j]);
+		}
+	    }
+	}
+	break;
+    case "selectwcs":
+	for(i=0; i<JS9.wcssyss.length; i++){
+	    el.append(`<option>${JS9.wcssyss[i]}</option>`);
+	}
+	break;
+    case "selectgroup":
+	s = im.listGroups("all", {includeregions:false});
+	if( s ){
+	    arr = s.split("\n");
+	    for(i=0; i<arr.length; i++){
+		el.append(`<option>${arr[i]}</option>`);
+	    }
+	}
+	break;
+    }
+};
+
+// convenience routine used in regionsConfig.html
+JS9.Regions.regionsConfigSetSelectOrGroup = function(im, form, key, update){
+    let obj, group;
+    let canvas = im.layers.regions.canvas;
+    let el1 = form.find(`[name="selectfilter"]`);
+    let el2 = form.find(`[name="multitext"]`);
+    let selection = el1.val().trim();
+    // sanity check
+    if( !im ){ return; }
+    // default is to allow update of multi-selection dialog
+    // sometimes we definitely don't want that to happen, so ...
+    if( update === false ){ im.tmp.updateMulti = false; }
+    // default is to select
+    if( !selection ){
+	el1.val("");
+	el2.val("");
+	form.data("selectfilter", "");
+	if( canvas.getActiveObject() ){
+	    canvas.discardActiveObject();
+	}
+	canvas.renderAll()
+	key = "clear";
+    }
+    if( !key ){
+	key = im.lookupGroup(selection) ? "group" : "select";
+    }
+    switch(key){
+    case "select":
+	form.data("selectfilter", selection);
+	im.selectShapes("regions", selection, {transparentgroup: false});
+	break;
+    case "group":
+	form.data("selectfilter", selection);
+	group = im.groupShapes("regions", selection);
+	el1.val(group);
+	el2.val(im.listGroups(group))
+	obj = im.lookupGroup(group);
+	if( obj ){
+	    canvas.setActiveObject(obj);
+	    canvas.renderAll();
+	    JS9.Regions.regionsConfigSetSelectMenu(im, form, "selectgroup");
+	}
+	break;
+    case "ungroup":
+	im.ungroupShapes("regions", selection);
+	el1.val("");
+	el2.val("");
+	form.data("selectfilter", "");
+	if( canvas.getActiveObject() ){
+	    canvas.discardActiveObject();
+	}
+	JS9.Regions.regionsConfigSetSelectMenu(im, form, "selectgroup");
+	break;
+    case "clear":
+	form.find(`input[name="color"]`).val("");
+	form.find(`input[name="strokeWidth"]`).val("");
+	form.find(`input[name="strokeDashes"]`).val("");
+	form.data("strokewidth", "");
+	form.data("strokedashes", "");
+	break;
+    default:
+	break;
+    }
+    delete im.tmp.updateMulti;
 };
 
 // paste a region from clipboard
@@ -17980,6 +18678,7 @@ JS9.Regions.listRegions = function(which, opts, layerName){
     let preservedcoords = [];
     const sepstr="; ";
     const tagcolors = [];
+    const topts = {includeObj: true};
     const getExports = (obj, region) => {
 	let i, s, key, child, ra, dec;
 	const nexports = {};
@@ -18133,7 +18832,7 @@ JS9.Regions.listRegions = function(which, opts, layerName){
 	opts.includedcoords = JS9.globalOpts.regListDCoords;
     }
     // get specified regions into an array
-    pubs = this.getShapes(layerName, which, {includeObj: true});
+    pubs = this.getShapes(layerName, which, topts);
     // loop through shapes
     rlen = pubs.length;
     // display tags if at least one is not standard "source,include"
@@ -22986,12 +23685,7 @@ JS9.mouseUpCB = function(evt){
     }
     // in a region, update region string since we probably just modified it
     if( im.clickInRegion && im.clickInLayer ){
-	if( isclick ){
-	    if( fabric.major_version === 1 ){
-		// for fabric v2+, done in selection:created callback
-		im.updateShapes(im.clickInLayer, "selected", "select");
-	    }
-	} else {
+	if( !isclick ){
 	    // tell plugins that this region has been updated (e.g. sync)
 	    im.updateShapes(im.clickInLayer, "selected", "update");
 	}
@@ -23089,7 +23783,7 @@ JS9.mouseMoveCB = function(evt){
     // in a region, update the region info
     if( im.clickInRegion && (im.clickInLayer === "regions") ){
 	sel = im.display.layers.regions.params.sel;
-	if( sel ){
+	if( sel && sel.params ){
 	    if( im.params.listonchange          ||
 		sel.params.listonchange         ||
 		JS9.globalOpts.intensivePlugins ){
@@ -24603,6 +25297,8 @@ JS9.mkPublic("ChangeShapes", "changeShapes");
 JS9.mkPublic("CopyShapes", "copyShapes");
 JS9.mkPublic("SelectShapes", "selectShapes");
 JS9.mkPublic("UnselectShapes", "unselectShapes");
+JS9.mkPublic("GroupShapes", "groupShapes");
+JS9.mkPublic("UngroupShapes", "ungroupShapes");
 JS9.mkPublic("DisplayCoordGrid", "displayCoordGrid");
 JS9.mkPublic("Print", "print");
 JS9.mkPublic("SavePNG", "savePNG");
@@ -26326,6 +27022,19 @@ JS9.mkPublic("ListRegions", function(...args){
     return null;
 });
 
+// list groups
+JS9.mkPublic("ListGroups", function(...args){
+    let region, opts;
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    if( im ){
+	region = obj.argv[0] || "all";
+	opts = obj.argv[1] || {};
+	return im.listGroups(region, opts, opts.layer);
+    }
+    return null;
+});
+
 // edit currently selected region or multi-selected regions
 JS9.mkPublic("EditRegions", function(...args){
     let layer, ao;
@@ -26401,6 +27110,34 @@ JS9.mkPublic("UnselectRegions", function(...args){
     opts = obj.argv[1];
     if( im ){
 	return im.unselectShapes("regions", region, opts);
+    }
+    return null;
+});
+
+// group one or more regions
+// eslint-disable-next-line no-unused-vars
+JS9.mkPublic("GroupRegions", function(...args){
+    let region, opts;
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    region = obj.argv[0];
+    opts = obj.argv[1];
+    if( im ){
+	return im.groupShapes("regions", region, opts);
+    }
+    return null;
+});
+
+// ungroup one or more regions
+// eslint-disable-next-line no-unused-vars
+JS9.mkPublic("UngroupRegions", function(...args){
+    let region, opts;
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    region = obj.argv[0];
+    opts = obj.argv[1];
+    if( im ){
+	return im.ungroupShapes("regions", region, opts);
     }
     return null;
 });

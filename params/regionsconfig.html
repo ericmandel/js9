@@ -147,7 +147,7 @@
     position: absolute;
     top: 0;
     left:  420px;
-    width: 180px;
+    width: 200px;
 }
 
 .rconfigcol_R7 {
@@ -231,6 +231,11 @@
     vertical-align: middle;
 }
 
+.rselbutton {
+    text-align: center;
+    width: 60px;
+}
+
 </style>
 
 </head>
@@ -246,7 +251,7 @@ Region&nbsp;<input type="text" class="val rconfigtext_regid rconfigtext_R0" name
 </span>
 
 <span class="rconfigcol_R rconfigcol_R2L">
-<input type="text" class="val JS9Text rconfigtext_R" name="regstr" value="" autocapitalize="off" autocorrect="off" data-tooltip="region in current global coordinate system" readonly="readonly">
+<input type="text" class="val JS9Text rconfigtext_R" name="regstr" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="region in current global coordinate system" readonly="readonly">
 </span>
 
 <span class="rconfigcol_R rconfigcol_R6">
@@ -313,7 +318,52 @@ if( im && wcssys && shape && shape.params ){
 Selection:&nbsp;
 </span>
 <span class="rconfigcol_R rconfigcol_R2L">
-<input type="text" class="val JS9Text rconfigtext_R" name="selectfilter" value="" autocapitalize="off" autocorrect="off" placeholder="select criteria" data-tooltip="multi-selection criteria">
+<input type="text" class="val JS9Text rconfigtext_R" name="selectfilter" value="" autocapitalize="off" autocorrect="off" autocomplete="off" placeholder="select/group criteria" data-tooltip="multi-selection or group criteria"
+onkeydown="
+let filter;
+if( event.keyCode !== 13 ){ return; }
+const form = $(this).closest('form');
+const im = form.data('im');
+if( im ){
+  // hack needed because selectfilter is reset when we destroy an active object
+  // (it must do so, else it is not cleared when a selection is destroyed)
+  filter = form.find(`[name='selectfilter']`).val();
+  if( filter ){
+    JS9.Regions.regionsConfigSetSelectOrGroup(im, form, 'clear');
+    JS9.Regions.regionsConfigSetSelectOrGroup(im, form, null);
+    form.find(`[name='selectfilter']`).val(filter);  
+  }
+}
+"
+>
+</span>
+<span class="rconfigcol_R rconfigcol_R6L">
+<input name="Select" type="button" class="JS9Button2" value="Select"
+onclick="
+const form = $(this).closest('form');
+const im = form.data('im');
+if( im ){
+  JS9.Regions.regionsConfigSetSelectOrGroup(im, form, 'select');
+}
+">
+&nbsp;
+<input name="Group" type="button" class="JS9Button2" value="Group"
+onclick="
+const form = $(this).closest('form');
+const im = form.data('im');
+if( im ){
+  JS9.Regions.regionsConfigSetSelectOrGroup(im, form, 'group');
+}
+">
+&nbsp;
+<input name="Ungroup" type="button" class="JS9Button2" value="Ungroup"
+onclick="
+const form = $(this).closest('form');
+const im = form.data('im');
+if( im ){
+  JS9.Regions.regionsConfigSetSelectOrGroup(im, form, 'ungroup');
+}
+">
 </span>
 </div>
 <div class="rconfiglinegroup2">
@@ -321,8 +371,47 @@ Selection:&nbsp;
 Selected:&nbsp;
 </span>
 <span class="rconfigcol_R rconfigcol_R2L">
-<textarea class="val JS9TextArea rconfigtextarea_R2" name="multitext" autocapitalize="off" autocorrect="off" data-tooltip="currently selected regions" rows="4" cols="80" readonly="readonly"></textarea>
+<textarea class="val JS9TextArea rconfigtextarea_R2" name="multitext" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="currently selected regions" rows="4" cols="80" readonly="readonly"></textarea>
 </span>
+
+<span class="rconfigcol_R rconfigcol_R6L">
+<select name="selectshape" class="val JS9Select rselbutton" onchange="
+JS9.Regions.regionsConfigSetSelectFilter($(this),'regions');
+">
+<option value="" disabled=disabled>shape</option>
+</select>
+<select name="selectcolor" class="val JS9Select rselbutton" onchange="
+JS9.Regions.regionsConfigSetSelectFilter($(this),'colors');
+">
+<option value="" disabled=disabled>color</option>
+</select>
+<select name="selecttag" class="val JS9Select rselbutton" onchange="
+JS9.Regions.regionsConfigSetSelectFilter($(this),'tags');
+">
+<option value="" disabled=disabled>tag</option>
+</select>
+<br>
+<select name="selectwcs" class="val JS9Select rselbutton" onchange="
+JS9.Regions.regionsConfigSetSelectFilter($(this),'wcs');
+">
+<option value="" disabled=disabled>wcs</option>
+</select>
+<select name="selectgroup" class="val JS9Select rselbutton" onchange="
+JS9.Regions.regionsConfigSetSelectFilter($(this),'groups');
+">
+<option value="" disabled=disabled>group</option>
+</select>
+<select name="selectop" class="val JS9Select rselbutton" onchange="
+JS9.Regions.regionsConfigSetSelectFilter($(this),'ops');
+">
+<option value="" disabled=disabled>op</option>
+<option value="&&">&&</option>
+<option value="||">||</option>
+<option value="!">!</option>
+</select>
+
+</span>
+
 </div>
 </div>
 
@@ -332,72 +421,72 @@ Selected:&nbsp;
 Edit:
 </span>
 <span class="rconfigcol_R rconfigcol_R2">
-<input type="text" class="val JS9Text rconfigtext_R" name="xpos" value="" autocapitalize="off" autocorrect="off" data-tooltip="x position in units of degrees (wcs) or pixels (no wcs)">
+<input type="text" class="val JS9Text rconfigtext_R" name="xpos" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="x position in units of degrees (wcs) or pixels (no wcs)">
 </span>
 <span class="rconfigcol_R rconfigcol_R3">
-<input type="text" class="val JS9Text rconfigtext_R" name="ypos" value="" autocapitalize="off" autocorrect="off"  data-tooltip="y position in units of degrees (wcs) or pixels (no wcs)">
+<input type="text" class="val JS9Text rconfigtext_R" name="ypos" value="" autocapitalize="off" autocorrect="off" autocomplete="off"  data-tooltip="y position in units of degrees (wcs) or pixels (no wcs)">
 </span>
 
 <div class="nodisplay annulus">
 <span class="rconfigcol_R rconfigcol_R4L">
-<input type="text" class="val JS9Text rconfigtext_R" id="radii" name="radii" value="" autocapitalize="off" autocorrect="off" data-tooltip="radii in units of degrees (wcs) or pixels (no wcs)">
+<input type="text" class="val JS9Text rconfigtext_R" id="radii" name="radii" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="radii in units of degrees (wcs) or pixels (no wcs)">
 </span>
 </div>
 
 <div class="nodisplay box">
 <span class="rconfigcol_R rconfigcol_R4">
-<input type="text" class="val JS9Text rconfigtext_R" name="width" value="" autocapitalize="off" autocorrect="off" data-tooltip="width in units of degrees (wcs) or pixels (no wcs)">
+<input type="text" class="val JS9Text rconfigtext_R" name="width" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="width in units of degrees (wcs) or pixels (no wcs)">
 </span>
 <span class="rconfigcol_R rconfigcol_R5">
-<input type="text" class="val JS9Text rconfigtext_R" name="height" value="" autocapitalize="off" autocorrect="off" data-tooltip="height in units of degrees (wcs) or pixels (no wcs)">
+<input type="text" class="val JS9Text rconfigtext_R" name="height" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="height in units of degrees (wcs) or pixels (no wcs)">
 </span>
 </div>
 
 <div class="nodisplay circle">
 <span class="rconfigcol_R rconfigcol_R4">
-<input type="text" class="val JS9Text rconfigtext_R" name="radius" value="" autocapitalize="off" autocorrect="off" data-tooltip="radius in units of degrees (wcs) or pixels (no wcs)">
+<input type="text" class="val JS9Text rconfigtext_R" name="radius" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="radius in units of degrees (wcs) or pixels (no wcs)">
 </span>
 </div>
 
 <div class="nodisplay cross">
 <span class="rconfigcol_R rconfigcol_R4">
-<input type="text" class="val JS9Text rconfigtext_R" name="width" value="" autocapitalize="off" autocorrect="off" data-tooltip="width in units of degrees (wcs) or pixels (no wcs)">
+<input type="text" class="val JS9Text rconfigtext_R" name="width" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="width in units of degrees (wcs) or pixels (no wcs)">
 </span>
 <span class="rconfigcol_R rconfigcol_R5">
-<input type="text" class="val JS9Text rconfigtext_R" name="height" value="" autocapitalize="off" autocorrect="off" data-tooltip="height in units of degrees (wcs) or pixels (no wcs)">
+<input type="text" class="val JS9Text rconfigtext_R" name="height" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="height in units of degrees (wcs) or pixels (no wcs)">
 </span>
 </div>
 
 <div class="nodisplay ellipse">
 <span class="rconfigcol_R rconfigcol_R4">
-<input type="text" class="val JS9Text rconfigtext_R" name="r1" value="" autocapitalize="off" autocorrect="off" data-tooltip="r1 in units of degrees (wcs) or pixels (no wcs)">
+<input type="text" class="val JS9Text rconfigtext_R" name="r1" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="r1 in units of degrees (wcs) or pixels (no wcs)">
 </span>
 <span class="rconfigcol_R rconfigcol_R5">
-<input type="text" class="val JS9Text rconfigtext_R" name="r2" value="" autocapitalize="off" autocorrect="off" data-tooltip="r2 in units of degrees (wcs) or pixels (no wcs)">
+<input type="text" class="val JS9Text rconfigtext_R" name="r2" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="r2 in units of degrees (wcs) or pixels (no wcs)">
 </span>
 </div>
 
 <div class="nodisplay linelength">
 <span class="rconfigcol_R rconfigcol_R4">
-<input type="text" class="val JS9Text rconfigtext_R" name="linelength" value="" autocapitalize="off" autocorrect="off" data-tooltip="line length in units of degrees (wcs) or pixels (no wcs)">
+<input type="text" class="val JS9Text rconfigtext_R" name="linelength" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="line length in units of degrees (wcs) or pixels (no wcs)">
 </span>
 </div>
 
 <div class="nodisplay lineangle">
 <span class="rconfigcol_R rconfigcol_R5">
-<input type="text" class="val JS9Text rconfigtext_R" name="lineangle" value="" autocapitalize="off" autocorrect="off" data-tooltip="angle in degrees">
+<input type="text" class="val JS9Text rconfigtext_R" name="lineangle" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="angle in degrees">
 </span>
 </div>
 
 <div class="nodisplay angle">
 <span class="rconfigcol_R rconfigcol_R6">
-<input type="text" class="val JS9Text rconfigtext_R" name="angle" value="" autocapitalize="off" autocorrect="off" data-tooltip="angle in degrees">
+<input type="text" class="val JS9Text rconfigtext_R" name="angle" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="angle in degrees">
 </span>
 </div>
 
 <div class="nodisplay textangle">
 <span class="rconfigcol_R rconfigcol_R4">
-<input type="text" class="val JS9Text rconfigtext_R" name="angle" value="" autocapitalize="off" autocorrect="off" data-tooltip="angle of text in degrees">
+<input type="text" class="val JS9Text rconfigtext_R" name="angle" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="angle of text in degrees">
 </span>
 </div>
 
@@ -419,7 +508,7 @@ color = $(this).val();
 form.data('colorpicker', color);
 form.find(`input[name='color']`).val(color).trigger(e);
 ">
-<input type="text" class="val rconfigtext_R1" name="color" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke color name or #rrggbb hex value">
+<input type="text" class="val rconfigtext_R1" name="color" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="stroke color name or #rrggbb hex value">
 &nbsp;&nbsp;
 <select name="strokeMenu" class="val JS9Select" onchange="
 const form = $(this).closest('form');
@@ -443,7 +532,7 @@ if( swidth ){
 <option value="7">7</option>
 <option value="8">8</option>
 </select>
-<input type="text" class="val rconfigtext_R2" name="strokeWidth" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke width in pixels">
+<input type="text" class="val rconfigtext_R2" name="strokeWidth" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="stroke width in pixels">
 &nbsp;&nbsp;
 <select name="dashesMenu" class="val JS9Select" onchange="
 const form = $(this).closest('form');
@@ -467,19 +556,17 @@ $(this).prop('selectedIndex', 0);
 <option value="1 2">1 2</option>
 <option value="1 1">1 1</option>
 </select>
-<input type="text" class="val rconfigtext_R2" name="strokeDashes" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke dash/line pattern, e.g. 3 1">
+<input type="text" class="val rconfigtext_R2" name="strokeDashes" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="stroke dash/line pattern, e.g. 3 1">
 </span>
 
 <span class="rconfigcol_R rconfigcol_R7">
 <input name="Clear" type="button" class="JS9Button2" value="Clear"
 onclick="
 const form = $(this).closest('form');
-form.find(`input[name='color']`).val('');
-form.find(`input[name='strokeWidth']`).val('');
-form.find(`input[name='strokeDashes']`).val('');
-// form.data('colorpicker', '');
-form.data('strokewidth', '');
-form.data('strokedashes', '');
+const im = form.data('im');
+if( im ){
+  JS9.Regions.regionsConfigSetSelectOrGroup(im, form, 'clear');
+}
 ">
 </span>
 </div>
@@ -491,7 +578,7 @@ form.data('strokedashes', '');
 Text:
 </span>
 <span class="rconfigcol_R rconfigcol_R2L">
-<input type="text" class="val JS9Text rconfigtext_R" name="text" value="" autocapitalize="off" autocorrect="off" data-tooltip="text to associate with a parent region">
+<input type="text" class="val JS9Text rconfigtext_R" name="text" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="text to associate with a parent region">
 </span>
 </div>
 
@@ -500,16 +587,16 @@ Text:
 font:
 </span>
 <span class="rconfigcol_R rconfigcol_R2">
-<input type="text" class="val JS9Text rconfigtext_R" name="fontFamily" value="" autocapitalize="off" autocorrect="off" data-tooltip="font family, e.g. Helvetica">
+<input type="text" class="val JS9Text rconfigtext_R" name="fontFamily" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="font family, e.g. Helvetica">
 </span>
 <span class="rconfigcol_R rconfigcol_R3">
-<input type="text" class="val JS9Text rconfigtext_R" name="fontSize" value="" autocapitalize="off" autocorrect="off" data-tooltip="font size in units of pt, e.g. 12">
+<input type="text" class="val JS9Text rconfigtext_R" name="fontSize" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="font size in units of pt, e.g. 12">
 </span>
 <span class="rconfigcol_R rconfigcol_R4">
-<input type="text" class="val JS9Text rconfigtext_R" name="fontStyle" value="" autocapitalize="off" autocorrect="off" data-tooltip="font style, e.g. italic, normal, oblique">
+<input type="text" class="val JS9Text rconfigtext_R" name="fontStyle" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="font style, e.g. italic, normal, oblique">
 </span>
 <span class="rconfigcol_R rconfigcol_R5">
-<input type="text" class="val JS9Text rconfigtext_R" name="fontWeight" value="" autocapitalize="off" autocorrect="off" data-tooltip="font weight, e.g. normal, bold, 900">
+<input type="text" class="val JS9Text rconfigtext_R" name="fontWeight" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="font weight, e.g. normal, bold, 900">
 </span>
 </div>
 </div>
@@ -520,7 +607,7 @@ font:
 text:
 </span>
 <span class="rconfigcol_R rconfigcol_R2L">
-<input type="text" class="val JS9Text rconfigtext_R" name="childtext" value="" autocapitalize="off" autocorrect="off" data-tooltip="text to display (edit via the associated child region)">
+<input type="text" class="val JS9Text rconfigtext_R" name="childtext" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="text to display (edit via the associated child region)">
 </span>
 </div>
 </div>
@@ -530,7 +617,7 @@ text:
 Tags:
 </span>
 <span class="rconfigcol_R rconfigcol_R2L">
-<input type="text" class="val JS9Text rconfigtext_R" name="tags" value="" autocapitalize="off" autocorrect="off" placeholder="comma-separated tags" data-tooltip="comma-separated list of tags">
+<input type="text" class="val JS9Text rconfigtext_R" name="tags" value="" autocapitalize="off" autocorrect="off" autocomplete="off" placeholder="comma-separated tags" data-tooltip="comma-separated list of tags">
 </span>
 </div>
 
@@ -539,7 +626,7 @@ Tags:
 Misc:
 </span>
 <span class="rconfigcol_R rconfigcol_R2L">
-<input type="text" class="val JS9Text rconfigtext_R" name="misc" value="" autocapitalize="off" autocorrect="off" placeholder="misc fabric.js properties, in JSON format" data-tooltip="misc fabric.js properties, in JSON format">
+<input type="text" class="val JS9Text rconfigtext_R" name="misc" value="" autocapitalize="off" autocorrect="off" autocomplete="off" placeholder="misc fabric.js properties, in JSON format" data-tooltip="misc fabric.js properties, in JSON format">
 </span>
 </div>
 
@@ -585,7 +672,7 @@ im.processRegionsForm(form, shape, arr2);"
 <!-- start: regions save html -->
 <div class="rconfiglinegroup">
 <div class="JS9Hidden rconfigbrowse">
-<input type="file" class="val rconfigfile_R" id="browsefile" name="browsefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="browse files"
+<input type="file" class="val rconfigfile_R" id="browsefile" name="browsefile" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="browse files"
 onchange="
 let form, savefile, fname;
 if( this.files.length  ){
@@ -602,7 +689,7 @@ if( this.files.length  ){
 Filename:
 </span>
 <span class="rconfigcol_R rconfigcol_R2LL">
-<input type="text" class="val JS9Text rconfigtext_R" name="savefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="save file name"
+<input type="text" class="val JS9Text rconfigtext_R" name="savefile" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="save file name"
 onchange="
 let ext, form, fname;
 form = $(this).closest('form');

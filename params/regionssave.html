@@ -141,7 +141,7 @@
 <!-- start: regions save html to be added to regions config -->
 <div class="rsavelinegroup">
 <div class="JS9Hidden rsavebrowse">
-<input type="file" class="val rsavefile_R" id="browsefile" name="browsefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="browse files"
+<input type="file" class="val rsavefile_R" id="browsefile" name="browsefile" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="browse files"
 onchange="
 let form, savefile, fname;
 if( this.files.length  ){
@@ -158,7 +158,7 @@ if( this.files.length  ){
 Filename:
 </span>
 <span class="rsavecol_R rsavecol_R2LL">
-<input type="text" class="val JS9Text rsavetext_R" name="savefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="save file name"
+<input type="text" class="val JS9Text rsavetext_R" name="savefile" value="" autocapitalize="off" autocorrect="off" autocomplete="off" data-tooltip="save file name"
 onchange="
 let ext, form, fname;
 form = $(this).closest('form');

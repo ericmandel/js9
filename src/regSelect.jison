@@ -1,5 +1,5 @@
 
-/* description: Parses and executes mathematical expressions. */
+/* description: Parses and executes region expressions. */
 
 /* lexical grammar */
 %lex
@@ -47,8 +47,22 @@ function jisonSelect(s){
     }
     JS9.tmp.regSelect.im._selectShapes(JS9.tmp.regSelect.layer, s, null,
         (obj) => {
+	    let grp;
             if( obj.params ){
-	        r.push(obj.params.id);
+	        if( obj.params.groupid ){
+		    if( $.inArray(obj.params.groupid, r) < 0 ){
+		        r.push(obj.params.groupid);
+		    }
+		} else {
+		    r.push(obj.params.id);
+	        }
+	    } else if( obj.type === "group" ){
+		grp = obj.getObjects();
+		if( grp && grp[0] && grp[0].params.groupid ){
+		    if( $.inArray(obj.params.groupid, r) < 0 ){
+		        r.push(grp[0].params.groupid);
+		    }
+		}
 	    }
         });
     return r;
