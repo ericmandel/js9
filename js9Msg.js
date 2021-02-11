@@ -29,7 +29,7 @@ const os = require('os'),
 let s, msg, client, server;
 let sbase = "socket.io";
 let cbase = "socket.io-client";
-let version = 2;
+let version = 3;
 let browser = "";
 let content = "";
 let webpage = "";
