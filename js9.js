@@ -18503,15 +18503,20 @@ JS9.Regions.regionsConfigSetSelectMenu = function(im, form, key) {
     el = form.find(`[name='${key}']`);
     // reinit: clear menu
     initmenu(el[0]);
+    // current objects
+    objs = im.getShapes("regions", "all");
     // add items
     switch(key){
     case "selectshape":
-	for(i=0; i<JS9.regions.length; i++){
-	    el.append(`<option>${JS9.regions[i]}</option>`);
+	for(i=0, gots=[]; i<objs.length; i++){
+	    s = objs[i].shape;
+	    if( $.inArray(s, gots) < 0 ){
+		el.append(`<option>${s}</option>`);
+		gots.push(s);
+	    }
 	}
 	break;
     case "selectcolor":
-	objs = im.getShapes("regions", "all");
 	for(i=0, gots=[]; i<objs.length; i++){
 	    s = objs[i].color;
 	    if( $.inArray(s, gots) < 0 ){
@@ -18521,7 +18526,6 @@ JS9.Regions.regionsConfigSetSelectMenu = function(im, form, key) {
 	}
 	break;
     case "selecttag":
-	objs = im.getShapes("regions", "all");
 	for(i=0, gots=[]; i<objs.length; i++){
 	    s = objs[i].tags;
 	    for(j=0; j<s.length; j++){
