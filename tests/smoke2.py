@@ -124,10 +124,11 @@ def regGroupTest(j, file):
         rtn("!polygon", {"color": "blue"})
         xwait(j, timeout)
         displayMessage(j, "ungroup: grp1");
-        # j.UngroupRegions("grp1");
-        j.send({'cmd': 'UngroupRegions', 'args': ['grp1']})
+        j.UngroupRegions("grp1");
+        # j.send({'cmd': 'UngroupRegions', 'args': ['grp1']})
         xwait(j, timeout)
-        s = j.send({'cmd': 'ListGroups', 'args': []})
+        s = j.ListGroups()
+        # s = j.send({'cmd': 'ListGroups', 'args': []})
         s = re.sub(r';|\n', '<br>', s)
         displayMessage(j, s)
         xwait(j, 3)
@@ -135,26 +136,26 @@ def regGroupTest(j, file):
         rtn("circle || line", {"color": "cyan"})
         xwait(j, 3)
         displayMessage(j, "ungroup: grp2");
-        # j.UngroupRegions("grp2");
-        j.send({'cmd': 'UngroupRegions', 'args': ['grp2']})
+        j.UngroupRegions("grp2");
+        # j.send({'cmd': 'UngroupRegions', 'args': ['grp2']})
         xwait(j, timeout)
         xdisp(j, rtn, "(ellipse && foo1) || (box && foo2) || polygon: majenta");
         rtn("(ellipse && foo1) || (box && foo2) || polygon", {"color": "magenta"})
         xwait(j, timeout)
         displayMessage(j, "ungroup: grp3");
-        # j.UngroupRegions("grp3");
-        j.send({'cmd': 'UngroupRegions', 'args': ['grp3']})
+        j.UngroupRegions("grp3");
+        # j.send({'cmd': 'UngroupRegions', 'args': ['grp3']})
         xwait(j, timeout)
         xdisp(j, rtn, "all: yellow");
         rtn("all", {"color": "yellow"})
         xwait(j, timeout)
         displayMessage(j, "group: circle || box");
-        # j.GroupRegions("circle || box");
-        grp = j.send({'cmd': 'GroupRegions', 'args': ['circle || box']})
+        grp = j.GroupRegions("circle || box");
+        # grp = j.send({'cmd': 'GroupRegions', 'args': ['circle || box']})
         xwait(j, timeout)
         xdisp(j, rtn, "%s: red" % grp);
         rtn(grp, {"color": "red"})
-        xwait(j, 10)
+        xwait(j, 3)
 
 # end of new tests
 
@@ -164,8 +165,8 @@ def smokeTests():
     """
     j = init()
     # call new tests here
-#    regSelectTest(j, "../js9/data/fits/casa.fits.gz")
-    regGroupTest(j, "../js9/data/fits/casa.fits.gz")
+    regSelectTest(j, "../js9/data/fits/casa.fits.gz")
+    regGroupTest(j,  "../js9/data/fits/casa.fits.gz")
     # end of new tests
     sleep(2)
     j.close()
