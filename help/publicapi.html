@@ -3286,6 +3286,7 @@ these characteristics. The
 <b><a href="#JS9.RemoveRegions">JS9.RemoveRegions()</a></b>,
 and
 <b><a href="#JS9.SelectRegions">JS9.SelectRegions()</a></b>
+<b><a href="#JS9.GroupRegions">JS9.GroupRegions()</a></b>
 calls all take a region selection specification as the first argument,
 which can be any of the following (in order of precedence):
 <ul>
@@ -3712,6 +3713,50 @@ The mode property accepts the following values:
 <li><b>3</b>: display and return full region string (including json and comments)
 </ul>
 
+<h5 id="JS9.ListGroups">List groups</h5>
+<p>
+<code class="api">gstr = JS9.ListGroups(group, opts)</code>
+<p>
+where:
+<ul>
+<li><b>group</b>: which group to list or "all"
+<li><b>opts</b>: optional options object
+</ul>
+returns:
+<ul>
+<li><b>gstr</b>: group string
+</ul>
+<p>
+List the specified region/shape group(s) in the specified layer (default is
+"regions").  The first argument is the groupid of the group to list,
+or "all" to list all groups.
+
+<p>
+The optional opts object can contain the following properties:
+<ul>
+<li><b>includeregions</b>: display regions as well as the group name (default: true)
+<li><b>layer</b>: layer to list (default is "regions")
+</ul>
+By default, the display will includes the name of the group and the
+regions in the group. To skip the display of regions, supply
+an opts object with the <b>includeregions</b> property set to <b>false</b>.
+
+For example:
+<pre>
+    JS9.ListGroups("all", {"includeregions": false})
+    grp1
+    grp2
+    grp3
+
+    JS9.ListGroups("grp1")
+    grp1:
+    circle(3980.00,4120.00,20.00) # source,include,foo1
+    ellipse(4090.00,4120.00,25.00,15.00,0.0000) # source,include,foo1
+</pre>
+<p>
+See <a href="#JS9.GroupRegions"><b>JS9.GroupRegions()</b></a>
+for more information about region groups.
+
 <h5 id="JS9.EditRegions">Edit one or more selected regions</h5>
 <p>
 <code class="api">JS9.EditRegions()</code>
@@ -3884,7 +3929,7 @@ or a single string containing a comma-separated list of tags:
 Each of the above routines adds two "foo" tags and removes two "goo"
 tags from the selected region(s).
 
-<h5 id="JS9.SelectRegions">Group Regions into a Selection</h5>
+<h5 id="JS9.SelectRegions">Gather Regions into a Temporary Selection</h5>
 <p>
 <code class="api">JS9.SelectRegions(regions)</code>
 <p>
@@ -3894,23 +3939,24 @@ where:
 </ul>
 JS9 has a rich mouse-based interface for selecting regions: a single
 region is selected by clicking on it. A number of regions can be
-gathered into a group selection by pressing the left mouse button and
+gathered into a temporary selection by pressing the left mouse button and
 dragging the mouse over the desired regions. To add to an
 already-existing selection, shift-click the mouse on a region.
-A selected group of regions can be moved, resized, or retrieved as a
-single unit.
 
 <p>
-This routine allows you to create a group selection programmatically by
-specifying which regions make up the selection.
+A regions selection can be moved, resized, or retrieved as a
+single unit. The selection is destroyed when the mouse is clicked
+outside the selection, or when
+<a href="#JS9.UnselectRegions"><b>JS9.UnselectRegions()</b></a>
+is called.
 
 <p>
-The first argument is the <a href="#selectregions"><b>regions
-selection</b></a>.  If not specified, it defaults to "all" (since it
-doesn't make sense to default to the already-selected regions, does it?).
-
-<p>
-The result of the call will be a selected group which can be moved as one unit.
+This routine allows you to create a selection programmatically by
+specifying which regions make up the selection.  The first argument is
+the <a href="#selectregions"><b>regions selection</b></a>.  If not
+specified, it defaults to "all" (since it doesn't make sense to
+default to the already-selected regions, does it?).  The result of the
+call will be a selection of regions which can be moved as one unit.
 
 <p>
 For example:
@@ -3921,6 +3967,20 @@ For example:
     # select all circles not having tag 'foo2'
     JS9.SelectRegions("circle && !foo2");
 </pre>
+
+<p>
+Regions in a selection are processed individually,
+i.e. a <a href="#selectregions"><b>regions selection</b></a> will match
+the regions inside a group. Thus for example, if you create a
+selection containing circles, changing the color using the "circle"
+specification will also affect the circles within the selection. You
+can, of course, process only the regions inside a selection using
+the <b>selected</b> specification.
+
+<p>
+To create more long-lived groups (i.e., which are not destroyed
+when you click the mouse outside the region), see
+<a href="#JS9.GroupRegions"><b>JS9.GroupRegions()</b></a>.
 
 <h5 id="JS9.UnselectRegions">Remove Regions From a Selection</h5>
 <p>
@@ -3937,15 +3997,11 @@ dragging the mouse over the desired regions. To add to an
 already-existing selection, shift-click the mouse on a region.
 
 <p>
-This routine allows you to remove one or more regions from a group
+This routine allows you to remove one or more regions from a region
 selection programmatically by specifying which regions to remove.
-
-<p>
 The first argument is the <a href="#selectregions"><b>regions selection</b></a>.
 If not specified, or specified as "all" or "selected", the selection is undone.
-
-<p>
-The result of the call will be a new selected group, not containing
+Otherwise, the result of the call will be a new selection, not containing
 the unselected regions, which can be moved as one unit.
 
 <p>
@@ -3956,6 +4012,134 @@ For example:
 
     # unselect circles not having tag 'foo2'
     JS9.UnselectRegions("circle && !foo2");
+</pre>
+
+<h5 id="JS9.GroupRegions">Gather Regions into a Long-lived Group</h5>
+<p>
+<code class="api">JS9.GroupRegions(regions, opts)</code>
+<p>
+where:
+<ul>
+<li><b>regions</b>: which regions to group
+<li><b>opts</b>: optional object containing grouping options
+</ul>
+returns:
+<ul>
+<li><b>groupid</b>: the group id associated with the newly created group
+</ul>
+
+<p>
+A <b>region group</b> can be moved and resized as a single unit. To
+first order, it is a long-lived form of a <b>region selection</b>.
+The latter gets dissolved when you click the mouse outside the
+selection, but a region group is dissolved only by
+calling <a href="#JS9.UngroupRegions"><b>JS9.UngroupRegions()</b></a>.
+
+<p>
+This routine allows you to create a group by specifying the regions
+which will compose it.  The first argument is
+the <a href="#selectregions"><b>regions selection</b></a>.  If not
+specified, it defaults to either "selected" or "all", depending on
+whether a region selection currently exits.
+
+<p>
+The optional opts argument contains the following properties:
+<ul>
+<li><b>groupid</b>: the group id to use, if possible (default: "group_[n]")
+<li><b>select</b>: if false, the group is not selected upon creation
+</ul>
+<p>
+By default, the <b>groupid</b> will be the string "group_" followed by
+an integer chosen so that the groupid is unique. You can supply your
+own groupid, but if it already is associated with an existing group,
+an integer value will be appended to make it unique. Also, by default
+the newly created group will be "selected".  You can pass
+the <b>select</b> property with a value of <b>false</b> in order to
+avoid selecting the group (e.g., if you are creating a number of
+groups and don't want to see each of them selected in turn.)
+
+<p>
+The returned <b>groupid</b> string can be used to select and process all the
+regions in that group. Thus, for example, you can use the groupid to
+change the color of all grouped regions:
+<pre>
+    # make a group from all circles having the tag foo1
+    gid = JS9.GroupRegions("circle && foo1");
+
+    # change color of all regions in the group
+    JS9.ChangeRegions(gid, {"color":"red"});
+</pre>
+Furthermore, when creating a regions file via
+<a href="#JS9.SaveRegions"><b>JS9.SaveRegions()</b></a>, the groupid will
+be stored in each grouped region's JSON object, and will be used to
+reconstitute the group when the file is reloaded.
+
+<p>
+Note however, that unlike the temporary region selections,
+regions in a group are not available individually,
+i.e., a <a href="#selectregions"><b>regions selection</b></a> using a
+non-groupid does not match regions inside a group. Thus, for
+example, if you have created a group of circles, changing the color
+using a "circle" specification does not affect circles within the group:
+<pre>
+    # make a group from all circles having the tag foo1
+    gid = JS9.GroupRegions("circle && foo1");
+
+    # change color of circle regions, but NOT including those in any group
+    JS9.ChangeRegions("circle", {"color":"cyan"});
+
+    # change color of all regions in the group
+    JS9.ChangeRegions(gid, {"color":"red"});
+</pre>
+
+<p>
+Furthermore, a given region can only be part of one group at a
+time. In the case where a region already is part of an existing group,
+the <b>globalOpts.regGroupConflict</b> property determines how that region
+is processed.  The default is <b>skip</b>, meaning that the region is
+silently skipped over when creating the new group. The alternative
+is <b>error</b>, which will throw an error.
+
+<p>
+To create a more temporary selection, see
+<a href="#JS9.SelectRegions"><b>JS9.SelectRegions()</b></a>.
+
+<h5 id="JS9.UngroupRegions">Dissolve a Group of Regions</h5>
+<p>
+<code class="api">JS9.UngroupRegions(groupid, opts)</code>
+<p>
+where:
+<ul>
+<li><b>groupid</b>: group id of the group to dissolve
+<li><b>opts</b>: optional object containing ungrouping options
+</ul>
+
+<p>
+This routine allows you to dissolve an existing group, so that the
+regions contained therein once again become separate.
+The first argument is the <b>groupid</b>, previously returned by the
+<a href="#JS9.GroupRegions"><b>JS9.GroupRegions()</b></a> call.
+
+<p>
+The optional opts argument contains the following properties:
+<ul>
+<li><b>select</b>: newly separate regions in the group are "selected"?
+</ul>
+By default, the ungrouped regions unobtrusively take their place among
+other regions on the display. You can make them be selected by
+passing the <b>select: true</b> property in opts. Doing this, for
+example, would allow you to remove them easily with the Delete key.
+<p>
+For example:
+<pre>
+    # group all circles and ellipses
+    gid = JS9.GroupRegions("circle || ellipse");
+
+    # ungroup so the regions are again separate
+    JS9.UngroupRegions(gid)
+
+    # change color of circle regions, including the newly ungrouped ones
+    JS9.ChangeRegions("circle", {"color":"cyan"});
 </pre>
 
 <h5 id="JS9.ToggleRegionTags">Toggle two region tags for the specified image(s)</h5>
@@ -4398,19 +4582,20 @@ shape is selected by clicking on it. A number of shapes can be
 gathered into a group selection by pressing the left mouse button and
 dragging the mouse over the desired shapes. To add to an
 already-existing selection, shift-click the mouse on a shape.
-A selected group of shapes can be moved, resized, or retrieved as a
-single unit.
+
+<p>
+A selected group of regions can be moved, resized, or retrieved as a
+single unit. The selected group is destroyed when the mouse is clicked
+outside the selection, or when
+<a href="#JS9.UnselectShapes"><b>JS9.UnselectShapes()</b></a>
+is called.
 
 <p>
 This routine allows you to create a group selection programmatically by
-specifying which shapes make up the selection.
-
-<p>
-The second argument is the <a href="#selectregions"><b>regions
+specifying which shapes make up the selection. The first argument is the
+shape layer. The second argument is the <a href="#selectregions"><b>regions
 selection</b></a>.  If not specified, it defaults to "all" (since it
 doesn't make sense to default to the already-selected shapes, does it?).
-
-<p>
 The result of the call will be a selected group which can be moved as one unit.
 
 <h5 id="JS9.UnselectShapes">Remove Shapes From a Selection</h5>
@@ -4424,23 +4609,146 @@ where:
 </ul>
 JS9 has a rich mouse-based interface for selecting shapes: a single
 shape is selected by clicking on it. A number of shapes can be
-gathered into a group selection by pressing the left mouse button and
+gathered into a selection by pressing the left mouse button and
 dragging the mouse over the desired shapes. To add to an
 already-existing selection, shift-click the mouse on a shape.
 
 <p>
 This routine allows you to remove one or more shapes from a group
-selection programmatically by specifying which shapes to remove.
+selection programmatically by specifying which shapes to remove.  The
+first argument is the shape layer.  The second argument is
+the <a href="#selectregions"><b>regions selection</b></a>.  If not
+specified, or specified as "all" or "selected", the selection is
+undone.  The result of the call will be a new selected group, not
+containing the unselected shapes, which can be moved as one unit.
+
+<h5 id="JS9.GroupShapes">Gather Shapes into a Long-lived Group</h5>
+<p>
+<code class="api">JS9.GroupShapes(layer, shapes, opts)</code>
+<p>
+where:
+<ul>
+<li><b>layer</b>: shape layer
+<li><b>shapes</b>: which shapes to group
+<li><b>opts</b>: optional object containing grouping options
+</ul>
+returns:
+<ul>
+<li><b>groupid</b>: the group id associated with the newly created group
+</ul>
 
 <p>
-The second argument is the <a href="#selectregions"><b>regions
-selection</b></a>.  If not specified, or specified as "all" or
-"selected", the selection is undone.
+A <b>shape group</b> can be moved and resized as a single unit. To
+first order, it is a long-lived form of a <b>region selection</b>.
+The latter gets dissolved when you click the mouse outside the
+selection, but a shape group is dissolved only by
+calling <b><a href="#JS9.UngroupShapes">JS9.UngroupShapes()</a></b>.
 
 <p>
-The result of the call will be a new selected group, not containing
-the unselected shapes, which can be moved as one unit.
+This routine allows you to create a group by specifying the shapes
+which will compose it. The first argument is the shape layer.  The
+second argument is the <a href="#selectregions"><b>regions selection</b></a>.
+If not specified, it defaults to either "selected" or "all",
+depending on whether a shape selection currently exits.
 
+<p>
+The optional opts argument contains the following properties:
+<ul>
+<li><b>groupid</b>: the group id to use, if possible (default: "group_[n]")
+<li><b>select</b>: if false, the group is not selected upon creation
+</ul>
+<p>
+By default, the <b>groupid</b> will be the string "group_" followed by
+an integer chosen so that the groupid is unique. You can supply your
+own groupid, but if it already is associated with an existing group,
+an integer value will be appended to make it unique. Also, by default
+the newly created group will be "selected".  You can pass
+the <b>select</b> property with a value of <b>false</b> in order to
+avoid selecting the group (e.g., if you are creating a number of
+groups and don't want to see each of them selected in turn.)
+
+<p>
+The returned <b>groupid</b> string can be used to select and process all the
+shapes in that group. Thus, for example, you can use the groupid to
+change the color of all grouped shapes:
+<pre>
+    # make a group from all circles having the tag foo1
+    gid = JS9.GroupShapes("myregions", "circle && foo1");
+
+    # change color of all shapes in the group
+    JS9.ChangeShapes("myregions", gid, {"color":"red"});
+</pre>
+
+<p>
+Note however, that unlike the temporary shape selections,
+shapes in a group are not available individually,
+i.e., a <a href="#selectshapes"><b>shapes selection</b></a> using a
+non-groupid does not match shapes inside a group. Thus, for
+example, if you have created a group of circles, changing the color
+using a "circle" specification does not affect circles within the group:
+<pre>
+    # make a group from all circles having the tag foo1
+    gid = JS9.GroupShapes("myregions", "circle && foo1");
+
+    # change color of circle shapes, but NOT including those in any group
+    JS9.ChangeShapes("myregions", "circle", {"color":"cyan"});
+
+    # change color of all shapes in the group
+    JS9.ChangeShapes("myregions", gid, {"color":"red"});
+</pre>
+
+<p>
+Furthermore, a given shape can only be part of one group at a
+time. In the case where a shape already is part of an existing group,
+the <b>globalOpts.regGroupConflict</b> property determines how that shape
+is processed.  The default is <b>skip</b>, meaning that the shape is
+silently skipped over when creating the new group. The alternative
+is <b>error</b>, which will throw an error.
+
+<p>
+To create a more temporary selection, see
+<a href="#JS9.SelectShapes"><b>JS9.SelectShapes()</b></a>.
+
+<h5 id="JS9.UngroupShapes">Dissolve a Group of Shapes</h5>
+<p>
+<code class="api">JS9.UngroupShapes(layer, groupid, opts)</code>
+<p>
+where:
+<ul>
+<li><b>layer</b>: shape layer
+<li><b>groupid</b>: group id of the group to dissolve
+<li><b>opts</b>: optional object containing ungrouping options
+</ul>
+
+<p>
+This routine allows you to dissolve an existing group, so that the
+shapes contained therein once again become separate.  The first
+argument is the shape layer.  The second argument is
+the <b>groupid</b>, previously returned by the
+<a href="#JS9.GroupShapes"><b>JS9.GroupShapes()</b></a> call.
+
+<p>
+The optional opts argument contains the following properties:
+<ul>
+<li><b>select</b>: newly separate shapes in the group are "selected"?
+</ul>
+By default, the ungrouped shapes unobtrusively take their place among
+other shapes on the display. You can make them be selected by
+passing the <b>select: true</b> property in opts. Doing this, for
+example, would allow you to remove them easily with the Delete key.
+
+<p>
+For example:
+<pre>
+    # group all circles and ellipses
+    gid = JS9.GroupShapes("myregions", "circle || ellipse");
+
+    # ungroup so the shapes are again separate
+    JS9.UngroupShapes("myregions", gid)
+
+    # change color of circle shapes, including the newly ungrouped ones
+    JS9.ChangeShapes("myregions", "circle", {"color":"cyan"});
+</pre>
 
 <h5 id="JS9.LoadCatalog">Load an astronomical catalog</h5>
 <p>
