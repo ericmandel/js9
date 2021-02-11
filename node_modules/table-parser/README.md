@@ -31,7 +31,7 @@ Use table-parser to parse it into object:
 
 ```
 var FS = require( 'fs' );
-var Parser = require( '../lib/index' );
+var Parser = require('table-parser');
 
 var linux_ps = './ps.log';
 

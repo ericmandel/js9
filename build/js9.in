@@ -70,7 +70,7 @@ usage(){
   printf "  # or without -a if no switches specified:\n"
   printf "  %s [image1, image2, ...]\n" $XEQ
   printf "  # start a JS9 web page in a browser and load images\n"
-  printf "  %s -b [bname] [switches] [image1, image2, ...]\n" $XEQ
+  printf "  %s -b [switches] [image1, image2, ...]\n" $XEQ
   printf "  # convert JS9 region file to DS9 region file\n"
   printf "  %s -r js9RegionFile\n" $XEQ
   printf " \n"
@@ -94,7 +94,7 @@ usage(){
   printf "    --width [w]               # width of app\n"
   printf " \n"
   printf "  browser (-b) specific switches:\n"
-  printf "    -b|--browser [bname]      # start browser chrome|firefox|safari\n"
+  printf "    -b|--browser              # start in browser
   printf "    -w|--webpage [url]        # url or full path of web page to open\n"
   printf " \n"
   printf "  command and browser (-b) switches:\n"
@@ -129,8 +129,8 @@ usage(){
   printf "    %s -a --webpage ~/myjs9.html foo.fits\n" $XEQ
   printf "    # start the js9 app, enable node for direct access to file system\n"
   printf "    %s -a --node true foo.fits\n" $XEQ
-  printf "    # start chrome and load foo.fits into the myjs9.html page\n"
-  printf "    %s -b chrome -w ~/myjs9.html foo.fits\n" $XEQ
+  printf "    # start browser and load foo.fits into the myjs9.html page\n"
+  printf "    %s -b -w ~/myjs9.html foo.fits\n" $XEQ
   printf "    # display js9.html web page (or \$JS9_WEBPAGE) in \$JS9_BROWSER\n"
   printf "    %s -b foo.fits\n" $XEQ
   printf "    # ... then carry on as usual\n"
@@ -145,6 +145,8 @@ usage(){
   printf "  notes:\n"
   printf "    Make sure the relative paths to the js9 files in your web page are correct!"
   printf "\n"
+  printf "\n"
+  printf "    --browser uses \$JS9_BROWSER, or Safari on Mac, else Chrome\n"
   if [ x"$OS" = xDarwin ]; then
     printf "\n    When using Desktop JS9 with Electron.app, you can codesign it to avoid"
     printf "\n    repeated requests by macOS to allow incoming connections:\n"

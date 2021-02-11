@@ -44,14 +44,15 @@ module.exports.parse = function (output) {
     // Treat the first line as the title fields line
     if (index == 0) {
       var fields = line.split(/\s+/);
+      var currentIndex = 0;
 
       // record the beginning and ending for each field
       fields.forEach(function (field, idx) {
 
         if (field) {
           var info = titleInfo[field] = {};
-          var indexBegin = line.indexOf(field);
-          var indexEnd = indexBegin + field.length;
+          var indexBegin = line.indexOf(field, currentIndex);
+          var indexEnd = currentIndex = (indexBegin + field.length);
 
           if (idx == 0) {
             info.titleBegin = 0;
