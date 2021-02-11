@@ -24,7 +24,7 @@ const http = require('http'),
       qs = require('querystring'),
       cproc = require("child_process"),
       fs = require("fs"),
-      uuidv4 = require('uuid/v4'),
+      { v4: uuidv4 } = require('uuid'),
       rmdir = require('rimraf');
 
 // internal variables

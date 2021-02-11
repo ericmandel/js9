@@ -41,6 +41,6 @@
     "socket.io-3": "npm:socket.io@^3.1.1",
     "socket.io-client-3": "npm:socket.io-client@^3.1.1",
     "table-parser": "^1.0.1",
-    "uuid": "^3.4.0"
+    "uuid": "^8.3.2"
   }
 }
