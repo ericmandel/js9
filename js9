@@ -3,10 +3,10 @@
 
 # values will be filled in by mkjs9 during the build
 if [ x${JS9_SRCDIR} = x ]; then
-export JS9_SRCDIR="/Users/eric/js9"
+  JS9_SRCDIR=""
 fi
 if [ x${JS9_INSTALLDIR} = x ]; then
-export JS9_INSTALLDIR="/Users/eric/Sites/js9"
+  JS9_INSTALLDIR=""
 fi
 
 # make sure js9Msg sees these, if possible
@@ -275,7 +275,9 @@ export JS9_MSGSCRIPT
 # make sure we have a browser defined
 if [ x$JS9_BROWSER = x ]; then
     case $OS in
-        Darwin) JS9_BROWSER="safari" ;;
+# see known issues
+#       Darwin) JS9_BROWSER="safari" ;;
+        Darwin) JS9_BROWSER="chrome" ;;
         *)      JS9_BROWSER="chrome" ;;
     esac
 fi

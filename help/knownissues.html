@@ -15,6 +15,26 @@
 
 <ol>
 
+<li><b>Desktop app (February 11, 2021 : unresolved)</b>
+<p>
+When the js9 script is run with the -b (start a browser) switch on a Mac:
+<pre>
+    js9 -b --webpage js9.html
+</pre>
+we would like to use Safari as the target browser. But executing this command
+under the hood:
+<pre>
+    open -a Safari --webpage js9.html
+</pre>
+causes both Safari and your default browser to start up. We therefore use
+Chrome instead. If you really want to use Safari, you can run:
+<pre>
+    js9 -b safari --webpage js9.html
+</pre>
+or set the JS9_BROWSER environment variable to "safari". In either case,
+try to ensure that Safari is actually running before running js9 with -b,
+as this seems to work properly.
+
 <li><b>Desktop app (July 9, 2019 : unresolved)</b>
 <p>
 The <a href="https://electronjs.org/" target="_blank">Electron.js</a>-based
