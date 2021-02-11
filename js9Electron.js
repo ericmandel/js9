@@ -161,7 +161,7 @@ function startHelper(mode){
 	    return;
 	}
 	// get process list and look for a js9 helper
-
+	// see async usage example https://github.com/sindresorhus/ps-list
 	(async () => {
 	    let i, got, ps;
 	    js9Electron.pslist = await pslist();
@@ -169,8 +169,8 @@ function startHelper(mode){
 	    for(i=0, got=0; i<js9Electron.pslist.length; i++){
 		ps = js9Electron.pslist[i];
 		if( ps.cmd.match(/node .*js9Helper.js/) ){
-		    // found a helper
-		    // merge, if necessary
+		    // found a node-based helper, so we can just exit
+		    // but merge first, if necessary
 		    if( js9Electron.merge ){
 			domerge();
 		    }
