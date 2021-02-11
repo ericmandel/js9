@@ -1,8 +1,7 @@
-
 # socket.io
-
+[![Run on Repl.it](https://repl.it/badge/github/socketio/socket.io)](https://repl.it/github/socketio/socket.io)
 [![Backers on Open Collective](https://opencollective.com/socketio/backers/badge.svg)](#backers) [![Sponsors on Open Collective](https://opencollective.com/socketio/sponsors/badge.svg)](#sponsors)
-[![Build Status](https://secure.travis-ci.org/socketio/socket.io.svg?branch=master)](https://travis-ci.org/socketio/socket.io)
+[![Build Status](https://github.com/socketio/socket.io/workflows/CI/badge.svg)](https://github.com/socketio/socket.io/actions)
 [![Dependency Status](https://david-dm.org/socketio/socket.io.svg)](https://david-dm.org/socketio/socket.io)
 [![devDependency Status](https://david-dm.org/socketio/socket.io/dev-status.svg)](https://david-dm.org/socketio/socket.io#info=devDependencies)
 [![NPM version](https://badge.fury.io/js/socket.io.svg)](https://www.npmjs.com/package/socket.io)
@@ -22,6 +21,8 @@ Some implementations in other languages are also available:
 - [C++](https://github.com/socketio/socket.io-client-cpp)
 - [Swift](https://github.com/socketio/socket.io-client-swift)
 - [Dart](https://github.com/rikulo/socket.io-client-dart)
+- [Python](https://github.com/miguelgrinberg/python-socketio)
+- [.Net](https://github.com/Quobject/SocketIoClientDotNet)
 
 Its main features are:
 
@@ -35,7 +36,7 @@ For this purpose, it relies on [Engine.IO](https://github.com/socketio/engine.io
 
 #### Auto-reconnection support
 
-Unless instructed otherwise a disconnected client will try to reconnect forever, until the server is available again. Please see the available reconnection options [here](https://github.com/socketio/socket.io-client/blob/master/docs/API.md#new-managerurl-options).
+Unless instructed otherwise a disconnected client will try to reconnect forever, until the server is available again. Please see the available reconnection options [here](https://socket.io/docs/v3/client-api/#new-Manager-url-options).
 
 #### Disconnection detection
 
@@ -84,7 +85,11 @@ This is a useful feature to send notifications to a group of users, or to a give
 ## Installation
 
 ```bash
+// with npm
 npm install socket.io
+
+// with yarn
+yarn add socket.io
 ```
 
 ## How to use
