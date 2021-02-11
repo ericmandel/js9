@@ -34,7 +34,7 @@ const os = require('os');
 const path = require('path');
 const fs = require('fs');
 const proc = require('child_process');
-const ps = require('ps-node');
+const pslist = require('ps-list');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -144,7 +144,7 @@ function savePreferences(obj){
 
 // start up a JS9 helper, if possible and necessary
 function startHelper(mode){
-    var domerge = () => {
+    const domerge = () => {
 	try{
 	    proc.exec(`js9 merge "${js9Electron.merge}"`);
 	}
@@ -160,28 +160,38 @@ function startHelper(mode){
 	    js9Electron.helper = require(js9Electron.helperpage);
 	    return;
 	}
-	// look for a node JS9 helper already running
-	ps.lookup({
-	    command: 'node',
-	    psargs: 'ux',
-	    arguments: 'js9Helper.js'
-	}, (err, rlist) => {
-	    if( rlist.length === 0 ){
-		// if node helper not running, look for an Electron helper
-		ps.lookup({
-		    psargs: 'ux',
-		    arguments: 'js9Electron.js'
-		}, (err2, rlist2) => {
-		    if( (rlist2.length <= 1) ){
-			js9Electron.helper = require(js9Electron.helperpage);
-		    } else if( js9Electron.merge ){
+	// get process list and look for a js9 helper
+
+	(async () => {
+	    let i, got, ps;
+	    js9Electron.pslist = await pslist();
+	    // look for a Node-based JS9 helper already running
+	    for(i=0, got=0; i<js9Electron.pslist.length; i++){
+		ps = js9Electron.pslist[i];
+		if( ps.cmd.match(/node .*js9Helper.js/) ){
+		    // found a helper
+		    // merge, if necessary
+		    if( js9Electron.merge ){
 			domerge();
 		    }
-		});
-	    } else if( js9Electron.merge ){
-		domerge();
+		    got = -1;
+		    break;
+		} else if( ps.cmd.match(/js9Electron.js/) ){
+		    got++;
+		}
 	    }
-	});
+	    // if we're the first electron instance, start up the helper
+	    if( got === 0 || got == 1 ){
+		js9Electron.helper = require(js9Electron.helperpage);
+	    } else {
+		// flag multiple electron instances
+		process.env.JS9_MULTIELECTRON = "true";
+		// merge, if necessary
+		if( js9Electron.merge ){
+		    domerge();
+		}
+	    }
+	})();
     }
 }
 
@@ -742,15 +752,7 @@ if( !js9Electron.webpage.match(/^(https?|ftp):\/\//) ||
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
-    ps.lookup({
-	psargs: 'ux',
-	arguments: 'js9Electron.js'
-    }, (err, rlist) => {
-	if( rlist.length >= 2 ){
-	    process.env.JS9_MULTIELECTRON = "true";
-	}
-	createWindow();
-    });
+    createWindow();
 });
 
 // quit when all windows are closed
@@ -788,8 +790,8 @@ app.on('activate', () => {
 
 // process messages from js9
 ipcMain.on("msg", (event, arg) => {
-    var s, obj, opts;
-    var win = js9Electron.win;
+    let s, obj, opts;
+    let win = js9Electron.win;
     switch(arg){
     case "startHelper":
 	startHelper(true);
@@ -908,4 +910,3 @@ ipcMain.on("msg", (event, arg) => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
-

@@ -29,18 +29,16 @@
     "ps-node",
     "rimraf",
     "socket.io",
-    "table-parser",
     "uuid"
   ],
   "dependencies": {
     "minimist": "^1.2.5",
     "open": "^7.4.0",
-    "ps-node": "^0.1.6",
+    "ps-list": "^7.2.0",
     "rimraf": "^3.0.2",
     "socket.io": "^2.4.1",
     "socket.io-3": "npm:socket.io@^3.1.1",
     "socket.io-client-3": "npm:socket.io-client@^3.1.1",
-    "table-parser": "^1.0.1",
     "uuid": "^8.3.2"
   }
 }
