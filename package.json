@@ -23,10 +23,9 @@
   },
   "homepage": "https://js9.si.edu",
   "bundledDependencies": [
-    "connected-domain",
     "minimist",
     "open",
-    "ps-node",
+    "ps-list",
     "rimraf",
     "socket.io",
     "uuid"
