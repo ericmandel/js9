@@ -234,9 +234,10 @@ JS9Msg.prototype.startBrowser = function(){
 	break;
     }
     if( browser ){
-	opts.app = [browser];
 	if( switches ){
-	    opts.app.push(switches);
+	    opts.app = [browser, switches];
+	} else {
+	    opts.app = browser;
 	}
     }
     if( verify ){ console.log("webpage, browser: %s, %s", webpage, browser); }
