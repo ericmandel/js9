@@ -11982,14 +11982,7 @@ JS9.Helper.prototype.connect = function(type){
 	if( this.sockver === 2 ){
 	    // socket.io file
 	    sockbase = "socket.io";
-	    // the slim version avoids the 4-second delay compiling the code
-	    // (this is fixed in v3)
-	    if( window.electron && window.electron.multiElectron ){
-		sockfile  = "socket.io.slim.js";
-	    } else {
-		// use the canonical version
-		sockfile  = "socket.io.js";
-	    }
+	    sockfile = "socket.io.js";
 	} else {
 	    // v3 is available as of 11/2020
 	    sockbase = `socket.io-${this.sockver}`;

@@ -37,7 +37,7 @@
     "open": "^7.2.1",
     "ps-node": "^0.1.0",
     "rimraf": "^1.0.0",
-    "socket.io": "^2.1.1",
+    "socket.io": "^2.4.1",
     "socket.io-3": "npm:socket.io@^3.0.3",
     "socket.io-client-3": "npm:socket.io-client@^3.0.3",
     "uuid": "^3.4.0"
