@@ -14270,7 +14270,7 @@ JS9.Fabric._parseShapes = function(layerName, selection, opts){
     catch(e){
 	JS9.error(`parsing selection filter: ${selection}`, e);
     }
-    if( opts && opts.saveselection ){
+    if( opts && opts.saveselection && selection !== "selected" ){
 	this.layers[layerName].selection = selection;
     }
     selection = JS9.tmp.regSelect.ids;
@@ -14397,7 +14397,7 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 	// (which will change the selection into an array of region ids)
 	if( selection.match(/&|\||!/) ){
 	    selection = this._parseShapes(layerName, selection, opts);
-	} else if( opts.saveselection ){
+	} else if( opts.saveselection && selection !== "selected" ){
 	    this.layers[layerName].selection = selection;
 	}
     }
@@ -18409,6 +18409,28 @@ JS9.Regions.regionsConfigSetSelectFilter = function(el, def) {
     nval =  el.val().trim();
     // cur value from filter select
     curval = filter.val().trim();
+    // handle "saved" specially
+    if( def === "other" && nval === "saved" ){
+	// compose and set the new filter selection
+	s = im.layers.regions.selection || "";
+	if( s ){
+	    if( curval ){
+		if( s.charAt(0) !== "("          ||
+		    s.charAt(s.length-1) !== ")" ){
+		    s = `(${s})`;
+		}
+		if( curval.charAt(0) !== "("               ||
+		    curval.charAt(curval.length-1) !== ")" ){
+		    curval = `(${curval})`;
+		}
+		s = `${s} && ${curval}`;
+	    }
+	}
+	filter.val(`${s}`);
+	// reset the menu
+	el.prop('selectedIndex', 0);
+	return;
+    }
     if( curval ){
 	arr = curval.split(/\s+/);
     }

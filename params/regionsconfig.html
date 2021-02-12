@@ -362,7 +362,7 @@ if( im ){
   JS9.Regions.regionsConfigSetSelectOrGroup(im, form, 'ungroup');
 }
 ">
-<input name="Clear" type="button" class="JS9Button2" value="clear"
+<input name="clear" type="button" class="JS9Button2" value="clear"
 onclick="
 const form = $(this).closest('form');
 form.find(`[name='selectfilter']`).val('');
@@ -412,7 +412,12 @@ JS9.Regions.regionsConfigSetSelectFilter($(this),'ops');
 <option value="||">||</option>
 <option value="!">!</option>
 </select>
-
+<select name="selectother" class="val JS9Select rselbutton" onchange="
+JS9.Regions.regionsConfigSetSelectFilter($(this),'other');
+">
+<option value="" disabled=disabled>other</option>
+<option value="saved">saved</option>
+</select>
 </span>
 
 </div>
