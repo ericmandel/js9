@@ -18399,6 +18399,16 @@ JS9.Regions.regionsConfigSetSelectFilter = function(el, def) {
     const form = el.closest('form');
     const filter = form.find(`[name='selectfilter']`);
     const im = form.data('im');
+    const withparens = (s) => {
+	let t;
+	if( !s ){ return ""; }
+	t = s.trim();
+	if( t.charAt(0) === "(" && t.charAt(t.length-1) === ")" ){
+	    return t;
+	} else {
+	    return `(${t})`;
+	}
+    };
     // sanity check
     if( !im ){
 	return;
@@ -18415,15 +18425,7 @@ JS9.Regions.regionsConfigSetSelectFilter = function(el, def) {
 	s = im.layers.regions.selection || "";
 	if( s ){
 	    if( curval ){
-		if( s.charAt(0) !== "("          ||
-		    s.charAt(s.length-1) !== ")" ){
-		    s = `(${s})`;
-		}
-		if( curval.charAt(0) !== "("               ||
-		    curval.charAt(curval.length-1) !== ")" ){
-		    curval = `(${curval})`;
-		}
-		s = `${s} && ${curval}`;
+		s = `${withparens(s)} && ${withparens(curval)}`;
 	    }
 	}
 	filter.val(`${s}`);
@@ -18485,10 +18487,8 @@ JS9.Regions.regionsConfigSetSelectFilter = function(el, def) {
 	if( arr.length >= 2 ){
 	    for(i=0; i<arr.length; i++){
 		s = arr[i].trim();
-		if( s.indexOf("&&")          > 0 &&
-		    s.charAt(0) !==          "(" &&
-		    s.charAt(s.length-1) !== ")" ){
-		    arr[i] = `(${s})`;
+		if( s.indexOf("&&") > 0 ){
+		    arr[i] = withparens(s);
 		} else {
 		    arr[i] = s;
 		}
