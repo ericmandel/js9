@@ -34,7 +34,7 @@ const os = require('os');
 const path = require('path');
 const fs = require('fs');
 const proc = require('child_process');
-const pslist = require('ps-list');
+const psList = require('ps-list');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -163,20 +163,18 @@ function startHelper(mode){
 	// get process list and look for a js9 helper
 	// see async usage example https://github.com/sindresorhus/ps-list
 	(async () => {
-	    let i, got, ps;
-	    js9Electron.pslist = await pslist();
+	    let i, got;
+	    let pslist = await psList();
 	    // look for a Node-based JS9 helper already running
-	    for(i=0, got=0; i<js9Electron.pslist.length; i++){
-		ps = js9Electron.pslist[i];
-		if( ps.cmd.match(/node .*js9Helper.js/) ){
+	    for(i=0, got=0; i<pslist.length; i++){
+		if( pslist[i].cmd.match(/node .*js9Helper.js/) ){
 		    // found a node-based helper, so we can just exit
 		    // but merge first, if necessary
 		    if( js9Electron.merge ){
 			domerge();
 		    }
-		    got = -1;
-		    break;
-		} else if( ps.cmd.match(/js9Electron.js/) ){
+		    return;
+		} else if( pslist[i].cmd.match(/js9Electron.js/) ){
 		    got++;
 		}
 	    }
@@ -184,8 +182,6 @@ function startHelper(mode){
 	    if( got === 0 || got == 1 ){
 		js9Electron.helper = require(js9Electron.helperpage);
 	    } else {
-		// flag multiple electron instances
-		process.env.JS9_MULTIELECTRON = "true";
 		// merge, if necessary
 		if( js9Electron.merge ){
 		    domerge();
@@ -752,7 +748,20 @@ if( !js9Electron.webpage.match(/^(https?|ftp):\/\//) ||
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
-    createWindow();
+    (async () => {
+	let i, got;
+	let pslist = await psList();
+	// look for multiple Electron instances ... requires special handling
+	for(i=0, got=0; i<pslist.length; i++){
+	    if( pslist[i].cmd.match(/js9Electron.js/) ){
+		got++;
+	    }
+	}
+	if( got >= 2 ){
+	    process.env.JS9_MULTIELECTRON = "true";
+	}
+	createWindow();
+    })();
 });
 
 // quit when all windows are closed
