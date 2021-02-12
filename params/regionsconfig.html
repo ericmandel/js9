@@ -338,7 +338,7 @@ if( im ){
 >
 </span>
 <span class="rconfigcol_R rconfigcol_R6L">
-<input name="Select" type="button" class="JS9Button2" value="Select"
+<input name="select" type="button" class="JS9Button2" value="select"
 onclick="
 const form = $(this).closest('form');
 const im = form.data('im');
@@ -346,8 +346,7 @@ if( im ){
   JS9.Regions.regionsConfigSetSelectOrGroup(im, form, 'select');
 }
 ">
-&nbsp;
-<input name="Group" type="button" class="JS9Button2" value="Group"
+<input name="group" type="button" class="JS9Button2" value="group"
 onclick="
 const form = $(this).closest('form');
 const im = form.data('im');
@@ -355,14 +354,18 @@ if( im ){
   JS9.Regions.regionsConfigSetSelectOrGroup(im, form, 'group');
 }
 ">
-&nbsp;
-<input name="Ungroup" type="button" class="JS9Button2" value="Ungroup"
+<input name="ungroup" type="button" class="JS9Button2" value="ungroup"
 onclick="
 const form = $(this).closest('form');
 const im = form.data('im');
 if( im ){
   JS9.Regions.regionsConfigSetSelectOrGroup(im, form, 'ungroup');
 }
+">
+<input name="Clear" type="button" class="JS9Button2" value="clear"
+onclick="
+const form = $(this).closest('form');
+form.find(`[name='selectfilter']`).val('');
 ">
 </span>
 </div>
@@ -560,7 +563,7 @@ $(this).prop('selectedIndex', 0);
 </span>
 
 <span class="rconfigcol_R rconfigcol_R7">
-<input name="Clear" type="button" class="JS9Button2" value="Clear"
+<input name="Clear" type="button" class="JS9Button2" value="clear"
 onclick="
 const form = $(this).closest('form');
 const im = form.data('im');
