@@ -14270,8 +14270,16 @@ JS9.Fabric._parseShapes = function(layerName, selection, opts){
     catch(e){
 	JS9.error(`parsing selection filter: ${selection}`, e);
     }
-    if( opts && opts.saveselection && selection !== "selected" ){
-	this.layers[layerName].selection = selection;
+    if( opts && opts.saveselection && selection ){
+	switch(selection.trim()){
+	case "all":
+	case "saved":
+	case "selected":
+	    break;
+	default:
+	    this.layers[layerName].selection = selection;
+	    break;
+	}
     }
     selection = JS9.tmp.regSelect.ids;
     delete JS9.tmp.regSelect;
@@ -14397,8 +14405,16 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 	// (which will change the selection into an array of region ids)
 	if( selection.match(/&|\||!/) ){
 	    selection = this._parseShapes(layerName, selection, opts);
-	} else if( opts.saveselection && selection !== "selected" ){
-	    this.layers[layerName].selection = selection;
+	} else if( opts.saveselection && selection ){
+	    switch(selection.trim()){
+	    case "all":
+	    case "saved":
+	    case "selected":
+		break;
+	    default:
+		this.layers[layerName].selection = selection;
+		break;
+	    }
 	}
     }
     // selection can be a single selection or an array of selections
