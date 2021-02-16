@@ -18568,8 +18568,14 @@ JS9.Regions.regionsConfigSetSelectMenu = function(im, form, key) {
 	}
 	break;
     case "selectwcs":
-	for(i=0; i<JS9.wcssyss.length; i++){
-	    el.append(`<option>${JS9.wcssyss[i]}</option>`);
+	for(i=0, gots=[]; i<objs.length; i++){
+	    if( objs[i].wcsconfig ){
+		s = objs[i].wcsconfig.wcssys;
+		if( $.inArray(s, gots) < 0 ){
+		    el.append(`<option>${s}</option>`);
+		    gots.push(s);
+		}
+	    }
 	}
 	break;
     case "selectgroup":
