@@ -43,10 +43,11 @@ function initSocketIO(sockurl, sockver, pageid, id){
 	return;
     }
     // configure path and script based on version of socketio
-    if( sockver !== 2 ){
-	sockopts.path = `/socket.io-${sockver}/`;
-	socksuffix = sockopts.path + "socket.io.min.js";
-    }
+// the import does not work trying to load v3
+//    if( sockver !== 2 ){
+//	sockopts.path = `/socket.io-${sockver}/`;
+//	socksuffix = sockopts.path + "socket.io.js";
+//    }
     sockscript = sockurl + socksuffix;
     // import socketio scripts
     if( !socketImported ){
@@ -82,13 +83,13 @@ function initSocketIO(sockurl, sockver, pageid, id){
     });
     socket.on("disconnect", () => {
 	const obj = {id: id, cmd: "disconnect"};
-	connected = false;
 	if( socketActive ){
 	    obj.alert = true;
 	    obj.result = "The JS9 helper connection was unexpectedly severed (probably on the server side). Please try again.";
 	} else if( connected ){
 	    obj.result = "JS9 worker socket was disconnected";
 	}
+	connected = false;
 	socketActive = false;
 	self.postMessage(obj);
     });
