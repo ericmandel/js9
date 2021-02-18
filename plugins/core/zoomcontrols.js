@@ -367,10 +367,10 @@ JS9.PanZoom.init = function(opts){
 	return res;
     };
     const getSysOptions = (im) => {
-	let i, sys;
+	let i, sys, wcssys;
 	let res = "<option selected disabled>WCS Systems</option>";
-	const wcssys = im.tmp.wcssysPanZoom || im.getWCSSys();
 	if( im ){
+	    wcssys = im.tmp.wcssysPanZoom || im.getWCSSys();
 	    if( im.raw.wcs && im.raw.wcs > 0 ){
 		sys = JS9.wcssyss;
 	    } else {
@@ -387,10 +387,10 @@ JS9.PanZoom.init = function(opts){
 	return res;
     };
     const getUnitsOptions = (im) => {
-	let i, units;
+	let i, units, wcsunits;
 	let res = "<option selected disabled>WCS Units</option>";
-	const wcsunits = im.tmp.wcsunitsPanZoom || im.getWCSUnits();
 	if( im ){
+	    wcsunits = im.tmp.wcsunitsPanZoom || im.getWCSUnits();
 	    if( im.raw.wcs && im.raw.wcs > 0 ){
 		units = ["degrees", "sexagesimal", "pixels"];
 	    } else {

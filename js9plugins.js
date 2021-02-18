@@ -1629,14 +1629,14 @@ JS9.Blink.nofileHTML='<p><span id="blinkNoFile">[Images will appear here as they
 
 // start blinking
 JS9.Blink.start = function(display){
-    let im;
+    let im, saveidx;
     let done = false;
     const plugin = display.pluginInstances.JS9Blink;
-    const saveidx = plugin.idx;
     // sanity check
     if( !plugin ){
 	return;
     }
+    saveidx = plugin.idx;
     while( !done ){
 	im = JS9.images[plugin.idx];
 	if( (im.display === display) && im.tmp.blinkMode ){
@@ -10969,10 +10969,10 @@ JS9.PanZoom.init = function(opts){
 	return res;
     };
     const getSysOptions = (im) => {
-	let i, sys;
+	let i, sys, wcssys;
 	let res = "<option selected disabled>WCS Systems</option>";
-	const wcssys = im.tmp.wcssysPanZoom || im.getWCSSys();
 	if( im ){
+	    wcssys = im.tmp.wcssysPanZoom || im.getWCSSys();
 	    if( im.raw.wcs && im.raw.wcs > 0 ){
 		sys = JS9.wcssyss;
 	    } else {
@@ -10989,10 +10989,10 @@ JS9.PanZoom.init = function(opts){
 	return res;
     };
     const getUnitsOptions = (im) => {
-	let i, units;
+	let i, units, wcsunits;
 	let res = "<option selected disabled>WCS Units</option>";
-	const wcsunits = im.tmp.wcsunitsPanZoom || im.getWCSUnits();
 	if( im ){
+	    wcsunits = im.tmp.wcsunitsPanZoom || im.getWCSUnits();
 	    if( im.raw.wcs && im.raw.wcs > 0 ){
 		units = ["degrees", "sexagesimal", "pixels"];
 	    } else {

@@ -35,14 +35,14 @@ JS9.Blink.nofileHTML='<p><span id="blinkNoFile">[Images will appear here as they
 
 // start blinking
 JS9.Blink.start = function(display){
-    let im;
+    let im, saveidx;
     let done = false;
     const plugin = display.pluginInstances.JS9Blink;
-    const saveidx = plugin.idx;
     // sanity check
     if( !plugin ){
 	return;
     }
+    saveidx = plugin.idx;
     while( !done ){
 	im = JS9.images[plugin.idx];
 	if( (im.display === display) && im.tmp.blinkMode ){
