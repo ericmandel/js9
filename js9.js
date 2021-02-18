@@ -6,7 +6,7 @@
  * Organization: Harvard Smithsonian Center for Astrophysics, Cambridge MA
  * Contact: saord@cfa.harvard.edu
  *
- * Copyright (c) 2012 - 2020 Smithsonian Astrophysical Observatory
+ * Copyright (c) 2012 - 2021 Smithsonian Astrophysical Observatory
  *
  */
 
@@ -639,7 +639,7 @@ if( window.electron ){
     }
     // once recommended by Electron, they removed this by 8.0.0
     // still seems worthwhile, but let's put it here instead of passing it in
-    if( window && typeof window.eval === "function" ){
+    if( typeof window.eval === "function" ){
 	window.eval = function(){
 	    throw new Error('For security reasons, Desktop JS9 does not support window.eval()');
 	}
@@ -997,7 +997,11 @@ JS9.Image = function(file, params, func){
     switch( typeof file ){
     case "object":
 	// save source
-	this.source = localOpts.source || "fits";
+	if( localOpts && localOpts.source ){
+	    this.source = localOpts.source;
+	} else {
+	    this.source = "fits";
+	}
 	// generate the raw data array from the hdu
 	this.mkRawDataFromHDU(file,
 			      $.extend({}, {file: file.filename}, localOpts));
@@ -1044,7 +1048,12 @@ JS9.Image = function(file, params, func){
 	break;
     case "string":
 	// save source
-	this.source = localOpts.source || "fits2png";
+	// save source
+	if( localOpts && localOpts.source ){
+	    this.source = localOpts.source;
+	} else {
+	    this.source = "fits2png";
+	}
 	// image or table
 	this.imtab = "image";
 	// downloaded image file, path relative to displayed Web page
@@ -1115,7 +1124,7 @@ JS9.Image.prototype.getImageData = function(dflag){
 	} else if( dflag === "base64" ){
 	    // NB: this seems to be the fastest method for IPC!
 	    data = atob64(this.raw.data);
-	} else if( dflag && (dflag !== "false") ){
+	} else {
 	    // use this for javascript programming on the web page itself
 	    data = this.raw.data;
 	}
@@ -2101,7 +2110,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 		this.file = this.file.replace(/\[.*\]/, "");
 		this.file += `[${opts.extnum}]`;
 	    }
-	    if( hdu && hdu.fits ){
+	    if( hdu.fits ){
 		if( opts.extname ){
 		    hdu.fits.extname = opts.extname;
 		}
@@ -2221,7 +2230,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 		    catch(e) { this.hdus = null; }
 		}
 	    });
-	} else if( this.raw && this.raw.hdu && this.raw.hdu.fits ){
+	} else if( this.raw.hdu && this.raw.hdu.fits ){
 	    s = JS9.listhdu(this.raw.hdu.fits.vfile);
 	    if( s ){
 		try{ this.hdus = JSON.parse(s); }
@@ -2231,7 +2240,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     }
     catch(ignore){ /* empty */ }
     // can we remove the virtual file?
-    if( this.raw.hdu.fits && this.raw.hdu.fits.vfile  ){
+    if( this.raw.hdu && this.raw.hdu.fits && this.raw.hdu.fits.vfile  ){
 	s = JS9.globalOpts.clearImageMemory;
 	if( s === false ){
 	    s = ["never"];
@@ -6544,8 +6553,6 @@ JS9.Image.prototype.saveFITS = function(fname, opts){
 JS9.Image.prototype.saveIMG = function(fname, type, opts){
     let key, img, ctx, canvas, width, height, quality;
     if( window.hasOwnProperty("saveAs") ){
-	// opts is optional
-	opts = opts || {};
 	// opts can be opts object or json string or quality value
 	if( typeof opts === "number" ){
 	    quality = opts;
@@ -6562,6 +6569,8 @@ JS9.Image.prototype.saveIMG = function(fname, type, opts){
 		quality = opts.quality;
 	    }
 	}
+	// opts is optional
+	opts = opts || {};
 	// filename is optional
 	fname = fname || "js9.png";
 	// save as specified type
@@ -7591,7 +7600,7 @@ JS9.Image.prototype.countsInRegions = function(...args){
     let i, s, vfile, bvfile, sect, ext, filter, bin, opts, cmdswitches;
     let sregions = "field";
     let bregions = "";
-    const getreg = (arg, macro, def) => {
+    const getreg = (arg, def) => {
 	let ii, rarr, reg, narg;
 	const regrexp= /(annulus|box|circle|ellipse|line|polygon|point|text) *\(/;
 	// if we have no region, we're done
@@ -7657,20 +7666,20 @@ JS9.Image.prototype.countsInRegions = function(...args){
 	if( typeof args[0] === "object" ){
 	    opts = args[0];
 	} else {
-	    sregions = getreg(args[0], "$sregions", "field");
+	    sregions = getreg(args[0], "field");
 	}
 	break;
     case 2:
-	sregions = getreg(args[0], "$sregions", "field");
+	sregions = getreg(args[0], "field");
 	if( typeof args[1] === "object" ){
 	    opts = args[1];
 	} else {
-	    bregions = getreg(args[1], "$bregions", "");
+	    bregions = getreg(args[1], "");
 	}
 	break;
     default:
-	sregions = getreg(args[0], "$sregions", "field");
-	bregions = getreg(args[1], "$bregions", "");
+	sregions = getreg(args[0], "field");
+	bregions = getreg(args[1], "");
 	opts = args[2];
 	break;
     }
@@ -8008,11 +8017,6 @@ JS9.Image.prototype.rawDataLayer = function(...args){
     if( typeof func !== "function" ){
 	return false;
     }
-    // opts can be an object or json
-    if( typeof opts === "string" ){
-	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error(`can't parse rawData opts: ${opts}`, e); }
-    }
     // but the id is not
     rawid = opts.rawid || JS9.RAWIDX;
     // which of the "old" raws do we pass to func?
@@ -8157,8 +8161,7 @@ JS9.Image.prototype.rawDataLayer = function(...args){
 
 // perform a gaussian blur on the raw data
 // creates a new raw data layer ("gaussBlur")
-JS9.Image.prototype.gaussBlurData = function(sigma){
-    let opts = {};
+JS9.Image.prototype.gaussBlurData = function(sigma, opts){
     if( sigma === undefined ){
 	JS9.error("missing sigma value for gaussBlurData");
     }
@@ -11780,7 +11783,7 @@ JS9.Helper.prototype.connect = function(type){
     let sockbase, sockfile;
     const tries = JS9.globalOpts.ehretries;
     const delay = JS9.globalOpts.ehtimeout;
-    const failedHelper = (jqXHR, textStatus, errorThrown) => {
+    const failedHelper = (textStatus, errorThrown) => {
 	this.connected = false;
 	this.helper = false;
 	this.ready = true;
@@ -11824,7 +11827,7 @@ JS9.Helper.prototype.connect = function(type){
 		// if there is no io object, we didn't really succeed
 		// can happen, for example, in the Jupyter environment
 		if( typeof io === "undefined" ){
-		    failedHelper(null, "socket io object is undefined", null);
+		    failedHelper("socket io object is undefined", null);
 		    return;
 		}
 		// connect to the helper
@@ -11895,7 +11898,7 @@ JS9.Helper.prototype.connect = function(type){
 		this.socket.on("msg", JS9.msgHandler);
 	    },
 	    error: (jqXHR, textStatus, errorThrown) => {
-		failedHelper(jqXHR, textStatus, errorThrown);
+		failedHelper(textStatus, errorThrown);
 	    }
 	});
     };
@@ -13582,7 +13585,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    // centroid of polygon from display points
 	    if( opts.left && opts.top ){
 		cpos = {x: opts.left, y: opts.top};
-	    } else if( opts.dx && opts.dx ){
+	    } else if( opts.dx && opts.dy ){
 		cpos = {x: opts.dx, y: opts.dy};
 	    } else {
 		// get center point of polygon bounding box
@@ -14270,7 +14273,7 @@ JS9.Fabric._parseShapes = function(layerName, selection, opts){
     catch(e){
 	JS9.error(`parsing selection filter: ${selection}`, e);
     }
-    if( opts && opts.saveselection && selection ){
+    if( opts.saveselection && selection ){
 	switch(selection.trim()){
 	case "all":
 	case "saved":
@@ -14593,12 +14596,10 @@ JS9.Fabric.selectShapes = function(layerName, shape, opts){
     const arr = [];
     // get layer
     layer = this.getShapeLayer(layerName);
+    // sanity check
+    if( !layer ){ return; }
     // convenience variable
     canvas = layer.canvas;
-    // sanity check
-    if( !layer ){
-	return;
-    }
     // opts is optional
     opts = opts || {};
     // opts can be an object or json
@@ -14634,7 +14635,7 @@ JS9.Fabric.selectShapes = function(layerName, shape, opts){
 	    arr.push(obj);
 	}
     });
-    if( arr && arr.length ){
+    if( arr.length ){
 	// deselect current active object, if necessary
 	if( canvas.getActiveObject() ){
 	    canvas.discardActiveObject();
@@ -16041,9 +16042,11 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
 	// reset the center point
 	JS9.resetPolygonCenter(poly);
 	// update the shape info
-	im._updateShape(poly.params.layerName, poly, null, "update");
-	if( im && (im.params.listonchange || poly.params.listonchange) ){
-	    im.listRegions(poly, {mode: 2});
+	if( im ){
+	    im._updateShape(poly.params.layerName, poly, null, "update");
+	    if( im.params.listonchange || poly.params.listonchange ){
+		im.listRegions(poly, {mode: 2});
+	    }
 	}
 	// redraw
 	canvas.renderAll();
@@ -16554,8 +16557,7 @@ JS9.MouseTouch.Actions["display value/position"] = function(im, ipos, evt){
 
 // change contrast/bias
 JS9.MouseTouch.Actions["change contrast/bias"] = function(im, ipos, evt){
-    let x, y, pos;
-    const display = im.display;
+    let x, y, pos, display;
     // skip contrast/bias change?
     if( !JS9.globalOpts.internalContrastBias || !im || !ipos ){
 	return;
@@ -16564,6 +16566,8 @@ JS9.MouseTouch.Actions["change contrast/bias"] = function(im, ipos, evt){
     if( im.cmapObj.type === "static" ){
 	return;
     }
+    // convenience variables
+    display = im.display;
     // make sure we moved the mouse a bit
     if( im.pos0 && im.pos ){
 	if( ((Math.abs(im.pos0.x-im.pos.x) < JS9.NOMOVE)  &&
@@ -18592,13 +18596,14 @@ JS9.Regions.regionsConfigSetSelectMenu = function(im, form, key) {
 
 // convenience routine used in regionsConfig.html
 JS9.Regions.regionsConfigSetSelectOrGroup = function(im, form, key, update){
-    let obj, group;
-    let canvas = im.layers.regions.canvas;
+    let obj, group, canvas;
     let el1 = form.find(`[name="selectfilter"]`);
     let el2 = form.find(`[name="multitext"]`);
     let selection = el1.val().trim();
     // sanity check
     if( !im ){ return; }
+    // convenience variables
+    canvas = im.layers.regions.canvas;
     // default is to allow update of multi-selection dialog
     // sometimes we definitely don't want that to happen, so ...
     if( update === false ){ im.tmp.updateMulti = false; }
@@ -19522,7 +19527,7 @@ JS9.Regions.saveRegions = function(fname, which, layer){
     }
     // construct final output file name, if necessary
     if( !fname ){
-	if( layer && layer !== "regions" ){
+	if( layer !== "regions" ){
 	    fname = `js9_${layer}.${format}`;
 	} else {
 	    fname = `js9.${format}`;
@@ -19871,10 +19876,7 @@ JS9.Plot.annotate = function (divjq, plot, pobj){
 // init the plot config form: called with the image context
 // eslint-disable-next-line no-unused-vars
 JS9.Plot.initConfigForm = function(plot, pobj){
-    let val, key, mover, mout;
-    const winid = plot.winid;
-    const wid = $(winid).attr("id");
-    const form = `#${wid} #plotConfigForm `;
+    let val, key, mover, mout, winid, wid, form;
     const fmt= (val) => {
 	if( val === undefined ){
 	    return undefined;
@@ -19886,6 +19888,10 @@ JS9.Plot.initConfigForm = function(plot, pobj){
     };
     // sanity checks
     if( !plot || !pobj ){ return; }
+    // convenience variables
+    winid = plot.winid;
+    wid = $(winid).attr("id");
+    form = `#${wid} #plotConfigForm `;
     // flot support only for now ...
     if( JS9.globalOpts.plotLibrary !== "flot" ){ return; }
     // fill in the values from the plot
@@ -20124,6 +20130,8 @@ JS9.Crosshair.opts = {
 JS9.Crosshair.display = function(im, ipos, evt){
     let i, s, arr, cim, ra, dec, w, h, x, y, hopts, vopts, shift, size;
     const layername = JS9.Crosshair.LAYERNAME;
+    // sanity check
+    if( !im ){ return; }
     // for computers, shift key must be down
     // for ipad, assume always true
     if( /iPad|iPhone|iPod/.test(navigator.platform) ){
@@ -20134,8 +20142,8 @@ JS9.Crosshair.display = function(im, ipos, evt){
     // always do arrow crosshair, otherwise:
     // exit if crosshair is not enabled for this image
     // exit if we are not actively tracking the crosshair via shift
-    if( !im.tmp.arrowCrosshair && (!shift || !im ||
-	im.tmp.shiftKey || !im.crosshair || !im.params.crosshair) ){
+    if( !im.tmp.arrowCrosshair &&
+	(!shift || im.tmp.shiftKey || !im.crosshair || !im.params.crosshair) ){
 	return;
     }
     if( im.tmp.arrowCrosshair && !im.params.crosshair ){
@@ -20159,7 +20167,7 @@ JS9.Crosshair.display = function(im, ipos, evt){
     im.changeShapes(layername, im.crosshair.v, vopts);
     im.crosshair.visible = true;
     // if crosshair mode is on and this image has wcs ...
-    if( JS9.globalOpts.wcsCrosshair && im && im.raw.wcs && im.raw.wcs > 0 ){
+    if( JS9.globalOpts.wcsCrosshair && im.raw.wcs && im.raw.wcs > 0 ){
 	// get wcs coords of current mouse position
 	arr = JS9.pix2wcs(im.raw.wcs, ipos.x, ipos.y).trim().split(/\s+/);
 	ra = JS9.saostrtod(arr[0]);
@@ -20206,9 +20214,10 @@ JS9.Crosshair.display = function(im, ipos, evt){
 JS9.Crosshair.hide = function(im, ipos, evt){
     const layername = JS9.Crosshair.LAYERNAME;
     const opts = JS9.Crosshair.opts.hiddenPts;
+    // sanity check
+    if( !im ){ return; }
     // if the crosshair is visible ...
-    if( im &&
-	(im.crosshair && im.crosshair.visible) ||
+    if( (im.crosshair && im.crosshair.visible) ||
 	im.tmp.arrowCrosshairVisible           ){
 	// move it off the display
 	im.changeShapes(layername, im.crosshair.h, opts);
@@ -20222,7 +20231,9 @@ JS9.Crosshair.hide = function(im, ipos, evt){
 JS9.Crosshair.create = function(im){
     const opts = JS9.Crosshair.opts.hiddenPts;
     const layername = JS9.Crosshair.LAYERNAME;
-    if( im && !im.crosshair ){
+    // sanity check
+    if( !im ){ return; }
+    if( !im.crosshair ){
 	// create the crosshair object for this image
 	im.crosshair = {};
 	// create the crosshair, but don't display it yet
@@ -23498,9 +23509,10 @@ JS9.parseStaticColors = function(arr){
 // look up a static color
 JS9.lookupStaticColor = (im, val, cache) => {
     let i, color;
+    let nocolor = {red:0,green:0,blue:0,alpha:0};
     const maxcache = 10000000;
-    const nocolor = im.params.nocolor || {red:0,green:0,blue:0,alpha:0};
     if( im && im.staticObj ){
+	nocolor = im.params.nocolor || nocolor;
 	// colors are sorted, so we can skip values less than the first min
 	if( val < im.staticObj.colors[0].min ){ return nocolor; }
 	// return cached color, if possible
@@ -25676,17 +25688,16 @@ JS9.mkPublic("Load", function(...args){
 	    display = JS9.DEFID;
 	}
     }
+    // opts is optional
+    opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "object" ){
 	// make a copy so we can modify it
 	opts = $.extend(true, {}, opts);
-    } else if( opts && typeof opts === "string" ){
+    } else if( typeof opts === "string" ){
 	// convert json to object
 	try{ opts = JSON.parse(opts); }
 	catch(e){ opts = { /* empty */ }; }
-    } else {
-	// init as an empty object
-	opts = {};
     }
     // if display was implicit, add it to opts
     opts.display = opts.display || display;
@@ -26075,22 +26086,21 @@ JS9.mkPublic("LoadWindow", function(...args){
     type = obj.argv[2];
     html = obj.argv[3];
     winopts = obj.argv[4];
+    // opts is optional
+    opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "object" ){
 	// make a copy so we can modify it
 	opts = $.extend(true, {}, opts);
-    } else if( opts && typeof opts === "string" ){
+    } else if( typeof opts === "string" ){
 	// convert json to object
 	try{ opts = JSON.parse(opts); }
 	catch(e){ opts = {}; }
-    } else {
-	// init as an empty object
-	opts = {};
     }
     // default window type
     type = type || "light";
     //  default base id
-    idbase = `${type || ""}win`;
+    idbase = `${type}win`;
     // create the specified type of window
     switch(type){
     case "light":
@@ -26213,6 +26223,8 @@ JS9.mkPublic("LoadProxy", function(...args){
     if( obj.display ){
 	disp = JS9.lookupDisplay(obj.display);
     }
+    // opts is optional
+    opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "object" ){
 	// make a copy so we can modify it
@@ -26222,8 +26234,6 @@ JS9.mkPublic("LoadProxy", function(...args){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ opts = {}; }
     }
-    // opts is optional
-    opts = opts || {};
     // output filename specified?
     if( opts.ofile ){
 	oname = opts.ofile;
@@ -27248,17 +27258,16 @@ JS9.mkPublic("LoadRegions", function(...args){
     }
     // set status
     im.setStatus("loadRegions", "processing");
+    // opts is optional
+    opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "object" ){
 	// make a copy so we can modify it
 	opts = $.extend(true, {}, opts);
-    } else if( opts && typeof opts === "string" ){
+    } else if( typeof opts === "string" ){
 	// convert json to object
 	try{ opts = JSON.parse(opts); }
 	catch(e){ opts = {}; }
-    } else {
-	// init as an empty object
-	opts = {};
     }
     // convert blob to string
     if( typeof file === "object" ){
@@ -27561,17 +27570,16 @@ JS9.mkPublic("LoadSession", function(...args){
     if( !file ){
 	JS9.error("JS9.LoadSession: no file specified for load");
     }
+    // opts is optional
+    opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "object" ){
 	// make a copy so we can modify it
 	opts = $.extend(true, {}, opts);
-    } else if( opts && typeof opts === "string" ){
+    } else if( typeof opts === "string" ){
 	// convert json to object
 	try{ opts = JSON.parse(opts); }
 	catch(e){ opts = {}; }
-    } else {
-	// init as an empty object
-	opts = {};
     }
     // check for display
     if( obj.display ){
@@ -27650,17 +27658,16 @@ JS9.mkPublic("LoadCatalog", function(...args){
     }
     // set status
     im.setStatus("loadCatalog", "processing");
+    // opts is optional
+    opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "object" ){
 	// make a copy so we can modify it
 	opts = $.extend(true, {}, opts);
-    } else if( opts && typeof opts === "string" ){
+    } else if( typeof opts === "string" ){
 	// convert json to object
 	try{ opts = JSON.parse(opts); }
 	catch(e){ opts = {}; }
-    } else {
-	// init as an empty object
-	opts = {};
     }
     // convert blob to string
     if( file instanceof Blob ){
@@ -28217,7 +28224,7 @@ JS9.init = function(){
     // check web page url for file to load, if necessary
     if( JS9.globalOpts.processQueryParams ){
 	url = new URL(window.location);
-	if( url && url.searchParams ){
+	if( url.searchParams ){
 	    uopts = {};
 	    for (const [key, value] of url.searchParams){
 		switch(key){

@@ -998,9 +998,12 @@ module.exports = xhr;
 
     function getBinParams(div, display) {
 	let im, ipos, lpos, form, hdu, bin;
-	if ( display === undefined ) {
-	    div     = this.div;
-	    display = this.display;
+	if ( !display ) {
+	    if( this ){
+		display = this.display;
+	    } else {
+		display = JS9.displays[0];
+	    }
 	}
 	im   = JS9.GetImage({display: display});
 
@@ -1178,9 +1181,7 @@ module.exports = xhr;
 	}
 
 	// get current params
-	if ( im ) {
-	    getBinParams(div, display);
-	}
+	getBinParams.call(null, div, display);
     }
 
     JS9.RegisterPlugin("FITS", "Binning", binningInit, {
@@ -3113,8 +3114,8 @@ JS9.Color.xfrom = function(did, id, target){
 	    // as if we clicked run
 	    pel.find("[name='run']").click();
 	}
+	plugin.lastfrom = from;
     }
-    plugin.lastfrom = from;
 };
 
 JS9.Color.xsetfile = function(did, id, mode, target){
@@ -3282,7 +3283,7 @@ JS9.Color.init = function(opts){
 	}
 	return res;
     };
-    const getFromOptions = () => {
+    const getFromOptions = (im) => {
 	let res;
 	let filesel = "";
 	let masksel = "";
@@ -3301,7 +3302,7 @@ JS9.Color.init = function(opts){
 		overlaysel = "selected";
 		break;
 	    }
-	} else if( im.params.flooropacity !== undefined  ){
+	} else if( im && im.params.flooropacity !== undefined  ){
 	    floorsel = "selected";
 	} else {
 	    globsel = "selected";
@@ -4156,9 +4157,10 @@ JS9.Divs.xvisible = function(display, plugin, target){
 	    } else {
 		mode = "hidden";
 	    }
+	    // the plugin container contains the plugin and maybe a toolbar
+	    instance.divjq
+		.closest(".JS9PluginContainer").css("visibility", mode);
 	}
-	// the plugin container contains the plugin and maybe a toolbar
-	instance.divjq.closest(".JS9PluginContainer").css("visibility", mode);
     }
 };
 
@@ -4851,7 +4853,6 @@ JS9.Info.init = function(){
 	default:
 	    return;
 	}
-	this.lastimage = this.display.image;
     }
     // generate the web page
     opts = JS9.globalOpts.infoBox;
@@ -7033,7 +7034,6 @@ JS9.Menubar.createMenus = function(){
 				// update the menu title
 				if( opt.updateTitle !== false ){
 				if( opt.image && menu.updateTitle &&
-				    opt.updateTitle !== false     &&
 				    menu.updateTitle.match(/(both|image)/) ){
 				    if( menu.updateTitle === "both" ){
 					hstr = `<div style='white-space:nowrap;'><img src='${opt.image}' name='${menu.name}' alt='${opt.name}' class='JS9MenubarUserImage JS9MenubarUserImageTitle' >` + `&nbsp;&nbsp;${opt.name}</div>`;
@@ -7411,12 +7411,14 @@ JS9.Menubar.createMenus = function(){
 		    let uplugin;
 		    JS9.Menubar.getDisplays.call(this, "any", key)
 			.forEach((val) => {
-			let j, s, t, kid, unew;
+			let j, s, t, kid, unew, uim;
 			const udisp = val;
-			let uim = udisp.image;
 			// make sure display is still valid
 			if( $.inArray(udisp, JS9.displays) < 0 ){
 			    return;
+			}
+			if( udisp ){
+			    uim = udisp.image;
 			}
 			switch(key){
 			case "refresh":
@@ -7698,6 +7700,7 @@ JS9.Menubar.createMenus = function(){
 	    items.pastePos = xname("paste to current pos");
 	    items.pasteReg = xname("paste to original pos");
 	    items.undoRemove = xname("undo remove");
+	    // deepscan-disable-next-line UNUSED_VAR_ASSIGN
 	    items[`sep${n++}`] = "------";
 	    items.edittitle2 = {
 		name: "Position/Value:",
@@ -9510,11 +9513,11 @@ JS9.Menubar.createMenus = function(){
 		    items.regcnts.disabled = true;
 		    items.radprof.disabled = true;
 		}
-		if( im && im.raw.header.NAXIS === 3 ){
+		if( im && im.raw && im.raw.header.NAXIS === 3 ){
 		    items.cnts3d = xname("3D Counts in Regions");
 		    items.plot3d = xname("3D Plot using Regions");
 		    if( !JS9.globalOpts.internalRegcnts ||
-			!im || !im.raw || !im.raw.hdu || !im.raw.hdu.vfile ){
+			!im.raw.hdu || !im.raw.hdu.vfile ){
 			items.cnts3d.disabled = true;
 			items.plot3d.disabled = true;
 		    }
@@ -10206,7 +10209,7 @@ JS9.Panner.create = function(im){
 	// this is because dynamics use one shape layer for all instances,
 	// and (obviously) it starts out in one of the displays.
 	if( this.display.image && this.isDynamic ){
-	    if( this.display.layers.panner && !im.display.layers.panner ){
+	    if( !im.display.layers.panner ){
 		im.display.layers.panner = this.display.layers.panner;
 	    }
 	    if( this.display.image.layers.panner && !im.layers.panner ){
@@ -13736,7 +13739,7 @@ JS9.Sync.maybeSync = function(ops, arg){
 	ops = [ops];
     }
     // do we need to sync images for this operation?
-    if( this.syncs && this.syncs.active ){
+    if( this.syncs.active ){
 	for(j=0; j<ops.length; j++){
 	    op = ops[j];
 	    if( $.isArray(this.syncs[op]) && this.syncs[op].length ){

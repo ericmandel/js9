@@ -101,9 +101,12 @@
 
     function getBinParams(div, display) {
 	let im, ipos, lpos, form, hdu, bin;
-	if ( display === undefined ) {
-	    div     = this.div;
-	    display = this.display;
+	if ( !display ) {
+	    if( this ){
+		display = this.display;
+	    } else {
+		display = JS9.displays[0];
+	    }
 	}
 	im   = JS9.GetImage({display: display});
 
@@ -281,9 +284,7 @@
 	}
 
 	// get current params
-	if ( im ) {
-	    getBinParams(div, display);
-	}
+	getBinParams.call(null, div, display);
     }
 
     JS9.RegisterPlugin("FITS", "Binning", binningInit, {

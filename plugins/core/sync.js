@@ -480,7 +480,7 @@ JS9.Sync.maybeSync = function(ops, arg){
 	ops = [ops];
     }
     // do we need to sync images for this operation?
-    if( this.syncs && this.syncs.active ){
+    if( this.syncs.active ){
 	for(j=0; j<ops.length; j++){
 	    op = ops[j];
 	    if( $.isArray(this.syncs[op]) && this.syncs[op].length ){
