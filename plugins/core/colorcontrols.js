@@ -186,8 +186,8 @@ JS9.Color.xfrom = function(did, id, target){
 	    // as if we clicked run
 	    pel.find("[name='run']").click();
 	}
+	plugin.lastfrom = from;
     }
-    plugin.lastfrom = from;
 };
 
 JS9.Color.xsetfile = function(did, id, mode, target){
@@ -355,7 +355,7 @@ JS9.Color.init = function(opts){
 	}
 	return res;
     };
-    const getFromOptions = () => {
+    const getFromOptions = (im) => {
 	let res;
 	let filesel = "";
 	let masksel = "";
@@ -374,7 +374,7 @@ JS9.Color.init = function(opts){
 		overlaysel = "selected";
 		break;
 	    }
-	} else if( im.params.flooropacity !== undefined  ){
+	} else if( im && im.params.flooropacity !== undefined  ){
 	    floorsel = "selected";
 	} else {
 	    globsel = "selected";

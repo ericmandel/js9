@@ -36,9 +36,10 @@ JS9.Divs.xvisible = function(display, plugin, target){
 	    } else {
 		mode = "hidden";
 	    }
+	    // the plugin container contains the plugin and maybe a toolbar
+	    instance.divjq
+		.closest(".JS9PluginContainer").css("visibility", mode);
 	}
-	// the plugin container contains the plugin and maybe a toolbar
-	instance.divjq.closest(".JS9PluginContainer").css("visibility", mode);
     }
 };
 

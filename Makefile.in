@@ -551,12 +551,14 @@ smoke2:		FORCE
 		  fi;							\
 		  python3 tests/smoke2.py)
 
-smokescript:	FORCE
+smoke3:		FORCE
 		@(echo "testing js9 shell scripting ...";               \
 		  tests/ebands;                                         \
 		  echo "testing hostfs support ...";                    \
 		  js9 -a -v --hostfs true --cmdfile tests/ecnts.js;     \
 		  rm -f countsInRegions.log);
+
+smokes:		smoke smoke2 smoke3
 
 viewreadme:	FORCE
 		@(grip)

@@ -46,7 +46,6 @@ JS9.Info.init = function(){
 	default:
 	    return;
 	}
-	this.lastimage = this.display.image;
     }
     // generate the web page
     opts = JS9.globalOpts.infoBox;

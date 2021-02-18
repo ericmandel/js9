@@ -700,11 +700,9 @@ const getFileSize = function(file){
 // execCmd: exec a analysis wrapper routine to run a command
 // this is the default callback for server-side analysis tasks
 const execCmd = function(socket, obj, cbfunc) {
-    let cmd, argstr, args, maxbuf, child, s;
+    let cmd, argstr, args, maxbuf, child, s, myid, myrtype;
     let myworkdir = null;
     const myip = getHost(socket);
-    const myid = obj.id;
-    const myrtype = obj.rtype || "binary";
     const myenv = process.env;
     const res = {stdout: null, stderr: null, errcode: 0,
 	       encoding: globalOpts.textEncoding};
@@ -716,6 +714,8 @@ const execCmd = function(socket, obj, cbfunc) {
 	}
 	return;
     }
+    myid = obj.id;
+    myrtype = obj.rtype || "binary";
     // stdin processing
     if( obj.stdin && typeof obj.stdin === "object" ){
 	// first chunk gets sent after process is started (see below),
@@ -758,7 +758,7 @@ const execCmd = function(socket, obj, cbfunc) {
 	break;
     }
     // the command string
-    argstr = obj.cmd || "";
+    argstr = obj.cmd;
     // expand directory macros
     argstr = argstr
 	.replace(/\$\{?JS9_DIR\}?/, installDir)
@@ -788,7 +788,7 @@ const execCmd = function(socket, obj, cbfunc) {
 	cmd = args[0];
     } else {
 	// start in the appropriate work directory, if possible
-	if( (obj.useWorkDir !== false) && socket.js9 && socket.js9.aworkDir ){
+	if( (obj.useWorkDir !== false) && socket.js9.aworkDir ){
 	    // abdsolute working directory to cd into
 	    myworkdir = socket.js9.aworkDir;
 	    // working directory relative to JS9 dir is for the worker
@@ -865,7 +865,7 @@ const execCmd = function(socket, obj, cbfunc) {
 };
 
 // sendAnalysis: send list of analysis routines to browser
-const sendAnalysisTasks = function(obj, cbfunc) {
+const sendAnalysisTasks = function(cbfunc) {
     let s;
     if( analysis && analysis.str.length ){
 	s = `[${analysis.str.join(",")}]`;
@@ -944,7 +944,7 @@ const sendMsg = function(socket, obj, cbfunc) {
 	myfunc(targets.length);
 	return;
     case "getAnalysis":
-	sendAnalysisTasks(obj, cbfunc);
+	sendAnalysisTasks(cbfunc);
 	return;
     case "addDisplay":
     case "renameDisplay":
@@ -1162,7 +1162,7 @@ const socketioHandler = function(socket, io) {
     //   support default server-side analysis (i.e. exec a wrapper script)
     socket.on("getAnalysis", (obj, cbfunc) => {
 	if( !obj ){return;}
-	sendAnalysisTasks(obj, cbfunc);
+	sendAnalysisTasks(cbfunc);
     });
     // on runAnalysis: run an analysis task
     // returns: object w/ errcode, stderr (error string), stdout (results)
@@ -1368,18 +1368,16 @@ const httpHandler = function(req, res){
 	// process the command
 	switch(cmd){
 	case "alive":
-	    if( cbfunc ){
-		// if this is a jsonp request, wrap the return string
-		// (this is done by the desktop app)
-		if( jstr.match(/^callback=/) ){
-		    s = `${jstr.replace(/^callback=/, "")}("OK")`;
-		} else {
-		    // ordinary request with ordinary return
-		    s = "OK";
-		}
-		// return callback
-		cbfunc(s);
+	    // if this is a jsonp request, wrap the return string
+	    // (this is done by the desktop app)
+	    if( jstr.match(/^callback=/) ){
+		s = `${jstr.replace(/^callback=/, "")}("OK")`;
+	    } else {
+		// ordinary request with ordinary return
+		s = "OK";
 	    }
+	    // return callback
+	    cbfunc(s);
 	    break;
 	case "msg":
 	    // send a command from an external source to a JS9 browser

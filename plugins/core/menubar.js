@@ -282,7 +282,6 @@ JS9.Menubar.createMenus = function(){
 				// update the menu title
 				if( opt.updateTitle !== false ){
 				if( opt.image && menu.updateTitle &&
-				    opt.updateTitle !== false     &&
 				    menu.updateTitle.match(/(both|image)/) ){
 				    if( menu.updateTitle === "both" ){
 					hstr = `<div style='white-space:nowrap;'><img src='${opt.image}' name='${menu.name}' alt='${opt.name}' class='JS9MenubarUserImage JS9MenubarUserImageTitle' >` + `&nbsp;&nbsp;${opt.name}</div>`;
@@ -660,12 +659,14 @@ JS9.Menubar.createMenus = function(){
 		    let uplugin;
 		    JS9.Menubar.getDisplays.call(this, "any", key)
 			.forEach((val) => {
-			let j, s, t, kid, unew;
+			let j, s, t, kid, unew, uim;
 			const udisp = val;
-			let uim = udisp.image;
 			// make sure display is still valid
 			if( $.inArray(udisp, JS9.displays) < 0 ){
 			    return;
+			}
+			if( udisp ){
+			    uim = udisp.image;
 			}
 			switch(key){
 			case "refresh":
@@ -947,6 +948,7 @@ JS9.Menubar.createMenus = function(){
 	    items.pastePos = xname("paste to current pos");
 	    items.pasteReg = xname("paste to original pos");
 	    items.undoRemove = xname("undo remove");
+	    // deepscan-disable-next-line UNUSED_VAR_ASSIGN
 	    items[`sep${n++}`] = "------";
 	    items.edittitle2 = {
 		name: "Position/Value:",
@@ -2759,11 +2761,11 @@ JS9.Menubar.createMenus = function(){
 		    items.regcnts.disabled = true;
 		    items.radprof.disabled = true;
 		}
-		if( im && im.raw.header.NAXIS === 3 ){
+		if( im && im.raw && im.raw.header.NAXIS === 3 ){
 		    items.cnts3d = xname("3D Counts in Regions");
 		    items.plot3d = xname("3D Plot using Regions");
 		    if( !JS9.globalOpts.internalRegcnts ||
-			!im || !im.raw || !im.raw.hdu || !im.raw.hdu.vfile ){
+			!im.raw.hdu || !im.raw.hdu.vfile ){
 			items.cnts3d.disabled = true;
 			items.plot3d.disabled = true;
 		    }

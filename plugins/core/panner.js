@@ -242,7 +242,7 @@ JS9.Panner.create = function(im){
 	// this is because dynamics use one shape layer for all instances,
 	// and (obviously) it starts out in one of the displays.
 	if( this.display.image && this.isDynamic ){
-	    if( this.display.layers.panner && !im.display.layers.panner ){
+	    if( !im.display.layers.panner ){
 		im.display.layers.panner = this.display.layers.panner;
 	    }
 	    if( this.display.image.layers.panner && !im.layers.panner ){
