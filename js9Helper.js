@@ -1319,7 +1319,10 @@ const httpHandler = function(req, res){
     let body = "";
     // return error into to browser
     const htmlerr = (s) => {
-	res.writeHead(400, String(s), {"Content-Type": "text/plain"});
+	// remove non-ascii characters, which throw an error here
+	// eslint-disable-next-line no-control-regex
+	let msg = String(s).replace(/[^\x00-\x7F]/g, "");
+	res.writeHead(400, msg, {"Content-Type": "text/plain"});
 	res.end();
     };
     // call-back func returning info to the client
