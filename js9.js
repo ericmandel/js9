@@ -159,6 +159,7 @@ JS9.globalOpts = {
     regToClipboard: false,	// copy all region changes to pseudo-clipboard?
     regGroupConflict: "skip",	// group conflicts: error or skip
     regConfigAddParens: true,	// does the reg configure gui try to add parens?
+    regFastRefreshFloor: 100,   // # of regions for fast refresh (if no groups)
     regDisplay: "lightwin",	// "lightwin" or "display"
     reConfigSize: "medium",	// "small", "medium"
     htimeout:  10000,		// connection timeout for the helper connect
@@ -890,6 +891,8 @@ JS9.Image = function(file, params, func){
     this.regstack = [];
     // image-specific scratch space
     this.tmp = {};
+    // current groups for each layer
+    this.groups = {};
     // xeq callback for region changes?
     this.params.xeqonchange = true;
     // copy image parameters
@@ -1283,9 +1286,7 @@ JS9.Image.prototype.closeImage = function(opts){
 // make offscreen canvas to hold RGB data from the png file
 JS9.Image.prototype.mkOffScreenCanvas = function(){
     // sanity check
-    if( !this.png || !this.png.image ){
-	return this;
-    }
+    if( !this.png || !this.png.image ){ return this; }
     // offscreen object holds canvas into which we draw to get RGB values
     // no need for jquery here, we only manipulate this via the canvas API
     this.offscreen = {};
@@ -1440,9 +1441,7 @@ JS9.Image.prototype.initLCS = function(iheader){
 JS9.Image.prototype.mkRawDataFromIMG = function(img){
     let i, h, w, ibuf, x, y, v;
     // sanity check
-    if( !img ){
-	return;
-    }
+    if( !img ){	return; }
     // convenience variables
     h = img.height;
     w = img.width;
@@ -1507,9 +1506,7 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
     // (including possible endian conversion)
     const dv = new DataView(abuf);
     // sanity check (we will null out the png image when we are done with it)
-    if( !this.offscreen.img  ){
-	return this;
-    }
+    if( !this.offscreen.img  ){	return this; }
     // create the object to hold raw data and add to raws array
     this.raws.push({from: "png"});
     // assign this object to the high-level raw data object
@@ -2598,13 +2595,9 @@ JS9.Image.prototype.mkScaledCells = function(){
 	return value;
     };
     // sanity check
-    if( !this.colorCells ){
-	return this;
-    }
+    if( !this.colorCells ){ return this; }
     // skip if colormap is static
-    if( this.cmapObj.type === "static" ){
-	return this;
-    }
+    if( this.cmapObj.type === "static" ){ return this; }
     // allocate array for scaled cells
     if( !this.psColors ){
 	this.psColors = [];
@@ -2823,9 +2816,7 @@ JS9.Image.prototype.mkRGBImage = function(){
     let mimoverlay = false;
     let cached = [];
     // sanity check
-    if( !this.rgb ){
-	return this;
-    }
+    if( !this.rgb ){ return this; }
     // image handles for RGB mode
     if( this.display.rgb.active &&
 	((this === this.display.rgb.rim) ||
@@ -3171,7 +3162,7 @@ JS9.Image.prototype.maskImage = function(...args){
     if( s ){
 	// get image handle
 	im = JS9.lookupImage(s);
-	// sanity checks
+	// sanity check
 	if( !im ){
 	    JS9.error(`unknown image for maskImage: ${s}`);
 	}
@@ -4288,7 +4279,7 @@ JS9.Image.prototype.displaySlice = function(slice, opts, func){
     }
     opts.waiting = false;
     // sanity check
-    if( slice === undefined ){
+    if( JS9.isNull(slice) ){
 	JS9.error("missing slice for displaySlice()");
     }
     if( this.raw.header.NAXIS !== 3 ){
@@ -4910,9 +4901,7 @@ JS9.Image.prototype.setFlip = function(...args){
 	return nflip || "none";
     }
     // sanity checks
-    if( JS9.isNull(flip) ){
-	return this;
-    }
+    if( JS9.isNull(flip) ){ return this; }
     // reset
     if( flip === "reset" ){
 	this.params.flip = "none";
@@ -4961,9 +4950,7 @@ JS9.Image.prototype.setRotate = function(...args){
 	return rot;
     }
     // sanity checks
-    if( JS9.isNull(rot) ){
-	return this;
-    }
+    if( JS9.isNull(rot) ){ return this; }
     // reset
     if( rot === "reset" ){
 	this.params.rotate = 0;
@@ -5027,9 +5014,7 @@ JS9.Image.prototype.setRot90 = function(...args){
 	return rot;
     }
     // sanity checks
-    if( JS9.isNull(rot) ){
-	return this;
-    }
+    if( JS9.isNull(rot) ){ return this; }
     // reset
     if( rot === "reset" ){
 	this.params.rot90 = 0;
@@ -5471,9 +5456,7 @@ JS9.Image.prototype.setWCS = function(version){
     let key, wcsname, wcssys;
     version = version || "default";
     // sanity check
-    if( !this.raw || !this.raw.altwcs ){
-	return this;
-    }
+    if( !this.raw || !this.raw.altwcs ){ return this; }
     // loop through wcs objects, looking for a match
     for( key in this.raw.altwcs ){
 	if( this.raw.altwcs.hasOwnProperty(key) ){
@@ -5689,9 +5672,7 @@ JS9.Image.prototype.queryHelper = function(which){
 JS9.Image.prototype.expandMacro = function(s, opts){
     let cmd, olen;
     // sanity check
-    if( !s ){
-	return;
-    }
+    if( !s ){ return; }
     // process each $ token
     // eslint-disable-next-line no-unused-vars
     cmd = s.replace(/\${?([a-zA-Z][a-zA-Z0-9_()]+)}?/g, (m, t, o) => {
@@ -5949,9 +5930,7 @@ JS9.Image.prototype.validateAnalysis = function(atask){
 	return String(s1).toUpperCase() === String(s2).toUpperCase();
     };
     // sanity check
-    if( !atask.title || !atask.name ){
-	return false;
-    }
+    if( !atask.title || !atask.name ){ return false; }
     // is this task hidden?
     if( atask.hidden ){
 	return false;
@@ -6017,9 +5996,7 @@ JS9.Image.prototype.getAnalysis = function(){
     let i, j, t, tasks;
     const obj = [];
     // sanity check
-    if( !this.analysisPackages ){
-	return obj;
-    }
+    if( !this.analysisPackages ){ return obj; }
     // return validated tasks
     for(j=0; j<this.analysisPackages.length; j++){
 	tasks = this.analysisPackages[j];
@@ -6071,13 +6048,8 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
     }
     // func can be passed, or it can be global
     func = func || JS9.globalOpts.analysisFunc;
-    // sanity checks
-    if( !JS9.helper.connected ){
-	return;
-    }
-    if( !this.analysisPackages ){
-	return;
-    }
+    // sanity check
+    if( !JS9.helper.connected || !this.analysisPackages ){ return; }
     // get analysis task
     a = this.lookupAnalysis(name);
     if( !a ){
@@ -6276,9 +6248,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	let winformat = "width=368px,height=110px,resize=1,scrolling=1";
 	const title = JS9.Plot.opts.title;
 	// sanity check
-	if( !divjq || !plot ){
-	    return;
-	}
+	if( !divjq || !plot ){ return; }
 	// call this once window is loaded
 	$(JS9.lightOpts[JS9.LIGHTWIN].topid)
 	    .arrive("#plotConfigForm", {onceOnly: true}, () => {
@@ -6350,9 +6320,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	    pobj = s;
 	}
 	// sanity check
-	if( !pobj ){
-	    return;
-	}
+	if( !pobj ){ return; }
 	// initialize scale
 	pobj.curscale = {x: "linear", y: "linear"};
 	// create an outer div and an inner plot for the light window open call
@@ -7166,9 +7134,7 @@ JS9.Image.prototype.setOpacity = function(...args){
 // get an image param value
 JS9.Image.prototype.getParam = function(param){
     // sanity check
-    if( !param ){
-	return null;
-    }
+    if( !param ){ return null; }
     // return param object
     if( param === "all" ){
 	return this.params;
@@ -7181,9 +7147,7 @@ JS9.Image.prototype.getParam = function(param){
 JS9.Image.prototype.setParam = function(param, value){
     let i, idx, ovalue, obj;
     // sanity check
-    if( !param ){
-	return null;
-    }
+    if( !param ){ return null; }
     // merge in new params
     if( param === "all" && typeof value === "object" ){
 	$.extend(true, this.params, value);
@@ -7317,9 +7281,7 @@ JS9.Image.prototype.copyParams = function(params, images, opts){
     let i, j, im, param, val;
     let xims = [];
     // sanity check
-    if( !params ){
-	return;
-    }
+    if( !params ){ return; }
     // opts is optional
     opts = opts || {};
     if( typeof params === "string" && params.charAt(0) === '[' ){
@@ -7553,9 +7515,7 @@ JS9.Image.prototype.dataminmax = function(dmin, dmax){
 JS9.Image.prototype.zscale = function(setvals){
     let s, rawdata, bufsize, buf, vals;
     // sanity check
-    if( !JS9.zscale || !this.raw || !this.raw.data ){
-	return this;
-    }
+    if( !JS9.zscale || !this.raw || !this.raw.data ){ return this; }
     rawdata = this.raw.data;
     // allocate space for the image in the emscripten heap
     bufsize = rawdata.length * rawdata.BYTES_PER_ELEMENT;
@@ -8014,9 +7974,7 @@ JS9.Image.prototype.rawDataLayer = function(...args){
 	}
     }
     // otherwise, sanity check if we are going to change data
-    if( typeof func !== "function" ){
-	return false;
-    }
+    if( typeof func !== "function" ){ return false; }
     // but the id is not
     rawid = opts.rawid || JS9.RAWIDX;
     // which of the "old" raws do we pass to func?
@@ -8625,9 +8583,7 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	return theader;
     };
     // sanity checks
-    if( !JS9.reproject || !wcsim || this === wcsim ){
-	return;
-    }
+    if( !JS9.reproject || !wcsim || this === wcsim ){ return; }
     if( !this.raws || !this.raws[0] ){
 	JS9.error("no raw data for reprojection");
     }
@@ -8850,10 +8806,8 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 JS9.Image.prototype.reprojectData = function(...args){
     let i, im, ovfile;
     let [wcsim, opts] = args;
-    // sanity checks
-    if( !wcsim || !JS9.reproject ){
-	return;
-    }
+    // sanity check
+    if( !wcsim || !JS9.reproject ){ return; }
     // is this a string containing an image name or WCS values?
     if( typeof wcsim === "string" ){
 	if( wcsim === "all" ){
@@ -8980,7 +8934,7 @@ JS9.Image.prototype.filterRGBImage = function(...args){
     default:
 	break;
     }
-    // sanity checks
+    // sanity check
     if( !JS9.ImageFilters[filter] ){
 	JS9.error(`JS9 image filter '${filter}' not available`);
     }
@@ -9014,7 +8968,6 @@ JS9.Image.prototype.moveToDisplay = function(dname){
     // sanity check
     if( !dname || !ndisplay ){
 	JS9.error(`could not find display: ${dname}`);
-	return null;
     }
     // clear old display first
     this.display.clearMessage();
@@ -9405,10 +9358,8 @@ JS9.Image.prototype.xeqPlugins = function(xtype, xname, xval){
         const s = `JS9:${name}`;
         $(document).trigger(s, obj);
     };
-    // sanity checks
-    if( !xtype || !xname || !JS9.globalOpts.xeqPlugins ){
-	return;
-    }
+    // sanity check
+    if( !xtype || !xname || !JS9.globalOpts.xeqPlugins ){ return; }
     // array of plugin instances
     parr = this.display.pluginInstances;
     // look for plugin callbacks to execute
@@ -9491,9 +9442,7 @@ JS9.Image.prototype.uploadFITSFile = function(){
 	}
     };
     // sanity check
-    if( !JS9.worker ){
-	return;
-    }
+    if( !JS9.worker ){ return; }
     // only supported when using socket.io ...
     if( JS9.helper.type !== "nodejs" && JS9.helper.type !== "socket.io" ){
 	return;
@@ -9562,9 +9511,7 @@ JS9.Image.prototype.removeProxyFile = function(s){
 	file = this.proxyFile;
     }
     // sanity check
-    if( !file ){
-	return;
-    }
+    if( !file ){ return; }
     // ask to remove proxy file, and process result
     JS9.Send('removeproxy', {'cmd': `js9Xeq removeproxy ${file}`}, func);
 };
@@ -9629,9 +9576,7 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
 	return col;
     };
     // sanity check
-    if( !starbase || !starbase.data || !starbase.headline ){
-	return;
-    }
+    if( !starbase || !starbase.data || !starbase.headline ){ return; }
     data = starbase.data;
     header = starbase.headline;
     delims = starbase.delims;
@@ -9761,9 +9706,7 @@ JS9.Image.prototype.loadCatalog = function(...args){
 	layer = null;
     }
     // sanity check
-    if( !catalog ){
-	return;
-    }
+    if( !catalog ){ return; }
     if( global.tooltip ){
 	lopts.tooltip = global.tooltip;
     }
@@ -9787,7 +9730,7 @@ JS9.Image.prototype.loadCatalog = function(...args){
     // generate starbase table
     try{ starbase = new JS9.Starbase(catalog, topts); }
     catch(e){ JS9.error("could not parse catalog. Is it in tab-separated column format?"); }
-    // sanity checks
+    // sanity check
     if( !starbase || !starbase.data || !starbase.data.length ){
 	JS9.error("no objects found in catalog");
     }
@@ -9890,9 +9833,7 @@ JS9.Image.prototype.wcs2imlen = function(s){
     let v, wcsinfo, iscale;
     let dpp = 1;
     // sanity check
-    if( !s ){
-	return;
-    }
+    if( !s ){ return; }
     v = JS9.strtoscaled(s);
     wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
     // oh dear, this is cheating ...
@@ -9930,9 +9871,7 @@ JS9.Colormap = function(...args){
     let [name, a1, a2, a3] = args;
     let i, got;
     // sanity check
-    if( !name ){
-	return;
-    }
+    if( !name ){ return; }
     // type of colormap is based on number and type of args
     this.name = name;
     switch(args.length){
@@ -10246,9 +10185,7 @@ JS9.Display = function(el){
 JS9.Display.prototype.addFileDialog = function(funcName, template){
     let jdiv, jinput, id;
     // sanity check
-    if( !funcName || !JS9.publics[funcName] ){
-	return;
-    }
+    if( !funcName || !JS9.publics[funcName] ){ return; }
     id = `openLocal${funcName}-${this.id}`;
     // outer div
     // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file
@@ -10537,7 +10474,7 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	o.top  += ntop;
 	o.setCoords();
     };
-    // sanity checks
+    // sanity check
     if( !JS9.globalOpts.resize ){
 	JS9.error("display resize not enabled");
     }
@@ -10581,7 +10518,7 @@ JS9.Display.prototype.resize = function(width, height, opts){
     } else {
 	height = width;
     }
-    // sanity checks
+    // sanity check
     if( (width < 10) || (height < 10) ){
 	JS9.error("invalid dimension(s) passed to display resize");
     }
@@ -11685,7 +11622,7 @@ JS9.Command = function(obj){
 	    this[p] = obj[p];
 	}
     }
-    // sanity checks
+    // sanity check
     if( !obj.name ){
 	JS9.error("command has no name");
     }
@@ -12015,9 +11952,7 @@ JS9.Helper.prototype.connect = function(type){
 // send request to back-end helper
 JS9.Helper.prototype.send = function(key, obj, cb){
     // sanity check
-    if( !this.connected ){
-	return null;
-    }
+    if( !this.connected ){ return null; }
     // add cookie value
     // add dataPath, if available (but always look in the helper directory)
     if( obj && (typeof obj === "object") ){
@@ -12458,9 +12393,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	seldialog(1);
     };
     // sanity check
-    if( !display || !layerName ){
-	return;
-    }
+    if( !display || !layerName ){ return; }
     // only do this once
     if( display.layers[layerName] ){
 	return display.layers[layerName];
@@ -12797,7 +12730,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
     dlayer.canvas.on("selection:created", (opts) => {
 	let obj;
 	// sanity check
-	if( !opts.target ){	return; }
+	if( !opts.target ){ return; }
 	if( JS9.globalOpts.skipSelectionProcessing ){ return; }
 	obj = opts.target;
 	if(  obj.type === "activeSelection"      ||
@@ -12812,7 +12745,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
     dlayer.canvas.on("selection:updated", (opts) => {
 	let obj;
 	// sanity check
-	if( !opts.target ){	return; }
+	if( !opts.target ){ return; }
 	if( JS9.globalOpts.skipSelectionProcessing ){ return; }
 	obj = opts.target;
 	if( obj.type === "activeSelection"       ||
@@ -12826,7 +12759,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
     dlayer.canvas.on("before:selection:cleared", (opts) => {
 	let obj;
 	// sanity check
-	if( !opts.target ){	return; }
+	if( !opts.target ){ return; }
 	if( JS9.globalOpts.skipSelectionProcessing ){ return; }
 	obj = opts.target;
 	if(  obj.type === "activeSelection"      ||
@@ -12863,9 +12796,7 @@ JS9.Fabric.showShapeLayer = function(layerName, mode, opts){
     let left = 0;
     layer = this.getShapeLayer(layerName);
     // sanity check
-    if( !layer ){
-	return;
-    }
+    if( !layer ){ return; }
     // opts is optional
     opts = opts || {};
     // opts can be an object or json
@@ -13061,9 +12992,7 @@ JS9.Fabric.toggleShapeLayers = function(){
 JS9.Fabric.getShapeLayer = function(layerName, opts){
     let dlayer, layer;
     // sanity check
-    if( !layerName ){
-	return null;
-    }
+    if( !layerName ){ return null; }
     layer = this.layers[layerName];
     // create new layer, if necessary
     if( !layer ){
@@ -13777,9 +13706,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 // call using image context
 JS9.Fabric._exportShapeOptions = function(opts){
     // sanity check
-    if( typeof opts !== "object" ){
-	return [];
-    }
+    if( typeof opts !== "object" ){ return []; }
     // array of export keys, with many stripped out
     return Object.keys(opts).filter( (item) => {
 	switch(item){
@@ -13952,9 +13879,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
     }
     layer = this.getShapeLayer(layerName);
     // sanity check
-    if( !layer || !layer.show ){
-	return;
-    }
+    if( !layer || !layer.show ){ return; }
     canvas = layer.canvas;
     // figure out the first arg
     if( typeof shape === "string" ){
@@ -14031,9 +13956,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	    }
 	}
 	// sanity check
-	if( !sobj.shape ){
-	    continue;
-	}
+	if( !sobj.shape ){ continue; }
 	// convenience variables
 	opts = sobj.opts;
 	params = sobj.params;
@@ -14247,9 +14170,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 JS9.Fabric._parseShapes = function(layerName, selection, opts){
     let canvas;
     // sanity check
-    if( !this.layers || !layerName || !this.layers[layerName] ){
-	return null;
-    }
+    if( !this.layers || !layerName || !this.layers[layerName] ){ return null; }
     // convenience variable(s)
     canvas = this.layers[layerName].canvas;
     // opts is optional
@@ -14323,28 +14244,42 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 	return objects;
     };
     const getgroups = (canvas, objects) => {
-	let i, j, obj, grp, olen, ao;
+	let i, j, obj, grp, olen, mlen, ao;
+	let mygroups = [];
 	let groups = [];
 	olen = objects.length;
+	// look for all possible groups
 	for(i=0; i<olen; i++){
-	    obj = objects[i];
-	    for(j=0; j<olen; j++){
-		grp = objects[j];
-		if( (grp.type === "activeSelection")      ||
-		    (grp.type === "group" && !grp.params) ){
-		   if( grp.contains(obj) ){
-		       groups[i] = grp;
-		   }
-		}
+	    grp = objects[i];
+	    if( (grp.type === "activeSelection")      ||
+		(grp.type === "group" && !grp.params) ){
+		mygroups.push(grp);
 	    }
-	    if( !groups[i] ){
-		ao = canvas.getActiveObject();
-		if( ao ){
-		    if( (ao.type === "activeSelection")      ||
-			(ao.type === "group" && !ao.params) ){
-			if( ao.contains(obj) ){
-			    groups[i] = ao;
+	}
+	mlen = mygroups.length;
+	// including the current active object
+	ao = canvas.getActiveObject();
+	if( ao ){
+	    if( !((ao.type === "activeSelection")      ||
+		  (ao.type === "group" && !ao.params)) ){
+		ao = null;
+	    }
+	}
+	if( mlen || ao ){
+	    for(i=0; i<olen; i++){
+		obj = objects[i];
+		for(j=0; j<mlen; j++){
+		    grp = mygroups[j];
+		    if( (grp.type === "activeSelection")      ||
+			(grp.type === "group" && !grp.params) ){
+			if( grp.contains(obj) ){
+			    groups[i] = grp;
 			}
+		    }
+		}
+		if( !groups[i] ){
+		    if( ao && ao.contains(obj) ){
+			groups[i] = ao;
 		    }
 		}
 	    }
@@ -14367,9 +14302,7 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 	return null;
     };
     // sanity check
-    if( !this.layers || !layerName || !this.layers[layerName] ){
-	return null;
-    }
+    if( !this.layers || !layerName || !this.layers[layerName] ){ return null; }
     // for all selections, we need a callback
     if( typeof cb !== "function" ){
 	JS9.error("selectShapes requires a callback");
@@ -14658,10 +14591,8 @@ JS9.Fabric.selectShapes = function(layerName, shape, opts){
 JS9.Fabric.unselectShapes = function(layerName, shape, opts){
     let layer, unshape, selection;
     layer = this.getShapeLayer(layerName);
-    // sanity checks
-    if( !layer || !this.layers[layerName] ){
-	return;
-    }
+    // sanity check
+    if( !layer || !this.layers[layerName] ){ return; }
     // default is to unselect everything
     if( !shape || shape === "all" || shape === "selected" ){
 	return this.selectShapes(layerName, "reset");
@@ -14700,10 +14631,10 @@ JS9.Fabric._updateMultiDialogs = function(setmode){
 // primitive to update one shape
 // call using image context
 JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
-    let i, xname, s, scalex, scaley, px, py, tval1, tval2, angstr;
+    let i, s, scalex, scaley, px, py, tval1, tval2, angstr;
     let bin, zoom, tstr, dpos, gpos, ipos, npos, objs, olen, radius, oangle;
     let opos, dist, txeq, owcssys, imforce, agroup, apos;
-    const pub ={};
+    const pub = {};
     const layer = this.layers[layerName];
     const moderexp = /^(child||export|unexport|move|mouseout)$/;
     const tr  = (x) => { return x.toFixed(2); };
@@ -14771,9 +14702,38 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    }
 	}
     };
+    // callbacks for regions (but not child regions or some modes)
+    const xplugins = () => {
+	let xname;
+	if( !obj.params.parent && !mode.match(moderexp) ){
+	    // when xeqonchange is set
+	    if( this.params.xeqonchange && layer.show && layer.opts.onchange ){
+		try{
+		    this.params.xeqonchange = false;
+		    JS9.xeqByName(layer.opts.onchange, window, this, pub);
+		}
+		catch(e){
+		    JS9.log("error in onchange: %s [%s]\n%s",
+			    this.id, e.message, JS9.strace(e));
+		}
+		finally{this.params.xeqonchange = true;}
+	    }
+	    // plugin callbacks: these have the form on[layer]change,
+	    // e.g. onregionschange
+	    xname = `on${layerName}change`;
+	    this.xeqPlugins("shape", xname, pub);
+	}
+    };
     // sanity check
-    if( !obj || !obj.params ){
+    if( !obj || !obj.params ){ return; }
+    // some updates just need to have the plugin callbacks called
+    switch(mode){
+    case "remove":
+	pub.mode = mode;
+	xplugins();
 	return;
+    default:
+	break;
     }
     ginfo = ginfo || {};
     opts = opts || {};
@@ -14842,8 +14802,10 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	}
     }
     // display position
-    pub.dx = dpos.x;
-    pub.dy = dpos.y;
+    if( pub.preservedcoords ){
+	pub.dx = dpos.x;
+	pub.dy = dpos.y;
+    }
     // image position
     ipos = this.displayToImagePos(dpos);
     pub.x = ipos.x;
@@ -15107,25 +15069,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     if( opts.nocb ){
 	return pub;
     }
-    // callbacks for regions (but not child regions or some modes)
-    if( !obj.params.parent && !mode.match(moderexp) ){
-	// when xeqonchange is set
-	if( this.params.xeqonchange && layer.show && layer.opts.onchange ){
-	    try{
-		this.params.xeqonchange = false;
-		JS9.xeqByName(layer.opts.onchange, window, this, pub);
-	    }
-	    catch(e){
-		JS9.log("error in onchange: %s [%s]\n%s",
-			this.id, e.message, JS9.strace(e));
-	    }
-	    finally{this.params.xeqonchange = true;}
-	}
-	// plugin callbacks: these have the form on[layer]change,
-	// e.g. onregionschange
-	xname = `on${layerName}change`;
-	this.xeqPlugins("shape", xname, pub);
-    }
+    // callbacks for regions
+    xplugins();
     // post processing:
     // copy to clipboard, if necessary
     if( layerName === "regions" && JS9.globalOpts.regToClipboard ){
@@ -15160,9 +15105,7 @@ JS9.Fabric.lookupGroup = function(group, layerName){
     layerName = layerName||"regions";
     layer = this.getShapeLayer(layerName);
     // sanity check
-    if( !layer ){
-	return null;
-    }
+    if( !layer ){ return null; }
     canvas = this.layers[layerName].canvas;
     if( typeof group === "string" ){
 	objs = canvas.getObjects();
@@ -15322,6 +15265,9 @@ JS9.Fabric.groupShapes = function(layerName, shape, opts){
     delete JS9.globalOpts.skipSelectionProcessing;
     // display the new group
     canvas.renderAll();
+    // save group id
+    this.groups[layerName] = this.groups[layerName] || [];
+    this.groups[layerName].push(id);
     // return the group id
     return id;
 };
@@ -15332,7 +15278,7 @@ JS9.Fabric.groupShapes = function(layerName, shape, opts){
 JS9.Fabric.ungroupShapes = function(layerName, groupid, opts){
     let i, j, idx, got, layer, canvas, objs, obj, shapes, shape;
     layer = this.getShapeLayer(layerName);
-    // sanity checks
+    // sanity check
     if( !layer || !this.layers[layerName] ){ return this; }
     if( JS9.isNull(groupid) ){
 	JS9.error("ungroup requires a group id or selection");
@@ -15379,6 +15325,14 @@ JS9.Fabric.ungroupShapes = function(layerName, groupid, opts){
 	    }
 	}
     }
+    // remove id from groups
+    if( this.groups[layerName] ){
+	idx = $.inArray(groupid, this.groups[layerName]);
+	if( idx >= 0 ){
+	    this.groups[layerName].splice(idx, 1);
+	}
+    }
+
     return this;
 };
 
@@ -15391,9 +15345,7 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
     const grp = [];
     layer = this.getShapeLayer(layerName);
     // sanity check
-    if( !layer ){
-	return;
-    }
+    if( !layer ){ return; }
     canvas = layer.canvas;
     // opts is optional
     opts = opts || {};
@@ -15522,13 +15474,7 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
     const orad = [], cpts = [];
     layer = this.getShapeLayer(layerName);
     // sanity check
-    if( !layer ){
-	return;
-    }
-    // sanity check
-    if( !opts ){
-	return;
-    }
+    if( !layer || !opts ){ return; }
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
@@ -15771,13 +15717,146 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 };
 
 // update shape layer after a change in panning, zooming, binning
-// call using image context
+// use fast if we have a lot of regions and no groups
+// otherwise use complete (handles everything, but is slower)
 JS9.Fabric.refreshShapes = function(layerName){
+    let nshape = 0;
+    let ngroup = 0;
+    let layer = this.getShapeLayer(layerName);
+    let floor = JS9.globalOpts.regFastRefreshFloor;
+    // sanity check
+    if( !layer ){ return; }
+    if( this.groups[layerName] ){
+	ngroup = this.groups[layerName].length;
+    }
+    nshape = layer.canvas.getObjects().length;
+    if( ngroup <= 0 && floor !== false && nshape >= floor ){
+	JS9.Fabric.refreshShapesFast.call(this, layerName);
+    } else {
+	JS9.Fabric.refreshShapesComplete.call(this, layerName);
+    }
+};
+
+// update shape layer after a change in panning, zooming, binning
+// This routine is more complicated that one would want because fabric.js mixes
+// regions resize, zoom, and binning all in the same scale factor. So when
+// we want to adjust a region for pan, zoom, or bin, we first have to untangle
+// the old zoom and bin values from the scale before applying new ones.
+// Current approach is to save the old bin and zoom factors when changing them,
+// use the old ones here, and then reset the old ones to the new ones. Hmmm ...
+// call using image context
+JS9.Fabric.refreshShapesFast = function(layerName){
+    let bin, zoom, scaleX, scaleY, canvas, opts;
+    let wcs = this.raw.wcs;
+    let layer = this.getShapeLayer(layerName);
+    const getpos = (obj, wcs) => {
+	let pos, s;
+	if( wcs > 0 && obj.pub.ra && obj.pub.dec ){
+	    if( typeof obj.pub.ra === "string" ){
+		obj.pub.ra = JS9.saostrtod(obj.pub.ra);
+		if( (String.fromCharCode(JS9.saodtype()) === ":") &&
+		    (this.params.wcssys !== "galactic" )          &&
+		    (this.params.wcssys !== "ecliptic" )          ){
+		    obj.pub.ra *= 15.0;
+		}
+	    }
+	    if( typeof obj.pub.dec === "string" ){
+		obj.pub.dec = JS9.saostrtod(obj.pub.dec);
+	    }
+	    s = JS9.wcs2pix(wcs, obj.pub.ra, obj.pub.dec).trim().split(/ +/);
+	    pos = this.imageToDisplayPos({x: parseFloat(s[0]),
+					  y: parseFloat(s[1])});
+	} else {
+	    pos = this.logicalToDisplayPos(obj.pub.lcs);
+	}
+	return pos;
+    };
+    // sanity check
+    if( !layer ){ return; }
+    // convenience variables
+    canvas = layer.canvas;
+    bin = this.binning.bin;
+    zoom = this.rgb.sect.zoom;
+    // scale factor removes the old values and applies the new ones
+    scaleX = (this.binning.obin / this.rgb.sect.ozoom) * zoom / bin;
+    scaleY = (this.binning.obin / this.rgb.sect.ozoom) * zoom / bin;
+    opts = {transparentgroup: false};
+    // discard selected object before changing position of shapes
+    if( canvas.getActiveObject() ){
+	canvas.discardActiveObject();
+    }
+    // process the specified shapes
+    this._selectShapes(layerName, "all", opts, (obj) => {
+	let i, s, pos, cen, pts;
+	// convert current wcs or physical pos to new display pos
+	// this takes binning, etc. into consideration
+	// we don't handle groups, and we skip regions preserving dcoords
+	if( (obj.type === "activeSelection") ||
+	    (obj.type === "group" && !obj.params) ){
+	    JS9.error("fast refreshShapes does not support groups");
+	} else if( !obj.params.preservedcoords ){
+	    pos = getpos(obj, wcs);
+	    obj.left = pos.x;
+	    obj.top = pos.y;
+	}
+	// set scaling based on zoom factor, if necessary
+	if( !obj.params.preservedcoords && obj.params.zoomable !== false ){
+	    switch(obj.params.shape){
+	    case "point":
+	    case "text":
+		break;
+	    default:
+		// rescale the region
+		obj.scaleX *= scaleX;
+		obj.scaleY *= scaleY;
+		// rescale the width of the stroke lines
+		obj.rescaleBorder();
+		//  refresh polygon and line coordinates from wcs or physical
+		if( obj.points ){
+		    cen = obj.getCenterPoint();
+		    if( wcs > 0 && obj.pub.wcspts ){
+			pts = obj.pub.wcspts;
+			for(i=0; i<pts.length; i++){
+			    s = JS9.wcs2pix(wcs, pts[i].ra, pts[i].dec)
+				.trim().split(/ +/);
+			    pos = this.imageToDisplayPos({x: parseFloat(s[0]),
+							  y: parseFloat(s[1])});
+			    obj.points[i] = {x: (pos.x - cen.x)/obj.scaleX,
+					     y: (pos.y - cen.y)/obj.scaleY};
+			}
+		    } else if( obj.pub.lcs.pts ){
+			pts = obj.pub.lcs.pts;
+			for(i=0; i<pts.length; i++){
+			    pos = this.logicalToDisplayPos(obj.pub.lcs.pts[i]);
+			    obj.points[i] = {x: (pos.x - cen.x)/obj.scaleX,
+					     y: (pos.y - cen.y)/obj.scaleY};
+			}
+		    }
+		}
+		break;
+	    }
+	}
+	// recalculate fabric coords
+	obj.setCoords();
+	// update children
+	JS9.Fabric.updateChildren(layer.dlayer, obj, "moving");
+	JS9.Fabric.updateChildren(layer.dlayer, obj, "scaling");
+	JS9.Fabric.updateChildren(layer.dlayer, obj, "rotating");
+    });
+    // redraw regions
+    if( canvas ){
+	canvas.renderAll();
+    }
+    return this;
+};
+
+// update shape layer after a change in panning, zooming, binning
+// uses ListRegions to recreate regions, very stable but a bit low
+// call using image context
+JS9.Fabric.refreshShapesComplete = function(layerName){
     let regstr, owcssys, txeq;
     // sanity check
-    if( !layerName ){
-	return;
-    }
+    if( !layerName ){ return; }
     // temporarily change wcs system to be independent of image coords
     // (in case we copied regions from one image to another)
     owcssys = this.getWCSSys();
@@ -15822,9 +15901,7 @@ JS9.Fabric.copyShapes = function(layerName, to, which){
     const ims = [];
     layer = this.getShapeLayer(layerName);
     // sanity check
-    if( !layer ){
-	return;
-    }
+    if( !layer ){ return; }
     if( typeof to === "object" ){
 	ims.push(to);
     } else if( to === "all" ){
@@ -15873,9 +15950,7 @@ JS9.Fabric._addPolygonPoint = function(layerName, obj, evt){
     const canv = {}, local = {};
     const newpt = {}, pos = {};
     // sanity check
-    if( !obj || !obj.points){
-        return;
-    }
+    if( !obj || !obj.points){ return; }
     // get mouse position
     mpos = JS9.eventToDisplayPos(evt);
     // convert the drag position from absolute to local to the group
@@ -15980,9 +16055,7 @@ JS9.Fabric._addPolygonPoint = function(layerName, obj, evt){
 JS9.Fabric._removePolygonPoint = function(layerName, obj){
     let layer, polygon, points, pt;
     // sanity check
-    if( !obj || !obj.polyparams ){
-	return;
-    }
+    if( !obj || !obj.polyparams ){ return; }
     // get info on this point
     polygon = obj.polyparams.polygon;
     points = polygon.points;
@@ -16075,13 +16148,9 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
 	canvas.renderAll();
     };
     // sanity check: don't add anchors twice
-    if( obj.params.anchors ){
-	return;
-    }
+    if( obj.params.anchors ){ return; }
     // sanity check: don't add if polygon is not changeable
-    if( obj.params.changeable === false ){
-	return;
-    }
+    if( obj.params.changeable === false ){ return; }
     obj.params.anchors = [];
     // make a rectangle at each anchor point
     for(i=0; i<obj.points.length; i++){
@@ -16481,9 +16550,7 @@ JS9.MouseTouch.isPinch = function(im, evt){
     const npinch = JS9.globalOpts.pinchWait;
     const pthresh = JS9.globalOpts.pinchThresh;
     // sanity check
-    if( !im ){
-	return -1;
-    }
+    if( !im ){ return -1; }
     display = im.display;
     if( !display.mousetouchZoom || (im.pos.touches.length !== 2) ){
 	return -1;
@@ -16627,10 +16694,8 @@ JS9.MouseTouch.Actions["change contrast/bias"].stop = function(im, ipos, evt){
 JS9.MouseTouch.Actions["wheel zoom"] = function(im, evt){
     let nzoom, display;
     const delta = evt.originalEvent.deltaY;
-    // sanity checks
-    if( !im ){
-	return;
-    }
+    // sanity check
+    if( !im ){ return; }
     // is scroll to zoom turned on?
     display = im.display;
     if( !display.mousetouchZoom ){
@@ -16653,9 +16718,7 @@ JS9.MouseTouch.Actions["wheel zoom"] = function(im, evt){
 JS9.MouseTouch.Actions["pan the image"] = function(im, ipos, evt){
     let dx, dy, temp, sect, pos;
     // sanity check
-    if( !im ){
-	return;
-    }
+    if( !im ){ return; }
     sect = im.rgb.sect;
     // how much would we pan by?
     dx = ((im.pos0.x - im.pos.x) / sect.zoom);
@@ -16701,10 +16764,8 @@ JS9.MouseTouch.Actions["pan the image"] = function(im, ipos, evt){
 // eslint-disable-next-line no-unused-vars
 JS9.MouseTouch.Actions.pinch = function(im, ipos, evt){
     let display, dist, nzoom;
-    // sanity checks
-    if( !im ){
-	return;
-    }
+    // sanity check
+    if( !im ){ return; }
     // is scroll to zoom turned on?
     display = im.display;
     // get current distance
@@ -16755,9 +16816,7 @@ JS9.MouseTouch.Actions.stop = function(im, ipos, evt){
 JS9.MouseTouch.getAction = function(im, evt){
     let action, display;
     // sanity check
-    if( !im ){
-	return action;
-    }
+    if( !im ){ return action; }
     display = im.display;
     switch(im.clickState){
 	// mouse move actions
@@ -18430,9 +18489,7 @@ JS9.Regions.regionsConfigSetSelectFilter = function(el, def) {
 	}
     };
     // sanity check
-    if( !im ){
-	return;
-    }
+    if( !im ){ return; }
     // groups
     grparr = im.listGroups("all", {includeregions:false}).split("\n");
     // new value from menu
@@ -18854,9 +18911,7 @@ JS9.Regions.listRegions = function(which, opts, layerName){
     layerName = layerName || "regions";
     layer = this.getShapeLayer(layerName);
     // sanity check
-    if( !layer ){
-	return;
-    }
+    if( !layer ){ return; }
     // set user-specified wcs, if necessary
     if( opts.wcssys || opts.wcsunits ){
 	txeq = JS9.globalOpts.xeqPlugins;
@@ -19606,7 +19661,9 @@ JS9.Regions.saveRegions = function(fname, which, layer){
 		opts.includecomments = JS9.globalOpts.regIncludeComments;
 	    }
 	    // when saving reg, we might want to exclude the dcoord shapes
-	    if( JS9.isNull(opts.savedcoords) ){
+	    if( JS9.notNull(opts.savedcoords) ){
+		opts.includedcoords = opts.savedcoords;
+	    } else {
 		opts.includedcoords = JS9.globalOpts.regSaveDCoords;
 	    }
 	    // list of regions
@@ -19886,7 +19943,7 @@ JS9.Plot.initConfigForm = function(plot, pobj){
 	}
 	return(String(val));
     };
-    // sanity checks
+    // sanity check
     if( !plot || !pobj ){ return; }
     // convenience variables
     winid = plot.winid;
@@ -20676,9 +20733,7 @@ JS9.Grid.display = function(mode, myopts){
 // toggle grid on/off
 JS9.Grid.toggle = function(im){
     // sanity check
-    if( !im ){
-	return;
-    }
+    if( !im ){ return; }
     // toggle display
     switch(im.tmp.gridStatus){
     case undefined:
@@ -20770,13 +20825,9 @@ JS9.Dysel.unhighlightSelection = function(){
 JS9.Dysel.highlightSelection = function(im){
     let disp;
     // sanity check
-    if( !im || !JS9.Dysel.retrievePlugins().length ){
-	return;
-    }
+    if( !im || !JS9.Dysel.retrievePlugins().length ){ return; }
     // optimization: no processing if we only have one display
-    if( JS9.displays.length === 1 ){
-	return;
-    }
+    if( JS9.displays.length === 1 ){ return; }
     // unhighlight all
     JS9.Dysel.unhighlightSelection();
     // the display to highlight
@@ -20822,9 +20873,7 @@ JS9.Dysel.getDisplayOr = function(def){
 // set current dynamically selected display
 JS9.Dysel.select = function(display){
     // sanity check
-    if( !display || !JS9.Dysel.retrievePlugins().length ){
-	return;
-    }
+    if( !display || !JS9.Dysel.retrievePlugins().length ){ return; }
     // save old display
     JS9.Dysel.odisplay = JS9.Dysel.display;
     // set new display
@@ -21501,9 +21550,7 @@ JS9.floatFormattedString = function(fval, prec, jj){
 JS9.centerPolygon = function(points){
     let i, plen, minx, maxx, miny, maxy;
     // sanity check
-    if( !points || !points.length ){
-	return;
-    }
+    if( !points || !points.length ){ return; }
     plen = points.length;
     for(i=0; i<plen; i++){
 	if( (minx === undefined) || (points[i].x < minx) ){
@@ -21534,9 +21581,7 @@ JS9.centroidPolygon = function(points, doaverage){
     let toty = 0;
     const pts = [];
     // sanity check
-    if( !points || !points.length ){
-	return;
-    }
+    if( !points || !points.length ){ return; }
     // get points
     plen = points.length;
     // just average the points?
@@ -21575,9 +21620,7 @@ JS9.lookupImage = function(id, display){
     let i, im, did, fp;
     const ilen= JS9.images.length;
     // sanity check
-    if( !id ){
-	return null;
-    }
+    if( !id ){ return null; }
     // desktop can have full path in file property, so check that as well
     if( window.electron ){
 	fp = `${window.electron.currentDir}/${id}`;
@@ -21668,9 +21711,7 @@ JS9.lookupVfile = function(vfile){
     let i, j, im, raw;
     const arr = [];
     // sanity check
-    if( !vfile ){
-	return arr;
-    }
+    if( !vfile ){ return arr; }
     // check raw0 hdu for specified vfile
     for(i=0; i<JS9.images.length; i++){
 	im = JS9.images[i];
@@ -22463,9 +22504,7 @@ JS9.pix2pix = function(im1, im2, obj){
     let s, ra, dec, x, y, nx, ny;
     const epsilon = 0.5;
     // sanity check
-    if( !im1 || !im2 || im1.raw.wcs <= 0 || im2.raw.wcs <= 0 ){
-	return obj;
-    }
+    if( !im1 || !im2 || im1.raw.wcs <= 0 || im2.raw.wcs <= 0 ){ return obj; }
     // convenience variables
     x = obj.x;
     y = obj.y;
@@ -22698,9 +22737,7 @@ JS9.raw2FITS = function(raw, opts){
 	return ncard;
     };
     // sanity check
-    if( !raw ){
-	return t;
-    }
+    if( !raw ){ return t; }
     // opts is optional
     opts = opts || {};
     // backward compatibility: orig. version used boolean to specify addcr
@@ -22897,9 +22934,7 @@ JS9.hdus2Str = function(hdus){
     let i, j, s, obj;
     let t = "";
     // sanity check
-    if( !hdus ){
-	return t;
-    }
+    if( !hdus ){ return t; }
     for(i=0; i<hdus.length; i++){
 	obj = hdus[i];
 	if( obj.name ){
@@ -23013,7 +23048,7 @@ JS9.searchbar = function(el, textid){
 	}
     };
     textid = textid || ".JS9AnalysisText";
-    // sanity check that we have text
+    // make sure we have text
     if( jel.is(textid) ){
 	text = jel;
     } else {
@@ -23351,9 +23386,7 @@ JS9.Starbase = function(s, opts){
     this.data = [];
     this.delims = [];
     // sanity check
-    if( !s ){
-	return;
-    }
+    if( !s ){ return; }
     // opts is optional
     opts = opts || {};
     // get array of data lines
@@ -23645,10 +23678,8 @@ JS9.mouseDownCB = function(evt){
     const display = evt.data;
     const im = display.image;
     const x = $(document).scrollLeft(), y = $(document).scrollTop();
-    // sanity checks
-    if( !im ){
-	return;
-    }
+    // sanity check
+    if( !im ){ return; }
     // set focus, if necessary, but undo any scrolling
     if( JS9.globalOpts.clickToFocus ){
 	im.display.displayConjq.focus();
@@ -23714,7 +23745,7 @@ JS9.mouseUpCB = function(evt){
     let i, dwidth, dheight, tdisp, isclick;
     const display = evt.data;
     const im = display.image;
-    // sanity checks
+    // sanity check
     if( !im ){
 	// handle supermenu clicks specially (even if no image is loaded)
 	if( JS9.hasOwnProperty("Menubar") ){
@@ -23807,10 +23838,8 @@ JS9.mouseMoveCB = function(evt){
     const display = evt.data;
     const im = display.image;
     // evt.preventDefault();
-    // sanity checks
-    if( !im ){
-	return;
-    }
+    // sanity check
+    if( !im ){ return; }
     // is mouse movement disabled with the meta key?
     if( JS9.specialKey(evt) ){
 	return;
@@ -23877,10 +23906,8 @@ JS9.mouseEnterCB = function(evt){
     const display = evt.data;
     const im = display.image;
     evt.preventDefault();
-    // sanity checks
-    if( !im ){
-	return;
-    }
+    // sanity check
+    if( !im ){ return; }
     if( !JS9.specialKey(evt) ){
 	if( JS9.globalOpts.dynamicSelect === "move" ){
 	    if( JS9.Dysel.getDisplayOr(display) !== display ){
@@ -23897,10 +23924,8 @@ JS9.mouseOverCB = function(evt){
     const im = display.image;
     const x = $(document).scrollLeft(), y = $(document).scrollTop();
     evt.preventDefault();
-    // sanity checks
-    if( !im ){
-	return;
-    }
+    // sanity check
+    if( !im ){ return; }
     // set focus, if necessary, but undo any scrolling
     if( !JS9.globalOpts.clickToFocus ){
 	im.display.displayConjq.focus();
@@ -23926,10 +23951,8 @@ JS9.mouseOutCB = function(evt){
     const display = evt.data;
     const im = display.image;
     evt.preventDefault();
-    // sanity checks
-    if( !im ){
-	return;
-    }
+    // sanity check
+    if( !im ){ return; }
     // unset focus
     if( !JS9.globalOpts.clickToFocus ){
 	im.display.displayConjq.blur();
@@ -24090,9 +24113,7 @@ JS9.RegisterPlugin = function(xclass, xname, func, opts){
     let name, m, type, url, title;
     const heading = xclass;
     // sanity check
-    if( !xclass || !xname || !func ){
-	return;
-    }
+    if( !xclass || !xname || !func ){ return; }
     // first and last name of plugin
     name = xclass + xname;
     // massage the opts a bit
@@ -24394,9 +24415,7 @@ JS9.instantiatePlugins = function(){
 JS9.initEmscripten = function(){
     let opts;
     // sanity check
-    if( window.hasOwnProperty("Astroem") ){
-	return;
-    }
+    if( window.hasOwnProperty("Astroem") ){ return; }
     // load astroem, based on whether we have native WebAssembly or not
     opts = {responseType: "arraybuffer", allowCache: true};
     if( JS9.globalOpts.useWasm          &&
@@ -24476,9 +24495,7 @@ JS9.initFITS = function(){
 // init colormaps
 JS9.initColormaps = function(){
     // sanity check
-    if( !JS9.hasOwnProperty("Colormap") ){
-	return;
-    }
+    if( !JS9.hasOwnProperty("Colormap") ){ return; }
     // load colormaps
     JS9.checkNew(new JS9.Colormap("grey",
 	[[0,0], [1,1]],
@@ -24637,9 +24654,7 @@ JS9.initColormaps = function(){
 // init console commands
 JS9.initCommands = function(){
     // sanity check
-    if( !JS9.hasOwnProperty("Command") ){
-	return;
-    }
+    if( !JS9.hasOwnProperty("Command") ){ return; }
     // load commands
     JS9.checkNew(new JS9.Command({
 	name: "analysis",
@@ -25676,7 +25691,6 @@ JS9.mkPublic("Load", function(...args){
     // sanity check
     if( !file ){
 	JS9.error("JS9.Load: no file specified for image load");
-	return;
     }
     // check for display
     if( obj.display ){
@@ -27295,9 +27309,7 @@ JS9.mkPublic("LoadRegions", function(...args){
 // construct directory starting with where JS9 is installed
 JS9.mkPublic("InstallDir", function(dir){
     // sanity check
-    if( !dir ){
-	return "";
-    }
+    if( !dir ){ return ""; }
     // add path to install directory, clean path a little bit
     return JS9.cleanPath(JS9.INSTALLDIR + dir);
 });
