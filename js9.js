@@ -3514,7 +3514,7 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
 	olpos = this.imageToLogicalPos({x: this.rgb.sect.xcen,
 					y: this.rgb.sect.ycen});
 	// save wcs pos, if available
-	if( this.raw.wcs && this.raw.wcs > 0 ){
+	if( this.validWCS() ){
 	    s = JS9.pix2wcs(this.raw.wcs,
 			    this.rgb.sect.xcen, this.rgb.sect.ycen);
 	    arr = s.trim().split(/\s+/);
@@ -3537,8 +3537,7 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
 	this.mkSection(ozoom);
     } else {
 	// try to restore section using saved coords
-	if( this.raw.wcs && this.raw.wcs > 0      &&
-	    JS9.notNull(ora) && JS9.notNull(odec) ){
+	if( this.validWCS() && JS9.notNull(ora) && JS9.notNull(odec) ){
 	    arr = JS9.wcs2pix(this.raw.wcs, ora, odec).trim().split(/ +/);
 	    ipos = {x: parseFloat(arr[0]), y: parseFloat(arr[1])};
 	} else {
@@ -4488,8 +4487,8 @@ JS9.Image.prototype.setPan = function(...args){
 		obj.wcssys = arr[2];
             }
 	}
-	if( JS9.notNull(obj.ra) && JS9.notNull(obj.dec) &&
-	    (this.raw.wcs > 0) ){
+
+	if( this.validWCS() && JS9.notNull(obj.ra) && JS9.notNull(obj.dec) ){
 	    // wcs coords
 	    // use supplied wcs, if necessary
 	    if( obj.wcssys ){
@@ -5316,7 +5315,7 @@ JS9.Image.prototype.setWCSSys = function(wcssys, updatedef){
 	if( updatedef ){
 	    JS9.globalOpts.wcsUnits.physical = "pixels";
 	}
-    } else if( this.raw.wcs && (this.raw.wcs > 0) ){
+    } else if( this.validWCS() ){
 	// native: original wcs from file
 	if( wcssys === "native" ){
 	    wcssys = this.params.wcssys0;
@@ -5497,6 +5496,11 @@ JS9.Image.prototype.setWCS = function(version){
     JS9.error(`could not find WCS version: ${version}`);
 };
 
+// is a valid WCS open and active
+JS9.Image.prototype.validWCS = function(){
+    return this.raw && this.raw.wcs && this.raw.wcs > 0;
+};
+
 // get the WCS units for this image
 JS9.Image.prototype.getWCSUnits = function(){
     if( this.params.wcsunits ){
@@ -5517,14 +5521,14 @@ JS9.Image.prototype.setWCSUnits = function(wcsunits, updatedef){
 	updatedef = JS9.globalOpts.wcsSetUpdatesDef;
     }
     if( wcsunits === "pixels" ){
-	if( JS9.isWCS(this.params.wcssys) ){
+	if( JS9.isWCSSys(this.params.wcssys) ){
 	    this.params.wcssys = "physical";
 	}
 	this.params.wcsunits = "pixels";
 	if( updatedef ){
 	    JS9.globalOpts.wcsUnits[this.params.wcssys] = "pixels";
 	}
-    } else if( this.raw.wcs && (this.raw.wcs > 0) ){
+    } else if( this.validWCS() ){
 	if( JS9.notWCS(this.params.wcssys) ){
 	    ws = JS9.imageOpts.wcssys;
 	    this.setWCSSys(ws);
@@ -6720,7 +6724,7 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	    obj.object += ")";
 	}
 	// add wcs, if necessary
-	if( (this.raw.wcs > 0) && JS9.isWCS(this.params.wcssys) ){
+	if( this.validWCS() && JS9.isWCSSys(this.params.wcssys) ){
 	    s = JS9.pix2wcs(this.raw.wcs, ipos.x, ipos.y).trim().split(/\s+/);
 	    vstr3 =  `${s[0]} ${s[1]} (${s[2]||"wcs"})`;
 	    vstr = vstr1 + sp + vstr3 + sp + vstr2;
@@ -8479,7 +8483,7 @@ JS9.Image.prototype.rotateData = function(...args){
     nheader = $.extend(true, {}, oheader);
     // rotate around current center or file center (i.e., CRPIX1,2)
     opts.center = opts.center || JS9.globalOpts.rotationCenter;
-    if( opts.center !== "file" && this.raw.wcs > 0 ){
+    if( opts.center !== "file" && this.validWCS() ){
 	pos = this.getPan();
 	arr = JS9.pix2wcs(this.raw.wcs, pos.x, pos.y).trim().split(/\s+/);
 	if( arr && arr.length > 1 ){
@@ -13245,8 +13249,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
         }
     }
     //  ra and dec are in degrees, using the current wcs
-    if( (opts.ra !== undefined) && (opts.dec !== undefined) &&
-	(this.raw.wcs > 0) ){
+    if( this.validWCS() && JS9.notNull(opts.ra) && JS9.notNull(opts.dec) ){
 	// make sure we have the right wcssys
 	if( opts.wcssys ){
 	    // from passed-in opts
@@ -13460,7 +13463,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     case "line":
     case "polygon":
 	//  wcspts in degrees, using the current wcs
-	if( (opts.wcspts !== undefined) && (this.raw.wcs > 0) ){
+	if( JS9.notNull(opts.wcspts) && this.validWCS() ){
             // fill pts array with better values from wcs, to be used below
 	    opts.pts = [];
 	    // make sure we have the right wcssys
@@ -15034,9 +15037,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	break;
     }
     // wcs processing
-    if( this.raw.wcs && (this.raw.wcs > 0) ){
-	updatewcs(this.raw.wcs, layer, pub, tstr, angstr, opts,
-		  pub);
+    if( this.validWCS() ){
+	updatewcs(this.raw.wcs, layer, pub, tstr, angstr, opts, pub);
 	if( obj.params.wcsconfig && obj.params.wcsconfig.wcssys ){
 	    txeq = JS9.globalOpts.xeqPlugins;
 	    JS9.globalOpts.xeqPlugins = false;
@@ -15751,7 +15753,8 @@ JS9.Fabric.refreshShapesFast = function(layerName){
     let layer = this.getShapeLayer(layerName);
     const getpos = (obj, wcs) => {
 	let pos, s;
-	if( wcs > 0 && obj.pub.ra && obj.pub.dec ){
+	if( this.validWCS()                                     &&
+	    JS9.notNull(obj.pub.ra) && JS9.notNull(obj.pub.dec) ){
 	    if( typeof obj.pub.ra === "string" ){
 		obj.pub.ra = JS9.saostrtod(obj.pub.ra);
 		if( (String.fromCharCode(JS9.saodtype()) === ":") &&
@@ -15814,7 +15817,7 @@ JS9.Fabric.refreshShapesFast = function(layerName){
 		//  refresh polygon and line coordinates from wcs or physical
 		if( obj.points ){
 		    cen = obj.getCenterPoint();
-		    if( wcs > 0 && obj.pub.wcspts ){
+		    if( this.validWCS() && JS9.notNull(obj.pub.wcspts) ){
 			pts = obj.pub.wcspts;
 			for(i=0; i<pts.length; i++){
 			    s = JS9.wcs2pix(wcs, pts[i].ra, pts[i].dec)
@@ -15844,9 +15847,7 @@ JS9.Fabric.refreshShapesFast = function(layerName){
 	JS9.Fabric.updateChildren(layer.dlayer, obj, "rotating");
     });
     // redraw regions
-    if( canvas ){
-	canvas.renderAll();
-    }
+    canvas.renderAll();
     return this;
 };
 
@@ -15865,7 +15866,7 @@ JS9.Fabric.refreshShapesComplete = function(layerName){
 	txeq = JS9.globalOpts.xeqPlugins;
 	JS9.globalOpts.xeqPlugins = false;
 	// get a wcs sys independent of image coords
-	if( this.raw.wcs && (this.raw.wcs > 0) ){
+	if( this.validWCS() ){
 	    this.setWCSSys("native", false);
 	} else {
 	    this.setWCSSys("physical", false);
@@ -18135,7 +18136,7 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 		key = `p${key.charAt(0)}`;
 		break;
 	    default:
-		if( this.raw.wcs && this.raw.wcs > 0 ){
+		if( this.validWCS() ){
 		    if( key === "xpos" ){
 			key = "ra";
 		    } else {
@@ -19083,7 +19084,7 @@ JS9.Regions.listRegions = function(which, opts, layerName){
 	    tagstr = ` # ${tagjoin}`;
 	}
 	// use wcs string, if available
-	if( region.wcsstr && JS9.isWCS(this.params.wcssys) ){
+	if( region.wcsstr && JS9.isWCSSys(this.params.wcssys) ){
 	    if( lasttype !== "wcs" ){
 		if( lasttype !== "none" ){
 		    regstr += sepstr;
@@ -19404,7 +19405,7 @@ JS9.Regions.parseRegions = function(s, opts){
     // this is the default wcs for regions
     wcssys = "physical";
     // do we have a real wcs?
-    iswcs = JS9.isWCS(wcssys);
+    iswcs = JS9.isWCSSys(wcssys);
     // get individual "lines" (new-line or semi-colon separated)
     lines = s.split(seprexp);
     // for each region or cmd
@@ -19520,7 +19521,7 @@ JS9.Regions.parseRegions = function(s, opts){
 		    // get new wcssys
 		    wcssys = this.getWCSSys();
 		    // is this a real wcs?
-		    iswcs = JS9.isWCS(wcssys);
+		    iswcs = JS9.isWCSSys(wcssys);
 		} else if( robj.cmd === "remove" || robj.cmd === "delete" ){
 		    regions.push({remove: true});
 		}
@@ -20224,7 +20225,7 @@ JS9.Crosshair.display = function(im, ipos, evt){
     im.changeShapes(layername, im.crosshair.v, vopts);
     im.crosshair.visible = true;
     // if crosshair mode is on and this image has wcs ...
-    if( JS9.globalOpts.wcsCrosshair && im.raw.wcs && im.raw.wcs > 0 ){
+    if( JS9.globalOpts.wcsCrosshair && im.validWCS() ){
 	// get wcs coords of current mouse position
 	arr = JS9.pix2wcs(im.raw.wcs, ipos.x, ipos.y).trim().split(/\s+/);
 	ra = JS9.saostrtod(arr[0]);
@@ -20237,7 +20238,7 @@ JS9.Crosshair.display = function(im, ipos, evt){
 	    cim = JS9.displays[i].image;
 	    if( cim && cim !== im                     &&
 		cim.crosshair && cim.params.crosshair &&
-		cim.raw.wcs > 0                       ){
+		cim.validWCS()                        ){
 		// if the ra, dec pos is on this image, display crosshair
 		w = cim.raw.width;
 		h = cim.raw.height;
@@ -22670,7 +22671,7 @@ JS9.defNull = function(s, def){
 };
 
 // check if a wcs system is a world coordinate system (fk5, etc)
-JS9.isWCS = function(s){
+JS9.isWCSSys = function(s){
     return s !== "image" && s !== "physical";
 };
 
@@ -26956,7 +26957,7 @@ JS9.mkPublic("PixToWCS", function(...args){
 	if( !JS9.isNumber(ix) || !JS9.isNumber(iy) ){
 	    JS9.error("invalid input for PixToWCS");
 	}
-	if( im.raw.wcs > 0 ){
+	if( im.validWCS() ){
 	    s = JS9.pix2wcs(im.raw.wcs, ix, iy).trim();
 	    arr = s.split(/ +/);
 	    if( (im.params.wcsunits === "sexagesimal") &&
@@ -26993,7 +26994,7 @@ JS9.mkPublic("WCSToPix", function(...args){
 	if( !JS9.isNumber(ra) || !JS9.isNumber(dec) ){
 	    JS9.error("invalid input for WCSToPix");
 	}
-	if( im.raw.wcs > 0 ){
+	if( im.validWCS() ){
 	    arr = JS9.wcs2pix(im.raw.wcs, ra, dec).trim().split(/ +/);
 	    x = parseFloat(arr[0]);
 	    y = parseFloat(arr[1]);
