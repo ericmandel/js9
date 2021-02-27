@@ -165,8 +165,8 @@ def smokeTests():
     """
     j = init()
     # call new tests here
-    regSelectTest(j, "../js9/data/fits/casa.fits.gz")
     regGroupTest(j,  "../js9/data/fits/casa.fits.gz")
+    regSelectTest(j, "../js9/data/fits/casa.fits.gz")
     # end of new tests
     sleep(2)
     j.close()
