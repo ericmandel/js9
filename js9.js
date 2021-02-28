@@ -159,7 +159,7 @@ JS9.globalOpts = {
     regToClipboard: false,	// copy all region changes to pseudo-clipboard?
     regGroupConflict: "skip",	// group conflicts: error or skip
     regConfigAddParens: true,	// does the reg configure gui try to add parens?
-    regFastRefreshFloor: 100,   // # of regions for fast refresh (if no groups)
+    regFastRefresh: 100,	// # of regions for fast refresh (no groups)
     regDisplay: "lightwin",	// "lightwin" or "display"
     reConfigSize: "medium",	// "small", "medium"
     htimeout:  10000,		// connection timeout for the helper connect
@@ -15409,7 +15409,7 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
     }
     canvas.renderAll();
     // reset the counter if all shapes were removed?
-    if( !canvas.getObjects().length && JS9.globalOpts.resetEmptyShapeId ){
+    if( !canvas.size() && JS9.globalOpts.resetEmptyShapeId ){
 	layer.nshape = 0;
     }
     return this;
@@ -15719,20 +15719,30 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 };
 
 // update shape layer after a change in panning, zooming, binning
-// use fast if we have a lot of regions and no groups
+// use fast if we have a lot of regions and no groups or selections
 // otherwise use complete (handles everything, but is slower)
+// call using image context
 JS9.Fabric.refreshShapes = function(layerName){
     let nshape = 0;
     let ngroup = 0;
     let layer = this.getShapeLayer(layerName);
-    let floor = JS9.globalOpts.regFastRefreshFloor;
+    let floor = JS9.globalOpts.regFastRefresh;
     // sanity check
     if( !layer ){ return; }
+    // is fast is turned off?
+    if( floor == false ){
+	JS9.Fabric.refreshShapesComplete.call(this, layerName);
+	return;
+    }
+    // use fast if we have no group or selections, and > floor shapes
     if( this.groups[layerName] ){
 	ngroup = this.groups[layerName].length;
     }
-    nshape = layer.canvas.getObjects().length;
-    if( ngroup <= 0 && floor !== false && nshape >= floor ){
+    if( layer.canvas.getActiveObject() ){
+	ngroup++;
+    }
+    nshape = layer.canvas.size();
+    if( ngroup <= 0 && nshape >= floor ){
 	JS9.Fabric.refreshShapesFast.call(this, layerName);
     } else {
 	JS9.Fabric.refreshShapesComplete.call(this, layerName);
@@ -15852,7 +15862,7 @@ JS9.Fabric.refreshShapesFast = function(layerName){
 };
 
 // update shape layer after a change in panning, zooming, binning
-// uses ListRegions to recreate regions, very stable but a bit low
+// uses ListRegions to recreate regions, very stable but slow for many shapes
 // call using image context
 JS9.Fabric.refreshShapesComplete = function(layerName){
     let regstr, owcssys, txeq;
