@@ -159,7 +159,6 @@ JS9.globalOpts = {
     regToClipboard: false,	// copy all region changes to pseudo-clipboard?
     regGroupConflict: "skip",	// group conflicts: error or skip
     regConfigAddParens: true,	// does the reg configure gui try to add parens?
-    regFastRefresh: 100,	// # of regions for fast refresh (no groups)
     regDisplay: "lightwin",	// "lightwin" or "display"
     reConfigSize: "medium",	// "small", "medium"
     htimeout:  10000,		// connection timeout for the helper connect
@@ -182,6 +181,8 @@ JS9.globalOpts = {
     reloadRefresh: false,       // reload an image will refresh (or redisplay)?
     reloadRefreshReg: true,     // reloading regions file removes previous?
     nextImageMask: false,	// does nextImage() show active image masks?
+    panMouseThreshold: 1,	// pixels mouse must move before we pan
+    panRefreshThreshold: 500,	// # of regions before optimizing pan refresh
     panWithinDisplay: false,	// keep panned image within the display?
     pannerDirections: true,	// display direction vectors in panner?
     magnifierRegions: true,	// display regions in magnifier?
@@ -4442,7 +4443,7 @@ JS9.Image.prototype.getPan = function(){
 
 // set pan location of RGB image (using image coordinates)
 JS9.Image.prototype.setPan = function(...args){
-    let i, key, obj, im, pos, owcssys, txeq, arr, oval, npan;
+    let i, obj, im, pos, owcssys, txeq, arr, oval, npan;
     let [panx, pany] = args;
     // is this core service disabled?
     if( $.inArray("pan", this.params.disable) >= 0 ){
@@ -4487,7 +4488,6 @@ JS9.Image.prototype.setPan = function(...args){
 		obj.wcssys = arr[2];
             }
 	}
-
 	if( this.validWCS() && JS9.notNull(obj.ra) && JS9.notNull(obj.dec) ){
 	    // wcs coords
 	    // use supplied wcs, if necessary
@@ -4546,14 +4546,7 @@ JS9.Image.prototype.setPan = function(...args){
     }
     this.displayImage("rgb");
     // pan/zoom the shape layers
-    for( key in this.layers ){
-	if( this.layers.hasOwnProperty(key) ){
-	    if( this.layers[key].show &&
-		this.layers[key].opts.panzoom ){
-		this.refreshShapes(key);
-	    }
-	}
-    }
+    this.refreshLayers();
     // extended plugins
     if( JS9.globalOpts.extendedPlugins ){
 	this.xeqPlugins("image", "onsetpan");
@@ -4614,7 +4607,7 @@ JS9.Image.prototype.parseZoom = function(zval){
 
 // set zoom of RGB image
 JS9.Image.prototype.setZoom = function(zval){
-    let i, nzoom, key, im, ipos, oval;
+    let i, nzoom, im, ipos, oval;
     // is this core service disabled?
     if( $.inArray("zoom", this.params.disable) >= 0 ){
 	return;
@@ -4648,14 +4641,7 @@ JS9.Image.prototype.setZoom = function(zval){
     // redisplay the image
     this.displayImage("rgb");
     // pan/zoom the shape layers
-    for( key in this.layers ){
-	if( this.layers.hasOwnProperty(key) ){
-	    if( this.layers[key].show &&
-		this.layers[key].opts.panzoom ){
-		this.refreshShapes(key);
-	    }
-	}
-    }
+    this.refreshLayers();
     // extended plugins
     if( JS9.globalOpts.extendedPlugins ){
 	this.xeqPlugins("image", "onsetzoom");
@@ -5101,11 +5087,19 @@ JS9.Image.prototype.reFlipRot = function(){
 };
 
 // refresh all layers
-JS9.Image.prototype.refreshLayers = function(){
-    this.setZoom(this.getZoom());
-    // reset these explicitly after refresh
-    this.binning.obin = this.binning.bin;
-    this.rgb.sect.ozoom = this.rgb.sect.zoom;
+JS9.Image.prototype.refreshLayers = function(panrefresh){
+    let key;
+    for( key in this.layers ){
+	if( this.layers.hasOwnProperty(key) ){
+	    if( this.layers[key].show &&
+		this.layers[key].opts.panzoom ){
+		if( panrefresh && panrefresh[key] ){
+		    panrefresh[key].refresh = true;
+		}
+		this.refreshShapes(key);
+	    }
+	}
+    }
 };
 
 // return current file-related position for specified image position
@@ -14273,11 +14267,8 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 		obj = objects[i];
 		for(j=0; j<mlen; j++){
 		    grp = mygroups[j];
-		    if( (grp.type === "activeSelection")      ||
-			(grp.type === "group" && !grp.params) ){
-			if( grp.contains(obj) ){
-			    groups[i] = grp;
-			}
+		    if( grp.contains(obj) ){
+			groups[i] = grp;
 		    }
 		}
 		if( !groups[i] ){
@@ -15719,155 +15710,14 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 };
 
 // update shape layer after a change in panning, zooming, binning
-// use fast if we have a lot of regions and no groups or selections
-// otherwise use complete (handles everything, but is slower)
-// call using image context
-JS9.Fabric.refreshShapes = function(layerName){
-    let nshape = 0;
-    let ngroup = 0;
-    let layer = this.getShapeLayer(layerName);
-    let floor = JS9.globalOpts.regFastRefresh;
-    // sanity check
-    if( !layer ){ return; }
-    // is fast is turned off?
-    if( floor == false ){
-	JS9.Fabric.refreshShapesComplete.call(this, layerName);
-	return;
-    }
-    // use fast if we have no group or selections, and > floor shapes
-    if( this.groups[layerName] ){
-	ngroup = this.groups[layerName].length;
-    }
-    if( layer.canvas.getActiveObject() ){
-	ngroup++;
-    }
-    nshape = layer.canvas.size();
-    if( ngroup <= 0 && nshape >= floor ){
-	JS9.Fabric.refreshShapesFast.call(this, layerName);
-    } else {
-	JS9.Fabric.refreshShapesComplete.call(this, layerName);
-    }
-};
-
-// update shape layer after a change in panning, zooming, binning
-// This routine is more complicated that one would want because fabric.js mixes
-// regions resize, zoom, and binning all in the same scale factor. So when
-// we want to adjust a region for pan, zoom, or bin, we first have to untangle
-// the old zoom and bin values from the scale before applying new ones.
-// Current approach is to save the old bin and zoom factors when changing them,
-// use the old ones here, and then reset the old ones to the new ones. Hmmm ...
-// call using image context
-JS9.Fabric.refreshShapesFast = function(layerName){
-    let bin, zoom, scaleX, scaleY, canvas, opts;
-    let wcs = this.raw.wcs;
-    let layer = this.getShapeLayer(layerName);
-    const getpos = (obj, wcs) => {
-	let pos, s;
-	if( this.validWCS()                                     &&
-	    JS9.notNull(obj.pub.ra) && JS9.notNull(obj.pub.dec) ){
-	    if( typeof obj.pub.ra === "string" ){
-		obj.pub.ra = JS9.saostrtod(obj.pub.ra);
-		if( (String.fromCharCode(JS9.saodtype()) === ":") &&
-		    (this.params.wcssys !== "galactic" )          &&
-		    (this.params.wcssys !== "ecliptic" )          ){
-		    obj.pub.ra *= 15.0;
-		}
-	    }
-	    if( typeof obj.pub.dec === "string" ){
-		obj.pub.dec = JS9.saostrtod(obj.pub.dec);
-	    }
-	    s = JS9.wcs2pix(wcs, obj.pub.ra, obj.pub.dec).trim().split(/ +/);
-	    pos = this.imageToDisplayPos({x: parseFloat(s[0]),
-					  y: parseFloat(s[1])});
-	} else {
-	    pos = this.logicalToDisplayPos(obj.pub.lcs);
-	}
-	return pos;
-    };
-    // sanity check
-    if( !layer ){ return; }
-    // convenience variables
-    canvas = layer.canvas;
-    bin = this.binning.bin;
-    zoom = this.rgb.sect.zoom;
-    // scale factor removes the old values and applies the new ones
-    scaleX = (this.binning.obin / this.rgb.sect.ozoom) * zoom / bin;
-    scaleY = (this.binning.obin / this.rgb.sect.ozoom) * zoom / bin;
-    opts = {transparentgroup: false};
-    // discard selected object before changing position of shapes
-    if( canvas.getActiveObject() ){
-	canvas.discardActiveObject();
-    }
-    // process the specified shapes
-    this._selectShapes(layerName, "all", opts, (obj) => {
-	let i, s, pos, cen, pts;
-	// convert current wcs or physical pos to new display pos
-	// this takes binning, etc. into consideration
-	// we don't handle groups, and we skip regions preserving dcoords
-	if( (obj.type === "activeSelection") ||
-	    (obj.type === "group" && !obj.params) ){
-	    JS9.error("fast refreshShapes does not support groups");
-	} else if( !obj.params.preservedcoords ){
-	    pos = getpos(obj, wcs);
-	    obj.left = pos.x;
-	    obj.top = pos.y;
-	}
-	// set scaling based on zoom factor, if necessary
-	if( !obj.params.preservedcoords && obj.params.zoomable !== false ){
-	    switch(obj.params.shape){
-	    case "point":
-	    case "text":
-		break;
-	    default:
-		// rescale the region
-		obj.scaleX *= scaleX;
-		obj.scaleY *= scaleY;
-		// rescale the width of the stroke lines
-		obj.rescaleBorder();
-		//  refresh polygon and line coordinates from wcs or physical
-		if( obj.points ){
-		    cen = obj.getCenterPoint();
-		    if( this.validWCS() && JS9.notNull(obj.pub.wcspts) ){
-			pts = obj.pub.wcspts;
-			for(i=0; i<pts.length; i++){
-			    s = JS9.wcs2pix(wcs, pts[i].ra, pts[i].dec)
-				.trim().split(/ +/);
-			    pos = this.imageToDisplayPos({x: parseFloat(s[0]),
-							  y: parseFloat(s[1])});
-			    obj.points[i] = {x: (pos.x - cen.x)/obj.scaleX,
-					     y: (pos.y - cen.y)/obj.scaleY};
-			}
-		    } else if( obj.pub.lcs.pts ){
-			pts = obj.pub.lcs.pts;
-			for(i=0; i<pts.length; i++){
-			    pos = this.logicalToDisplayPos(obj.pub.lcs.pts[i]);
-			    obj.points[i] = {x: (pos.x - cen.x)/obj.scaleX,
-					     y: (pos.y - cen.y)/obj.scaleY};
-			}
-		    }
-		}
-		break;
-	    }
-	}
-	// recalculate fabric coords
-	obj.setCoords();
-	// update children
-	JS9.Fabric.updateChildren(layer.dlayer, obj, "moving");
-	JS9.Fabric.updateChildren(layer.dlayer, obj, "scaling");
-	JS9.Fabric.updateChildren(layer.dlayer, obj, "rotating");
-    });
-    // redraw regions
-    canvas.renderAll();
-    return this;
-};
-
-// update shape layer after a change in panning, zooming, binning
 // uses ListRegions to recreate regions, very stable but slow for many shapes
 // call using image context
-JS9.Fabric.refreshShapesComplete = function(layerName){
-    let regstr, owcssys, txeq;
+JS9.Fabric.refreshShapes = function(layerName){
+    let regstr, owcssys, txeq, opts;
     // sanity check
     if( !layerName ){ return; }
+    // convenience variables
+    opts = {mode: 1, sticky: false, savewcsconfig: true, saveid: true};
     // temporarily change wcs system to be independent of image coords
     // (in case we copied regions from one image to another)
     owcssys = this.getWCSSys();
@@ -15882,17 +15732,33 @@ JS9.Fabric.refreshShapesComplete = function(layerName){
 	    this.setWCSSys("physical", false);
 	}
     }
-    // get current regions (i.e., before update to current configuration)
-    regstr = this.listRegions("all", {mode: 1,
-				      sticky: false,
-				      savewcsconfig: true,
-				      saveid: true}, layerName);
-    if( regstr ){
-	// remove current regions (including unremovable ones)
-	this.removeShapes(layerName, "all", {overrideRemovable: true,
-					     sticky: false});
-	// add back regions in current configuration
-	this.addShapes(layerName, regstr, {restoreid: true});
+    // special optimization when panning an image with the mouse,
+    // to deal with slow panning a large number of regions
+    if( this.panrefresh && this.panrefresh[layerName] ){
+	if( !this.panrefresh[layerName].regstr ){
+	    // save current regions
+	    regstr = this.listRegions("all", opts, layerName);
+	    this.panrefresh[layerName] = {regstr: regstr, refresh: false};
+	    // remove current regions (including unremovable ones)
+	    this.removeShapes(layerName, "all", {overrideRemovable: true,
+						 sticky: false});
+	} else {
+	    if( this.panrefresh[layerName].refresh ){
+		regstr = this.panrefresh[layerName].regstr;
+		// add back regions in current configuration
+		this.addShapes(layerName, regstr, {restoreid: true});
+	    }
+	}
+    } else {
+	// get current regions (i.e., before update to current configuration)
+	regstr = this.listRegions("all", opts, layerName);
+	if( regstr ){
+	    // remove current regions (including unremovable ones)
+	    this.removeShapes(layerName, "all", {overrideRemovable: true,
+						 sticky: false});
+	    // add back regions in current configuration
+	    this.addShapes(layerName, regstr, {restoreid: true});
+	}
     }
     // restore wcs system, if necessary
     if( owcssys === "image" ){
@@ -16727,7 +16593,9 @@ JS9.MouseTouch.Actions["wheel zoom"] = function(im, evt){
 // pan the image
 // eslint-disable-next-line no-unused-vars
 JS9.MouseTouch.Actions["pan the image"] = function(im, ipos, evt){
-    let dx, dy, temp, sect, pos;
+    let dx, dy, temp, sect, pos, key;
+    let thresh = JS9.globalOpts.panMouseThreshold;
+    let floor = JS9.globalOpts.panRefreshThreshold;
     // sanity check
     if( !im ){ return; }
     sect = im.rgb.sect;
@@ -16735,7 +16603,7 @@ JS9.MouseTouch.Actions["pan the image"] = function(im, ipos, evt){
     dx = ((im.pos0.x - im.pos.x) / sect.zoom);
     dy = ((im.pos0.y - im.pos.y) / sect.zoom);
     // pan the image (but avoid a redisplay, if we haven't moved much)
-    if( Math.abs(dx) >= 1 || Math.abs(dy) >= 1 ){
+    if( Math.abs(dx) >= thresh || Math.abs(dy) >= thresh ){
 	// flips will change the pan direction
 	if( im.params.flip === "x" ){
 	    dx = -dx;
@@ -16764,6 +16632,17 @@ JS9.MouseTouch.Actions["pan the image"] = function(im, ipos, evt){
 	    pos = JS9.rotatePoint(pos,
 				  -im.params.rotate,
 				  {x: sect.xcen, y: sect.ycen});
+	}
+	// see if any layers have many regions, thus requiring optimization
+	for( key in im.layers ){
+	    if( im.layers.hasOwnProperty(key) ){
+		if( im.layers[key].show && im.layers[key].opts.panzoom ){
+		    if( im.layers[key].canvas.size() > floor ){
+			im.panrefresh = im.panrefresh || {};
+			im.panrefresh[key] = {};
+		    }
+		}
+	    }
 	}
 	im.setPan(pos);
 	// reset initial position
@@ -23812,6 +23691,11 @@ JS9.mouseUpCB = function(evt){
     im.clickInLayer = null;
     im.clickState = 0;
     im.posOffset = null;
+    // finish refresh, if necessary
+    if( im.panrefresh ){
+	im.refreshLayers(im.panrefresh);
+	delete im.panrefresh;
+    }
     // finish resize, if necessary
     if( display.resizing ){
 	display.resizing = false;

@@ -229,7 +229,7 @@
     </table>
     <script type="text/javascript">
     var im0, im1, im;
-    var n = 500;
+    var n = JS9.globalOpts.panRefreshThreshold;
     var inc = 4;
     // on an ipad, the click handler reload the page!
     var click='ontouchstart' in document.documentElement?'touchstart': 'click';
@@ -381,14 +381,18 @@
 	    var ciropts = $.extend(true, {}, JS9.Catalogs.opts);
             ciropts.movable = true;
 	    ciropts.onchange = function(im, xreg, evt){
-                console.log("onchange: %s %s", xreg.id, xreg.data.tag);
+		if( JS9.DEBUG > 2 ){
+                    console.log("onchange: %s %s", xreg.id, xreg.data.tag);
+		}
 	    };
 	    ciropts.onmousedown = function(im, xreg, evt){
-                console.log("mousedown: %s %s", xreg.id, xreg.data.tag);
+		if( JS9.DEBUG > 2 ){
+                    console.log("mousedown: %s %s", xreg.id, xreg.data.tag);
+		}
 	    };
             switch(who){
                 case "box":
-                    mkrandom(boxes, n, xdim, ydim, "box", "red");
+                    mkrandom(boxes, n + 1, xdim, ydim, "box", "red");
 	            JS9.NewShapeLayer("box", boxopts);
                     JS9.AddShapes("box", boxes, {color: "yellow"});
                     break;
@@ -398,7 +402,7 @@
                     JS9.AddShapes("circle", circles);
                     break;
                 case "both":
-                    mkrandom(boxes, n, xdim, ydim, "box", "red");
+                    mkrandom(boxes, n + 1, xdim, ydim, "box", "red");
 	            JS9.NewShapeLayer("box", JS9.Catalogs.opts);
                     JS9.AddShapes("box", boxes, {color: "yellow"});
                     mkspirals(circles, n, xcen, ycen, "circle", "blue");
