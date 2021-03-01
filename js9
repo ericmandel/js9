@@ -94,7 +94,7 @@ usage(){
   printf "    --width [w]               # width of app\n"
   printf " \n"
   printf "  browser (-b) specific switches:\n"
-  printf "    -b|--browser              # start in browser
+  printf "    -b|--browser              # start in browser"
   printf "    -w|--webpage [url]        # url or full path of web page to open\n"
   printf " \n"
   printf "  command and browser (-b) switches:\n"
