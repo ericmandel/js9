@@ -182,7 +182,7 @@ JS9.globalOpts = {
     reloadRefreshReg: true,     // reloading regions file removes previous?
     nextImageMask: false,	// does nextImage() show active image masks?
     panMouseThreshold: 1,	// pixels mouse must move before we pan
-    panRefreshThreshold: 500,	// # of regions before optimizing pan refresh
+    panRefreshLimit: 500,	// # of shapes before avoiding refresh
     panWithinDisplay: false,	// keep panned image within the display?
     pannerDirections: true,	// display direction vectors in panner?
     magnifierRegions: true,	// display regions in magnifier?
@@ -16595,7 +16595,7 @@ JS9.MouseTouch.Actions["wheel zoom"] = function(im, evt){
 JS9.MouseTouch.Actions["pan the image"] = function(im, ipos, evt){
     let dx, dy, temp, sect, pos, key;
     let thresh = JS9.globalOpts.panMouseThreshold;
-    let floor = JS9.globalOpts.panRefreshThreshold;
+    let floor = JS9.globalOpts.panRefreshLimit;
     // sanity check
     if( !im ){ return; }
     sect = im.rgb.sect;

@@ -11586,6 +11586,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "string",
 	    "helper": "select display: click, move, false"
 	},
+	"panRefreshLimit": {
+	    "type": "number",
+	    "helper": "# of shapes to minimze refresh during pan"
+	},
 	"regDisplay": {
 	    "type": "string",
 	    "helper": "show regions in 'lightwin' or 'display'"
