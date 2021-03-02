@@ -286,7 +286,7 @@ JS9.Sync.xeqSync = function(arr){
 		    break;
 		case "pan":
 		    pos = this.getPan();
-		    if( this.tmp.syncwcs && this.raw.wcs > 0 ){
+		    if( this.tmp.syncwcs && this.validWCS() ){
 			wcscen = JS9.pix2wcs(this.raw.wcs, pos.ox, pos.oy);
 			xim.setPan({wcs: wcscen});
 		    } else {

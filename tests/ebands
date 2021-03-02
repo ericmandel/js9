@@ -69,6 +69,8 @@ js9 SyncImages '["colormap", "regions"]'
 echo "set colormap to viridis in first image"
 js9 SetColormap viridis 4.4 0.078
 
+sleep 2
+
 echo "change region position in first image"
 js9 ChangeRegions all '{"deltax":62,"deltay":20}'
 

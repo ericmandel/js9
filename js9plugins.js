@@ -9186,7 +9186,7 @@ JS9.Menubar.createMenus = function(){
 		name: "WCS Systems:",
 		disabled: true
 	    };
-	    if( !tim || (tim && tim.raw.wcs && tim.raw.wcs > 0) ){
+	    if( !tim || (tim && tim.validWCS()) ){
 		sys = JS9.wcssyss;
 	    } else {
 		sys = ["image", "physical"];
@@ -9202,7 +9202,7 @@ JS9.Menubar.createMenus = function(){
 	    }
 	    // if we don't know which wcssys is current, assume native or image
 	    if( !got ){
-		if( !tim || (tim && tim.raw.wcs && tim.raw.wcs > 0) ){
+		if( !tim || (tim && tim.validWCS()) ){
 		    s1 = "native";
 		} else {
 		    s1 = "image";
@@ -9214,7 +9214,7 @@ JS9.Menubar.createMenus = function(){
 		name: "WCS Units:",
 		disabled: true
 	    };
-	    if( !tim || (tim && tim.raw.wcs && tim.raw.wcs > 0) ){
+	    if( !tim || (tim && tim.validWCS()) ){
 		units = JS9.wcsunitss;
 	    } else {
 		units = ["pixels"];
@@ -10788,7 +10788,7 @@ JS9.PanZoom.xpanto = function(did, id, target){
 		p2 = phys.y;
 		break;
 	    default:
-		if( im.raw.wcs && im.raw.wcs > 0 ){
+		if( im.validWCS() ){
 		    arr = JS9.wcs2pix(im.raw.wcs, p1, p2).trim().split(/\s+/);
 		    p1 = parseFloat(arr[0]);
 		    p2 = parseFloat(arr[1]);
@@ -10870,8 +10870,9 @@ JS9.PanZoom.getPos = function(im, which){
 	    res = String(phys[which]);
 	    break;
 	default:
-	    if( im.raw.wcs && im.raw.wcs > 0 ){
-		s = JS9.pix2wcs(im.raw.wcs, ipos.x, ipos.y).trim().split(/\s+/);
+	    if( im.validWCS() ){
+		s = JS9.pix2wcs(im.raw.wcs, ipos.x, ipos.y)
+		    .trim().split(/\s+/);
 		res = which === "x" ? s[0] : s[1];
 	    } else {
 		res = String(ipos[which]);
@@ -10973,7 +10974,7 @@ JS9.PanZoom.init = function(opts){
 	let res = "<option selected disabled>WCS Systems</option>";
 	if( im ){
 	    wcssys = im.tmp.wcssysPanZoom || im.getWCSSys();
-	    if( im.raw.wcs && im.raw.wcs > 0 ){
+	    if( im.validWCS() ){
 		sys = JS9.wcssyss;
 	    } else {
 		sys = ["image", "physical"];
@@ -10993,7 +10994,7 @@ JS9.PanZoom.init = function(opts){
 	let res = "<option selected disabled>WCS Units</option>";
 	if( im ){
 	    wcsunits = im.tmp.wcsunitsPanZoom || im.getWCSUnits();
-	    if( im.raw.wcs && im.raw.wcs > 0 ){
+	    if( im.validWCS() ){
 		units = ["degrees", "sexagesimal", "pixels"];
 	    } else {
 		units = ["pixels"];
@@ -11584,6 +11585,10 @@ JS9.Prefs.globalsSchema = {
 	"dynamicSelect": {
 	    "type": "string",
 	    "helper": "select display: click, move, false"
+	},
+	"panRefreshLimit": {
+	    "type": "number",
+	    "helper": "# of shapes to minimze refresh during pan"
 	},
 	"regDisplay": {
 	    "type": "string",
@@ -13545,7 +13550,7 @@ JS9.Sync.xeqSync = function(arr){
 		    break;
 		case "pan":
 		    pos = this.getPan();
-		    if( this.tmp.syncwcs && this.raw.wcs > 0 ){
+		    if( this.tmp.syncwcs && this.validWCS() ){
 			wcscen = JS9.pix2wcs(this.raw.wcs, pos.ox, pos.oy);
 			xim.setPan({wcs: wcscen});
 		    } else {

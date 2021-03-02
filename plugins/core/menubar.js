@@ -2434,7 +2434,7 @@ JS9.Menubar.createMenus = function(){
 		name: "WCS Systems:",
 		disabled: true
 	    };
-	    if( !tim || (tim && tim.raw.wcs && tim.raw.wcs > 0) ){
+	    if( !tim || (tim && tim.validWCS()) ){
 		sys = JS9.wcssyss;
 	    } else {
 		sys = ["image", "physical"];
@@ -2450,7 +2450,7 @@ JS9.Menubar.createMenus = function(){
 	    }
 	    // if we don't know which wcssys is current, assume native or image
 	    if( !got ){
-		if( !tim || (tim && tim.raw.wcs && tim.raw.wcs > 0) ){
+		if( !tim || (tim && tim.validWCS()) ){
 		    s1 = "native";
 		} else {
 		    s1 = "image";
@@ -2462,7 +2462,7 @@ JS9.Menubar.createMenus = function(){
 		name: "WCS Units:",
 		disabled: true
 	    };
-	    if( !tim || (tim && tim.raw.wcs && tim.raw.wcs > 0) ){
+	    if( !tim || (tim && tim.validWCS()) ){
 		units = JS9.wcsunitss;
 	    } else {
 		units = ["pixels"];
