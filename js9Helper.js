@@ -812,7 +812,7 @@ const execCmd = function(socket, obj, cbfunc) {
 	}
     }
     // log what we are about to do
-    clog("exec: %s [%s]", cmd, args.slice(1));
+    clog("exec: %s %s", cmd, JSON.stringify(args.slice(1)));
     // execute the analysis script with cmd arguments
     // NB: can't use exec because the shell breaks, e.g. region command lines
     try{
@@ -1006,7 +1006,7 @@ const socketioHandler = function(socket, io) {
 	// only process disconnect for displays (not js9 msgs or workers)
 	if( socket.js9 && socket.js9.displays && !socket.js9worker ){
             clog("disconnect: %s (%s) [%s]",
-		 myhost, socket.js9.displays, reason);
+		 myhost, JSON.stringify(socket.js9.displays), reason);
 	    // clean up working directory, unless we reconnected
 	    // use sync to prevent Electron.js from exiting too soon
 	    if( socket.js9.aworkDir && globalOpts.rmWorkDir ){
@@ -1076,8 +1076,8 @@ const socketioHandler = function(socket, io) {
 	// can we find the helper program?
 	jpath = !!getFilePath(globalOpts.cmd, process.env.PATH, process.env);
 	// log results
-        clog("connect v%s: %s (%s) %s",
-	     socket.js9.version, myhost, socket.js9.displays);
+        clog("connect v%s: %s (%s)",
+	     socket.js9.version, myhost, JSON.stringify(socket.js9.displays));
 	if( cbfunc ){ cbfunc({pageid: socket.js9.pageid, js9helper: jpath, dataPathModify: globalOpts.dataPathModify}); }
     });
     // on display: add a display to the display list
