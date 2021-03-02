@@ -43,11 +43,10 @@ function initSocketIO(sockurl, sockver, pageid, id){
 	return;
     }
     // configure path and script based on version of socketio
-// the import does not work trying to load v3
-//    if( sockver !== 2 ){
-//	sockopts.path = `/socket.io-${sockver}/`;
-//	socksuffix = sockopts.path + "socket.io.js";
-//    }
+    if( sockver !== 2 ){
+	sockopts.path = `/socket.io-${sockver}/`;
+	socksuffix = sockopts.path + "socket.io.js";
+    }
     sockscript = sockurl + socksuffix;
     // import socketio scripts
     if( !socketImported ){
