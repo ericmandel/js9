@@ -102,6 +102,8 @@ WEBDIRS	=	plugins params js css font images
 
 BEDIRS =	node_modules analysis-plugins analysis-wrappers
 
+RMBEDIRS =	node_modules
+
 OTHERDIRS =	astroem src scripts build demos tests sao
 
 WEBFILES =	js9.js js9.min.js js9worker.js \
@@ -368,6 +370,13 @@ install-webdirs:	FORCE
 	    fi; \
          done; \
 	 if [ x$(USEHELPER) = xyes ]; then \
+	   echo "Removing old backend helper dirs ..."; \
+	   for i in $(RMBEDIRS); do \
+		if [ -d $$i ] ; then \
+		    echo "removing backend dir: $$i" ; \
+	            rm -rf $(WEBDIR)/$$i; \
+		fi; \
+           done; \
 	   echo "Installing backend helper dirs ..."; \
 	   for i in $(BEDIRS); do \
 		if [ -d $$i ] ; then \
