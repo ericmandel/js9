@@ -31,7 +31,7 @@ if (!Uint8Array.prototype.slice) {
     });
 }
 
-function initSocketIO(sockurl, sockver, pageid, id){
+function initSocketIO(sockurl, pageid, id){
     let sockscript;
     const sockopts = {
 	reconnection: false,
@@ -42,14 +42,9 @@ function initSocketIO(sockurl, sockver, pageid, id){
 	self.postMessage({id: id, cmd: "initsocketio", result: "OK"});
 	return;
     }
-    // configure path and script based on version of socketio
-    if( sockver !== 2 ){
-	sockopts.path = `/socket.io-${sockver}/`;
-	socksuffix = sockopts.path + "socket.io.js";
-    }
-    sockscript = sockurl + socksuffix;
     // import socketio scripts
     if( !socketImported ){
+	sockscript = sockurl + socksuffix;
 	importScripts(sockscript);
 	socketImported = true;
     }
@@ -133,7 +128,7 @@ self.onmessage = function(e){
     };
     switch(obj.cmd){
     case "initsocketio":
-	initSocketIO(args[0], args[1], args[2], obj.id);
+	initSocketIO(args[0], args[1], obj.id);
 	break;
     case "uploadFITS":
 	if( connected ){

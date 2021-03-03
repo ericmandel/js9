@@ -11756,9 +11756,6 @@ JS9.Helper.prototype.connect = function(type){
 		    reconnectionAttempts: 100,
 		    timeout: JS9.globalOpts.htimeout
 		};
-		if( this.sockver !== 2 ){
-		    sockopts.path = `/socket.io-${this.sockver}/`;
-		}
 		// if there is no io object, we didn't really succeed
 		// can happen, for example, in the Jupyter environment
 		if( typeof io === "undefined" ){
@@ -11882,8 +11879,6 @@ JS9.Helper.prototype.connect = function(type){
     } else {
 	this.url = `${JS9.globalOpts.helperProtocol}localhost`;
     }
-    // save version of socketio
-    this.sockver = JS9.globalOpts.socketioVersion;
     // save base of url
     this.baseurl = this.url;
     // try to establish connection, based on connection type
@@ -11917,19 +11912,12 @@ JS9.Helper.prototype.connect = function(type){
 	// ignore port on url, add our own
 	this.url = `${this.url.replace(/:[0-9][0-9]*$/, "")}:${JS9.globalOpts.helperPort}`;
 	// which version of socket.io?
-	if( this.sockver === 2 ){
-	    // socket.io file
-	    sockbase = "socket.io";
-	    sockfile = "socket.io.js";
+	sockbase = "socket.io";
+	// use min version for production, as per migration docs
+	if( JS9.DEBUG <= 2 ){
+	    sockfile  = "socket.io.min.js";
 	} else {
-	    // v3 is available as of 11/2020
-	    sockbase = `socket.io-${this.sockver}`;
-	    // use min version for production, as per migration docs
-	    if( JS9.DEBUG <= 2 ){
-		sockfile  = "socket.io.min.js";
-	    } else {
-		sockfile  = "socket.io.js";
-	    }
+	    sockfile  = "socket.io.js";
 	}
 	// full url of the socket.io.js file
 	this.sockurl  = `${this.url}/${sockbase}/${sockfile}`;
@@ -12081,7 +12069,7 @@ JS9.WebWorker.prototype.msgHandler = function(msg){
 	obj.result = obj.result || "JS9 worker socket was disconnected";
 	// need a slight delay here, not sure why
 	window.setTimeout(() => {
-	    JS9.worker.send("initsocketio", [h.url, h.sockver, h.pageid],
+	    JS9.worker.send("initsocketio", [h.url, h.pageid],
 			    () => {
 				if( obj.alert ){
 				    alert(obj.result);
@@ -12121,7 +12109,7 @@ JS9.WebWorker.prototype.send = function(cmd, args, func, xfer){
 // initialize worker socketio connection, then call handler
 JS9.WebWorker.prototype.socketio = function(handler){
     const h = JS9.helper;
-    JS9.worker.send("initsocketio", [h.url, h.sockver, h.pageid], (s) => {
+    JS9.worker.send("initsocketio", [h.url, h.pageid], (s) => {
 	if( s === "OK" ){
 	    if( handler ){ handler(); }
 	} else {

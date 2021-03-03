@@ -28,7 +28,7 @@ const http = require('http'),
       rmdir = require('rimraf');
 
 // internal variables
-let i, app, io2, io3, opts2, opts3, secure;
+let i, app, io, secure;
 let fits2png = {};
 let fits2fits = {};
 let quotacheck = {};
@@ -43,15 +43,7 @@ const securefile = path.join(installDir, "js9Secure.json");
 const js9Queue = {};
 const rmQueue = {};
 const merges = {};
-
-// v2 installed using:
-// npm i socket.io@2
-const server2 = "socket.io";
-
-// v3 installed using:
-// npm i socket.io-3@npm:socket.io@3
-// npm i socket.io-client-3@npm:socket.io-client@3
-const server3 = "socket.io-3";
+const server = "socket.io";
 
 // secure options ... change as necessary in securefile
 const secureOpts = {
@@ -67,7 +59,12 @@ const globalOpts = {
     helperHost:       "0.0.0.0",
     // we need a large buffer for returning arbitrary analysis results
     // default ping timeout is too short, and Chrome gets disconnect errors
-    helperOpts:       {maxHttpBufferSize: 10E9, pingTimeout: 30000},
+    // v2 requires cors to be set explicitly
+    // allowEIO3 support socketio v2
+    helperOpts:       {maxHttpBufferSize: 10E9,
+		       pingTimeout:       30000,
+		       cors:{origin:      true},
+		       allowEIO3:         true},
     cmd:              "js9helper",
     analysisPlugins:  "analysis-plugins",
     analysisWrappers: "analysis-wrappers",
@@ -105,36 +102,29 @@ const getHost = function(req){
 // http://stackoverflow.com/questions/6563885/socket-io-how-do-i-get-a-list-of-connected-sockets-clients
 // v3 update: https://socket.io/docs/v3/migrating-from-2-x-to-3-0/#API-change
 // is it v2 or v3? emperically, for v3 the connected property is undefined
-const getClients = function(io){
-    let id, ioarr;
+const getClients = function(){
+    let id;
     const res = [];
-    if( io ){
-	ioarr = [io];
-    } else {
-	ioarr = [io2, io3];
-    }
     // check for conected targets connected (default: using v2 or v3)
-    ioarr.forEach((io) => {
-	const v2 = io.of("/").connected;
-	const v3 = io.of("/").sockets;
-	if( v2 ){
-	    // v2 protocol
-            for( id in v2 ){
-		if( v2.hasOwnProperty(id) ){
-		    if( !v2[id].js9worker ){
-			res.push(v2[id]);
-		    }
+    const v2 = io.of("/").connected;
+    const v3 = io.of("/").sockets;
+    if( v2 ){
+	// v2 protocol
+        for( id in v2 ){
+	    if( v2.hasOwnProperty(id) ){
+		if( !v2[id].js9worker ){
+		    res.push(v2[id]);
 		}
-            }
-	} else if( v3 ){
-	    // v3 protocol
-	    v3.forEach((value) => {
-		if( !value.js9worker ){
-		    res.push(value);
-		}
-	    })
-	}
-    });
+	    }
+        }
+    } else if( v3 ){
+	// v3 protocol
+	v3.forEach((value) => {
+	    if( !value.js9worker ){
+		res.push(value);
+	    }
+	})
+    }
     return res;
 };
 
@@ -980,16 +970,8 @@ const sendMsg = function(socket, obj, cbfunc) {
 // protocol handlers
 //
 
-const socketioHandler2 = function(socket) {
-    socketioHandler(socket, io2);
-};
-
-const socketioHandler3 = function(socket) {
-    socketioHandler(socket, io3);
-};
-
 // socketio handler: field socket.io requests
-const socketioHandler = function(socket, io) {
+const socketioHandler = function(socket) {
     let i, j, m, a;
     // func outside loop needed to make jslint happy
     const xfunc = (obj, cbfunc) => {
@@ -1550,21 +1532,9 @@ if( secure ){
 // never timeout, analysis requests can be very long
 app.setTimeout(0);
 
-// connect with the http server (v2 and v3)
 // for each socket.io connection, receive and process custom events
-if( server2 ){
-    opts2 = Object.assign({},
-			  globalOpts.helperOpts);
-    io2 = require(server2)(app,opts2);
-    io2.on("connection", socketioHandler2);
-}
-if( server3 ){
-    opts3 = Object.assign({},
-			  globalOpts.helperOpts,
-			  {path:`/${server3}/`, cors:{origin: true}});
-    io3 = require(server3)(app, opts3);
-    io3.on("connection", socketioHandler3);
-}
+io = require(server)(app, globalOpts.helperOpts);
+io.on("connection", socketioHandler);
 
 // start listening on the helper port
 app.listen(globalOpts.helperPort, globalOpts.helperHost);
@@ -1613,7 +1583,5 @@ process.on("exit", () => {
 
 // in case we are called as a module
 module.exports.globalOpts = globalOpts;
-module.exports.io = io2;
-module.exports.io2 = io2;
-module.exports.io3 = io3;
+module.exports.io = io;
 module.exports.app = app;
