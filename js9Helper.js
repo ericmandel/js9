@@ -28,7 +28,7 @@ const http = require('http'),
       rmdir = require('rimraf');
 
 // internal variables
-let i, app, io2, io3, secure;
+let i, app, io2, io3, opts2, opts3, secure;
 let fits2png = {};
 let fits2fits = {};
 let quotacheck = {};
@@ -1553,11 +1553,16 @@ app.setTimeout(0);
 // connect with the http server (v2 and v3)
 // for each socket.io connection, receive and process custom events
 if( server2 ){
-    io2 = require(server2)(app);
+    opts2 = Object.assign({},
+			  globalOpts.helperOpts);
+    io2 = require(server2)(app,opts2);
     io2.on("connection", socketioHandler2);
 }
 if( server3 ){
-    io3 = require(server3)(app, {path:`/${server3}/`, cors:{origin: true}});
+    opts3 = Object.assign({},
+			  globalOpts.helperOpts,
+			  {path:`/${server3}/`, cors:{origin: true}});
+    io3 = require(server3)(app, opts3);
     io3.on("connection", socketioHandler3);
 }
 
