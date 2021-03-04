@@ -182,7 +182,7 @@ JS9.globalOpts = {
     reloadRefreshReg: true,     // reloading regions file removes previous?
     nextImageMask: false,	// does nextImage() show active image masks?
     panMouseThreshold: 1,	// pixels mouse must move before we pan
-    panRefreshLimit: 500,	// # of shapes before avoiding refresh
+    panzoomRefreshLimit: 500,	// # of shapes before avoiding refresh
     panWithinDisplay: false,	// keep panned image within the display?
     pannerDirections: true,	// display direction vectors in panner?
     magnifierRegions: true,	// display regions in magnifier?
@@ -5087,14 +5087,14 @@ JS9.Image.prototype.reFlipRot = function(){
 };
 
 // refresh all layers
-JS9.Image.prototype.refreshLayers = function(panrefresh){
+JS9.Image.prototype.refreshLayers = function(panzoomrefresh){
     let key;
     for( key in this.layers ){
 	if( this.layers.hasOwnProperty(key) ){
 	    if( this.layers[key].show &&
 		this.layers[key].opts.panzoom ){
-		if( panrefresh && panrefresh[key] ){
-		    panrefresh[key].refresh = true;
+		if( panzoomrefresh && panzoomrefresh[key] ){
+		    panzoomrefresh[key].refresh = true;
 		}
 		this.refreshShapes(key);
 	    }
@@ -15722,17 +15722,17 @@ JS9.Fabric.refreshShapes = function(layerName){
     }
     // special optimization when panning an image with the mouse,
     // to deal with slow panning a large number of regions
-    if( this.panrefresh && this.panrefresh[layerName] ){
-	if( !this.panrefresh[layerName].regstr ){
+    if( this.tmp.panzoomRefresh && this.tmp.panzoomRefresh[layerName] ){
+	if( !this.tmp.panzoomRefresh[layerName].regstr ){
 	    // save current regions
 	    regstr = this.listRegions("all", opts, layerName);
-	    this.panrefresh[layerName] = {regstr: regstr, refresh: false};
+	    this.tmp.panzoomRefresh[layerName] = {regstr:regstr, refresh:false};
 	    // remove current regions (including unremovable ones)
 	    this.removeShapes(layerName, "all", {overrideRemovable: true,
 						 sticky: false});
 	} else {
-	    if( this.panrefresh[layerName].refresh ){
-		regstr = this.panrefresh[layerName].regstr;
+	    if( this.tmp.panzoomRefresh[layerName].refresh ){
+		regstr = this.tmp.panzoomRefresh[layerName].regstr;
 		// add back regions in current configuration
 		this.addShapes(layerName, regstr, {restoreid: true});
 	    }
@@ -16557,7 +16557,9 @@ JS9.MouseTouch.Actions["change contrast/bias"].stop = function(im, ipos, evt){
 
 // zoom the image
 JS9.MouseTouch.Actions["wheel zoom"] = function(im, evt){
-    let nzoom, display;
+    let nzoom, display, key;
+    let floor = JS9.globalOpts.panzoomRefreshLimit;
+    let got = 0;
     const delta = evt.originalEvent.deltaY;
     // sanity check
     if( !im ){ return; }
@@ -16574,6 +16576,29 @@ JS9.MouseTouch.Actions["wheel zoom"] = function(im, evt){
     }
     // a little rounding makes the zoom nicer
     nzoom = Math.round((nzoom + 0.00001) * 100) / 100;
+    // see if any layers have many regions, thus requiring optimization
+    for( key in im.layers ){
+	if( im.layers.hasOwnProperty(key) ){
+	    if( im.layers[key].show && im.layers[key].opts.panzoom ){
+		if( im.layers[key].canvas.size() > floor ){
+		    im.tmp.panzoomRefresh = im.tmp.panzoomRefresh || {};
+		    im.tmp.panzoomRefresh[key] = {};
+		    got++;
+		}
+	    }
+	}
+    }
+    // timeout to refresh layers
+    if( im.tmp.panzoomTimeout ){
+	clearTimeout(im.tmp.panzoomTimeout);
+	delete im.tmp.panzoomTimeout;
+    }
+    if( got || im.tmp.panzoomRefresh ){
+	im.tmp.panzoomTimeout = setTimeout(() => {
+	    im.refreshLayers(im.tmp.panzoomRefresh);
+	    delete im.tmp.panzoomRefresh;
+	}, JS9.TIMEOUT);
+    }
     // zoom the image
     im.setZoom(nzoom);
 };
@@ -16583,7 +16608,7 @@ JS9.MouseTouch.Actions["wheel zoom"] = function(im, evt){
 JS9.MouseTouch.Actions["pan the image"] = function(im, ipos, evt){
     let dx, dy, temp, sect, pos, key;
     let thresh = JS9.globalOpts.panMouseThreshold;
-    let floor = JS9.globalOpts.panRefreshLimit;
+    let floor = JS9.globalOpts.panzoomRefreshLimit;
     // sanity check
     if( !im ){ return; }
     sect = im.rgb.sect;
@@ -16626,8 +16651,8 @@ JS9.MouseTouch.Actions["pan the image"] = function(im, ipos, evt){
 	    if( im.layers.hasOwnProperty(key) ){
 		if( im.layers[key].show && im.layers[key].opts.panzoom ){
 		    if( im.layers[key].canvas.size() > floor ){
-			im.panrefresh = im.panrefresh || {};
-			im.panrefresh[key] = {};
+			im.tmp.panzoomRefresh = im.tmp.panzoomRefresh || {};
+			im.tmp.panzoomRefresh[key] = {};
 		    }
 		}
 	    }
@@ -23680,9 +23705,9 @@ JS9.mouseUpCB = function(evt){
     im.clickState = 0;
     im.posOffset = null;
     // finish refresh, if necessary
-    if( im.panrefresh ){
-	im.refreshLayers(im.panrefresh);
-	delete im.panrefresh;
+    if( im.tmp.panzoomRefresh ){
+	im.refreshLayers(im.tmp.panzoomRefresh);
+	delete im.tmp.panzoomRefresh;
     }
     // finish resize, if necessary
     if( display.resizing ){
