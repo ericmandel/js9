@@ -262,6 +262,7 @@ JS9.globalOpts = {
 	"downArrow": "move region/position down"
     }, // keyboard actions
     mousetouchZoom: false,	// use mouse wheel, pinch to zoom?
+    mousetouchLimit: true,	// limit zoom-out to size of image?
     metaClickPan: true,         // metaKey + click pans to mouse position?
     // statusBar: "$mag; $scale($scaleclipping); $img(images/voyager/color_$colormap.png) $colormap; $wcssys; $image",  // status display
     statusBar: "$colorbar; $colormap; $mag; $scale ($scalemin,$scalemax); $wcssys; $image0",  // status display
@@ -16557,7 +16558,7 @@ JS9.MouseTouch.Actions["change contrast/bias"].stop = function(im, ipos, evt){
 
 // zoom the image
 JS9.MouseTouch.Actions["wheel zoom"] = function(im, evt){
-    let nzoom, display, key;
+    let ozoom, nzoom, maxzoom, display, key;
     let floor = JS9.globalOpts.panzoomRefreshLimit;
     let got = 0;
     const delta = evt.originalEvent.deltaY;
@@ -16568,11 +16569,21 @@ JS9.MouseTouch.Actions["wheel zoom"] = function(im, evt){
     if( !display.mousetouchZoom ){
 	return;
     }
+    // current zoom
+    ozoom = im.getZoom();
     // scroll by the delta
     if( delta > 0 ){
-	nzoom = Math.min(JS9.MAXZOOM, im.getZoom() + JS9.ADDZOOM);
+	nzoom = Math.min(JS9.MAXZOOM, ozoom + JS9.ADDZOOM);
     } else {
-	nzoom = Math.max(JS9.MINZOOM, im.getZoom() - JS9.ADDZOOM);
+	nzoom = Math.max(JS9.MINZOOM, ozoom - JS9.ADDZOOM);
+    }
+    // stop zooming once full image is in the screen?
+    if( JS9.globalOpts.mousetouchLimit ){
+	maxzoom = Math.min(im.display.width/im.raw.width,
+			   im.display.height/im.raw.height);
+	if( maxzoom > nzoom && ozoom > nzoom ){
+	    return;
+	}
     }
     // a little rounding makes the zoom nicer
     nzoom = Math.round((nzoom + 0.00001) * 100) / 100;
