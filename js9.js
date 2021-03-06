@@ -68,6 +68,7 @@ JS9.IDFMT = "  (%s)";           // format for light window id
 JS9.MINZOOM = 0.125;		// min zoom using scroll wheel
 JS9.MAXZOOM = 32.0;		// max zoom using scroll wheel
 JS9.ADDZOOM = 0.1;		// add/subtract amount per mouse wheel click
+JS9.MODZOOM = 2;		// skip factor with wheel to avoid pileup
 JS9.CHROMEFILEWARNING = true;	// whether to alert chrome users about file URI
 JS9.CLIPBOARDERROR = "the local clipboard (which only holds data copied from within JS9) does not contain any content. Were you trying to paste something copied outside JS9?";
 JS9.CLIPBOARDERROR2 = "the local clipboard (which only holds data copied from within JS9) does not contain any regions";
@@ -16567,6 +16568,11 @@ JS9.MouseTouch.Actions["wheel zoom"] = function(im, evt){
     // is scroll to zoom turned on?
     display = im.display;
     if( !display.mousetouchZoom ){
+	return;
+    }
+    // prevent pileup
+    im.tmp.wheelzooms = im.tmp.wheelzooms || 0;
+    if( im.tmp.wheelzooms++ % JS9.MODZOOM !== 0 ){
 	return;
     }
     // current zoom
