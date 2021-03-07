@@ -69,6 +69,7 @@ JS9.MINZOOM = 0.125;		// min zoom using scroll wheel
 JS9.MAXZOOM = 32.0;		// max zoom using scroll wheel
 JS9.ADDZOOM = 0.1;		// add/subtract amount per mouse wheel click
 JS9.MODZOOM = 2;		// skip factor with wheel to avoid pileup
+JS9.DIRZOOM = 1;		// sign (+/-) determines zoom direction
 JS9.CHROMEFILEWARNING = true;	// whether to alert chrome users about file URI
 JS9.CLIPBOARDERROR = "the local clipboard (which only holds data copied from within JS9) does not contain any content. Were you trying to paste something copied outside JS9?";
 JS9.CLIPBOARDERROR2 = "the local clipboard (which only holds data copied from within JS9) does not contain any regions";
@@ -16562,7 +16563,7 @@ JS9.MouseTouch.Actions["wheel zoom"] = function(im, evt){
     let ozoom, nzoom, maxzoom, display, key;
     let floor = JS9.globalOpts.panzoomRefreshLimit;
     let got = 0;
-    const delta = evt.originalEvent.deltaY;
+    const delta = evt.originalEvent.deltaY * Math.sign(JS9.DIRZOOM);
     // sanity check
     if( !im ){ return; }
     // is scroll to zoom turned on?
@@ -16578,7 +16579,7 @@ JS9.MouseTouch.Actions["wheel zoom"] = function(im, evt){
     // current zoom
     ozoom = im.getZoom();
     // scroll by the delta
-    if( delta > 0 ){
+    if( delta < 0 ){
 	nzoom = Math.min(JS9.MAXZOOM, ozoom + JS9.ADDZOOM);
     } else {
 	nzoom = Math.max(JS9.MINZOOM, ozoom - JS9.ADDZOOM);
