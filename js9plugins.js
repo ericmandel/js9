@@ -2605,7 +2605,7 @@ JS9.RegisterPlugin(JS9.Cmaps.CLASS, JS9.Cmaps.NAME, JS9.Cmaps.init,
  * colorbar plugin (March 8, 2016)
  */
 
-/*global $, JS9, Uint8Array */
+/*global $, JS9 */
 
 "use strict";
 

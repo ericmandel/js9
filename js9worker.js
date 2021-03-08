@@ -10,7 +10,7 @@
  *
  */
 
-/*global importScripts, io, Uint8Array */
+/*global importScripts, io */
 
 // socket.io support
 let socket = null;

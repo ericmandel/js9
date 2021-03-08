@@ -1,4 +1,4 @@
-/*global Blob, Uint8Array, Int16Array, Uint16Array, Int32Array, Float32Array, Float64Array, FileReader, Module, FS, ccall, _malloc, _free, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPF32, HEAPF64, setValue, getValue,  UTF8ToString getCFunc assert stackSave stackAlloc EmterpreterAsync stackRestore, stringToUTF8, writeArrayToMemory, NODEFS */
+/*global Module, FS, ccall, _malloc, _free, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPF32, HEAPF64, setValue, getValue,  UTF8ToString getCFunc assert stackSave stackAlloc EmterpreterAsync stackRestore, stringToUTF8, writeArrayToMemory, NODEFS */
 
 /* eslint-disable dot-notation */
 
@@ -615,6 +615,7 @@ Module["handleFITSFile"] = function(fits, opts, handler) {
 	    delete fileReader.result;
 	    // but these don't seem to have any effect:
 	    arr = null;
+	    // eslint-disable-next-line no-unused-vars
 	    narr = null;
 	};
 	// eslint-disable-next-line no-unused-vars

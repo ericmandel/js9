@@ -11,7 +11,7 @@
  *
  */
 
-/* global require process module __dirname Buffer */
+/* global */
 
 "use strict";
 

@@ -10,7 +10,7 @@
  *
  */
 
-/* global require process */
+/* global */
 /* eslint no-console: "off" */
 
 "use strict";

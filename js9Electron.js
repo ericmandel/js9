@@ -12,7 +12,7 @@
  *
  */
 
-/* global require process __dirname */
+/* global */
 
 "use strict";
 

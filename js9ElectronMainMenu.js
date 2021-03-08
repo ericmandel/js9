@@ -5,7 +5,7 @@
 // https://electronjs.org/docs/api/menu
 // https://electronjs.org/docs/api/menu-item
 
-/* global require process */
+/* global */
 
 "use strict";
 
