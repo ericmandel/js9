@@ -49,14 +49,15 @@ JS9.Keyboard.arrowKey = function(im, evt, inc, active){
     im.pos.x += inc.x;
     im.pos.y += inc.y;
     im.ipos = im.displayToImagePos(im.pos);
-    if( JS9.hasOwnProperty("MouseTouch") ){
+    if( Object.prototype.hasOwnProperty.call(JS9, "MouseTouch") ){
 	im.valpos = null;
 	JS9.MouseTouch.Actions["display value/position"](im, im.ipos, evt);
     }
-    if( JS9.hasOwnProperty("Magnifier") ){
+    if( Object.prototype.hasOwnProperty.call(JS9, "Magnifier") ){
 	JS9.Magnifier.display(im, im.ipos);
     }
-    if( JS9.globalOpts.regArrowCrosshair && JS9.hasOwnProperty("Crosshair") ){
+    if( JS9.globalOpts.regArrowCrosshair                       &&
+	Object.prototype.hasOwnProperty.call(JS9, "Crosshair") ){
 	im.tmp.arrowCrosshair = true;
 	im.tmp.arrowCrosshairVisible = true;
 	if( active ){
@@ -800,7 +801,7 @@ JS9.Keyboard.init = function(){
 	.appendTo(this.keyboardContainer);
     // add actions
     for(key in JS9.globalOpts.keyboardActions ){
-	if( JS9.globalOpts.keyboardActions.hasOwnProperty(key) ){
+	if( Object.prototype.hasOwnProperty.call(JS9.globalOpts.keyboardActions, key) ){
 	    s = JS9.globalOpts.keyboardActions[key];
 	    JS9.Keyboard.addAction.call(this, this.keyboardActionContainer,
 					key, s);

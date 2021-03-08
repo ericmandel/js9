@@ -174,7 +174,7 @@ JS9.Menubar.createMenus = function(){
     // eslint-disable-next-line no-unused-vars
     const mypos = (opt,  x,  y) => {
 	let pos;
-	if( !window.hasOwnProperty("Jupyter") ){
+	if( !Object.prototype.hasOwnProperty.call(window, "Jupyter") ){
 	    opt.$menu.position({
 		my:  'left top',
 		at:  JS9.globalOpts.menuPosition || "left bottom",
@@ -201,7 +201,7 @@ JS9.Menubar.createMenus = function(){
 	if( !JS9.Menubar.rkeyMap ){
 	    JS9.Menubar.rkeyMap = {};
 	    for( key in gkeyActions ){
-		if( gkeyActions.hasOwnProperty(key) ){
+		if( Object.prototype.hasOwnProperty.call(gkeyActions, key) ){
 		    JS9.Menubar.rkeyMap[gkeyActions[key]] = key;
 		}
 	    }
@@ -215,7 +215,7 @@ JS9.Menubar.createMenus = function(){
 	    }
 	} else if( xact && JS9.Menubar.rkeyMap ){
 	    for( tact in JS9.Menubar.rkeyMap ){
-		if( JS9.Menubar.rkeyMap.hasOwnProperty(tact) && tact === xact ){
+		if( Object.prototype.hasOwnProperty.call(JS9.Menubar.rkeyMap, tact) && tact === xact ){
 		    key = JS9.Menubar.rkeyMap[tact];
 		    if( key ){
 			hstr = `<span>${name}<span class="JS9MenubarKeyAction">&nbsp;&nbsp;&nbsp;&nbsp;${key}</span></span>`;
@@ -416,7 +416,7 @@ JS9.Menubar.createMenus = function(){
 	    } else {
 		items.openlocal = xname("open local ...");
 		items.openremote = xname("open remote ...");
-		if( !window.hasOwnProperty("Jupyter") ){
+		if( !Object.prototype.hasOwnProperty.call(window, "Jupyter") ){
 		    items.openremote.disabled = false;
 		} else {
 		    items.openremote.disabled = true;
@@ -1006,12 +1006,12 @@ JS9.Menubar.createMenus = function(){
 			    }
 			    break;
 			case "copyWCSPos":
-			    if( JS9.hasOwnProperty("Keyboard") ){
+			    if( Object.prototype.hasOwnProperty.call(JS9, "Keyboard") ){
 				JS9.Keyboard.Actions["copy wcs position to clipboard"](uim, uim.ipos);
 			    }
 			    break;
 			case "copyValPos":
-			    if( JS9.hasOwnProperty("Keyboard") ){
+			    if( Object.prototype.hasOwnProperty.call(JS9, "Keyboard") ){
 				JS9.Keyboard.Actions["copy value and position to clipboard"](uim, uim.ipos);
 			    }
 			    break;
@@ -1169,7 +1169,7 @@ JS9.Menubar.createMenus = function(){
 	    items.vdisps.items.valpos = xname("value/position");
 	    items.vdisps.items.valposdisp = xname("display coords in val/pos");
 	    // disable if we don't have info plugin
-	    if( !JS9.hasOwnProperty("Info") ){
+	    if( !Object.prototype.hasOwnProperty.call(JS9, "Info") ){
 		items.vdisps.items.valpos.disabled = true;
 		items.vdisps.items.valposdisp.disabled = true;
 	    } else if( tdisp.image ){
@@ -1186,21 +1186,21 @@ JS9.Menubar.createMenus = function(){
 	    }
 	    items.vdisps.items.xhair = xname("crosshair for this image");
 	    // disable if we don't have info plugin
-	    if( !JS9.hasOwnProperty("Crosshair") || !tim ){
+	    if( !Object.prototype.hasOwnProperty.call(JS9, "Crosshair") || !tim ){
 		items.vdisps.items.xhair.disabled = true;
 	    } else if( tim && tim.params.crosshair ){
 		items.vdisps.items.xhair.icon = JS9.globalOpts.menuSelected;
 	    }
 	    items.vdisps.items.xhairwcs = xname("match wcs crosshairs");
 	    // disable if we don't have info plugin
-	    if( !JS9.hasOwnProperty("Crosshair") ){
+	    if( !Object.prototype.hasOwnProperty.call(JS9, "Crosshair") ){
 		items.vdisps.items.xhairwcs.disabled = true;
 	    } else if( JS9.globalOpts.wcsCrosshair ){
 		items.vdisps.items.xhairwcs.icon = JS9.globalOpts.menuSelected;
 	    }
 	    items.vdisps.items.toolbar = xname("toolbar tooltips");
 	    // disable if we don't have toolbar plugin
-	    if( !JS9.hasOwnProperty("Toolbar") ){
+	    if( !Object.prototype.hasOwnProperty.call(JS9, "Toolbar") ){
 		items.vdisps.items.toolbar.disabled = true;
 	    } else if( JS9.GetToolbar("showTooltips") ){
 		items.vdisps.items.toolbar.icon = JS9.globalOpts.menuSelected;
@@ -2185,7 +2185,7 @@ JS9.Menubar.createMenus = function(){
 		    }
 		} else {
 		    for( which in obj ){
-			if( obj.hasOwnProperty(which) ){
+			if( Object.prototype.hasOwnProperty.call(obj, which) ){
 			    key = which.substring(3);
 			    val = obj[which];
 			    if( key && val && im.tmp[`editingReg${which}`] ){
@@ -2225,7 +2225,7 @@ JS9.Menubar.createMenus = function(){
 		items.createRegions.icon = JS9.globalOpts.menuSelected;
 	    }
 	    for( key in JS9.globalOpts.keyboardActions ){
-		if( JS9.globalOpts.keyboardActions.hasOwnProperty(key) ){
+		if( Object.prototype.hasOwnProperty.call(JS9.globalOpts.keyboardActions, key) ){
 		    if( JS9.globalOpts.keyboardActions[key] ===
 			"add last region selected in regions menu" ){
 			items.notCreateRegions = {
@@ -2280,7 +2280,7 @@ JS9.Menubar.createMenus = function(){
 		items.copyto.disabled = true;
 	    }
 	    // disable if we don't have info plugin
-	    if( !JS9.hasOwnProperty("Info") ){
+	    if( !Object.prototype.hasOwnProperty.call(JS9, "Info") ){
 		items.listRegions.disabled = true;
 	    }
 	    return {
@@ -2322,7 +2322,7 @@ JS9.Menubar.createMenus = function(){
 				}
 				break;
 			    case "selectRegions":
-				if( JS9.hasOwnProperty("Keyboard") ){
+				if( Object.prototype.hasOwnProperty.call(JS9, "Keyboard") ){
 				    JS9.Keyboard.Actions["select all regions"](uim, uim.ipos);
 				}
 				break;
@@ -2490,7 +2490,7 @@ JS9.Menubar.createMenus = function(){
 	    } else {
 		altwcs = tim.raw.altwcs;
 		for( key in altwcs ){
-		    if( altwcs.hasOwnProperty(key) ){
+		    if( Object.prototype.hasOwnProperty.call(altwcs, key) ){
 			s1 = `altwcs_${key}`;
 			if( altwcs[key].header.WCSNAME ){
 			    s2 = `${altwcs[key].header.WCSNAME  
@@ -2999,7 +2999,7 @@ JS9.Menubar.createMenus = function(){
 	    };
 	    // first, internal js9 pages
 	    for( key in JS9.helpOpts ){
-		if( JS9.helpOpts.hasOwnProperty(key) ){
+		if( Object.prototype.hasOwnProperty.call(JS9.helpOpts, key) ){
 		    val = JS9.helpOpts[key];
 		    if( val.heading === "JS9Help" ){
 			last = val.type;
@@ -3021,7 +3021,7 @@ JS9.Menubar.createMenus = function(){
 	    };
 	    // second, the JS9 core plugins
 	    for( key in JS9.helpOpts ){
-		if( JS9.helpOpts.hasOwnProperty(key) ){
+		if( Object.prototype.hasOwnProperty.call(JS9.helpOpts, key) ){
 		    val = JS9.helpOpts[key];
 		    if( val.heading === "JS9" ){
 			last = val.type;
@@ -3033,7 +3033,7 @@ JS9.Menubar.createMenus = function(){
 	    }
 	    // last, the others
 	    for( key in JS9.helpOpts ){
-		if( JS9.helpOpts.hasOwnProperty(key) ){
+		if( Object.prototype.hasOwnProperty.call(JS9.helpOpts, key) ){
 		    val = JS9.helpOpts[key];
 		    if( val.heading === "JS9Help" || 
 			val.heading === "JS9" ){

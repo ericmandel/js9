@@ -67,13 +67,13 @@ function loadPreferences(prefs){
 	js9Electron.prefs = obj;
 	// look for top-level objects
 	for( tobj in obj ){
-	    if( obj.hasOwnProperty(tobj)              &&
-		typeof obj[tobj] === "object"         &&
-		js9Electron.hasOwnProperty(tobj)      &&
-		typeof js9Electron[tobj] === "object" ){
+	    if( Object.prototype.hasOwnProperty.call(obj, tobj)         &&
+		typeof obj[tobj] === "object"                           &&
+		Object.prototype.hasOwnProperty.call(js9Electron, tobj) &&
+		typeof js9Electron[tobj] === "object"                   ){
 		// process each property of this object
 		for( opt in obj[tobj] ){
-		    if( obj[tobj].hasOwnProperty(opt) ){
+		    if( Object.prototype.hasOwnProperty.call(obj[tobj], opt) ){
 			val = obj[tobj][opt];
 			otype = typeof val;
 			jtype = typeof js9Electron[tobj][opt];
@@ -112,7 +112,8 @@ function savePreferences(obj){
 	s = JSON.parse(JSON.stringify(js9Electron.prefs));
 	// overwrite cmdline object properties
 	for( key in obj ){
-	    if( obj.hasOwnProperty(key) && s.cmdlineOpts.hasOwnProperty(key) ){
+	    if( Object.prototype.hasOwnProperty.call(obj, key)           &&
+		Object.prototype.hasOwnProperty.call(s.cmdlineOpts, key) ){
 		s.cmdlineOpts[key] = obj[key];
 	    }
 	}

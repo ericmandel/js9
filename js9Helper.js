@@ -111,7 +111,7 @@ const getClients = function(){
     if( v2 ){
 	// v2 protocol
         for( id in v2 ){
-	    if( v2.hasOwnProperty(id) ){
+	    if( Object.prototype.hasOwnProperty.call(v2, id) ){
 		if( !v2[id].js9worker ){
 		    res.push(v2[id]);
 		}
@@ -286,7 +286,7 @@ const loadSecurePreferences = function(securefile){
 	    catch(e){ cerr("can't parse: ", securefile, e); }
 	    // merge opts into secureOpts
 	    for( opt in obj ){
-		if( obj.hasOwnProperty(opt) ){
+		if( Object.prototype.hasOwnProperty.call(obj, opt) ){
 		    switch(opt){
 		    case "key":
 			secureOpts.key = fs.readFileSync(obj[opt]);
@@ -328,7 +328,7 @@ const loadPreferences = function(prefs){
 	// look for globalOpts and merge
 	if( obj && obj.globalOpts ){
 	    for( opt in obj.globalOpts ){
-		if( obj.globalOpts.hasOwnProperty(opt) ){
+		if( Object.prototype.hasOwnProperty.call(obj.globalOpts, opt) ){
 		    otype = typeof obj.globalOpts[opt];
 		    jtype = typeof globalOpts[opt];
 		    if( (jtype === otype) || (jtype === "undefined") ){

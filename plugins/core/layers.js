@@ -237,7 +237,7 @@ JS9.Layers.init = function(opts){
 	    if( key === "crosshair" ){
 		continue;
 	    }
-	    if( im.layers.hasOwnProperty(key) ){
+	    if( Object.prototype.hasOwnProperty.call(im.layers, key) ){
 		JS9.Layers.addLayer.call(this, im, key);
 	    }
 	}

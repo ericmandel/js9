@@ -162,7 +162,7 @@ JS9.Sync.unsync = function(ops, ims, opts){
     }
     // for each op in this image ...
     for( op in this.syncs ){
-	if( this.syncs.hasOwnProperty(op) ){
+	if( Object.prototype.hasOwnProperty.call(this.syncs, op) ){
 	    // skip this op if its not in the specified op list
 	    if( xops && $.inArray(op, xops) < 0 ){
 		continue;
@@ -455,7 +455,7 @@ JS9.Sync.xeqSync = function(arr){
 	}
 	// revert to display of orginal image where necessary
 	for( key in displays ){
-	    if( displays.hasOwnProperty(key) ){
+	    if( Object.prototype.hasOwnProperty.call(displays, key) ){
 		displays[key].displayImage();
 	    }
 	}

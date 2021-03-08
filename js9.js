@@ -77,9 +77,7 @@ JS9.URLEXP = /^(https?|ftp):\/\//; // url to determine a web page
 JS9.WCSEXP = /^(fk4|fk5|icrs|galactic|ecliptic|image|physical|linear)$/;
 
 // https://hacks.mozilla.org/2013/04/detecting-touch-its-the-why-not-the-how/
-JS9.TOUCHSUPPORTED = ( window.hasOwnProperty("ontouchstart") ||
-		      (navigator.maxTouchPoints > 0) ||
-		      (navigator.msMaxTouchPoints > 0));
+JS9.TOUCHSUPPORTED = (Object.prototype.hasOwnProperty.call(window, "ontouchstart") || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
 // modified from:
 // http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
 // https://stackoverflow.com/questions/58019463/how-to-detect-device-name-in-safari-on-ios-13-while-it-doesnt-show-the-correct
@@ -625,7 +623,7 @@ if( JS9.BROWSER[3] ){
     JS9.lightOpts.dhtml.regWin="width=660px,height=470px,resize=1,scrolling=1";
 }
 // Jupyter doesn't seem to be able to load wasm (7/4/2018)
-if( window.hasOwnProperty("Jupyter") ){
+if( Object.prototype.hasOwnProperty.call(window, "Jupyter") ){
     JS9.globalOpts.useWasm = false;
 }
 // JS9 desktop app using Electron.js
@@ -1201,7 +1199,7 @@ JS9.Image.prototype.closeImage = function(opts){
 		}
 		// clear all layers
 		for( key in tim.layers ){
-		    if( tim.layers.hasOwnProperty(key) ){
+		    if( Object.prototype.hasOwnProperty.call(tim.layers, key) ){
 			// clear the shape layer if its in the main display,
 			//  and non-main layers if this image is selected
 			if( tim.layers[key].dlayer.dtype === "main" ||
@@ -3186,7 +3184,7 @@ JS9.Image.prototype.maskImage = function(...args){
 	}
 	// add opts to mask object
 	for( key in opts ){
-	    if( opts.hasOwnProperty(key) ){
+	    if( Object.prototype.hasOwnProperty.call(opts, key) ){
 		switch(key){
 		case "opacity":
 		    // handle opacity specially to avoid name collision
@@ -5093,7 +5091,7 @@ JS9.Image.prototype.reFlipRot = function(){
 JS9.Image.prototype.refreshLayers = function(panzoomrefresh){
     let key;
     for( key in this.layers ){
-	if( this.layers.hasOwnProperty(key) ){
+	if( Object.prototype.hasOwnProperty.call(this.layers, key) ){
 	    if( this.layers[key].show &&
 		this.layers[key].opts.panzoom ){
 		if( panzoomrefresh && panzoomrefresh[key] ){
@@ -5357,7 +5355,7 @@ JS9.Image.prototype.initWCS = function(header){
     // look for wcs alternates
     // see: http://www.atnf.csiro.au/people/mcalabre/WCS/wcs.pdf
     for( key in header ){
-	if( header.hasOwnProperty(key) ){
+	if( Object.prototype.hasOwnProperty.call(header, key) ){
 	    // is it an alt wcs keyword?
 	    varr = key.match(awcs);
 	    if( varr && varr.length ){
@@ -5381,7 +5379,7 @@ JS9.Image.prototype.initWCS = function(header){
     // init all of the wcs's we found
     for( key in this.raw.altwcs ){
 	// loop through alt wcs objects
-	if( this.raw.altwcs.hasOwnProperty(key) ){
+	if( Object.prototype.hasOwnProperty.call(this.raw.altwcs, key) ){
 	    s = JS9.raw2FITS(this.raw.altwcs[key].header);
 	    // too large headers blow Emscripten's stack space
 	    // this.raw.altwcs[key].wcs = JS9.initwcs(s, hlen);
@@ -5420,7 +5418,7 @@ JS9.Image.prototype.freeWCS = function(raw){
 	// free all wcs structures
 	for( key in raw.altwcs ){
 	    // loop through alt wcs objects
-	    if( raw.altwcs.hasOwnProperty(key) ){
+	    if( Object.prototype.hasOwnProperty.call(raw.altwcs, key) ){
 		if( raw.altwcs[key].wcs > 0 ){
 		    JS9.freewcs(raw.altwcs[key].wcs);
 		    raw.altwcs[key].wcs = null;
@@ -5435,7 +5433,7 @@ JS9.Image.prototype.getWCS = function(){
     let key, obj;
     // loop through wcs objects, looking for a match
     for( key in this.raw.altwcs ){
-	if( this.raw.altwcs.hasOwnProperty(key) ){
+	if( Object.prototype.hasOwnProperty.call(this.raw.altwcs, key) ){
 	    if( this.raw.wcs === this.raw.altwcs[key].wcs ){
 		obj = $.extend(true, {}, this.raw.altwcs[key].wcsinfo);
 		obj.version = key;
@@ -5455,7 +5453,7 @@ JS9.Image.prototype.setWCS = function(version){
     if( !this.raw || !this.raw.altwcs ){ return this; }
     // loop through wcs objects, looking for a match
     for( key in this.raw.altwcs ){
-	if( this.raw.altwcs.hasOwnProperty(key) ){
+	if( Object.prototype.hasOwnProperty.call(this.raw.altwcs, key) ){
 	    wcsname = this.raw.altwcs[key].header.WCSNAME;
 	    if( (version === key) || (version === wcsname) ){
 		// make sure its a valid wcs
@@ -6483,7 +6481,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 // save image as a FITS file
 JS9.Image.prototype.saveFITS = function(fname, opts){
     let arr, blob, s, ll, ur, sect;
-    if( window.hasOwnProperty("saveAs") ){
+    if( Object.prototype.hasOwnProperty.call(window, "saveAs") ){
 	if( fname ){
 	    fname = fname
 		.replace(/\.fz$/i, "")
@@ -6521,7 +6519,7 @@ JS9.Image.prototype.saveFITS = function(fname, opts){
 // save image as an img file of specified type (e.g., image/png, image/jpeg)
 JS9.Image.prototype.saveIMG = function(fname, type, opts){
     let key, img, ctx, canvas, width, height, quality;
-    if( window.hasOwnProperty("saveAs") ){
+    if( Object.prototype.hasOwnProperty.call(window, "saveAs") ){
 	// opts can be opts object or json string or quality value
 	if( typeof opts === "number" ){
 	    quality = opts;
@@ -6565,7 +6563,7 @@ JS9.Image.prototype.saveIMG = function(fname, type, opts){
 	// add graphics layers, unless explicitly specified not to
 	if( opts.layers !== false ){
 	    for( key in this.layers ){
-		if( this.layers.hasOwnProperty(key) ){
+		if( Object.prototype.hasOwnProperty.call(this.layers, key) ){
 		    // each layer canvas
 		    if( this.layers[key].dlayer.dtype === "main" &&
 			this.layers[key].show ){
@@ -8598,7 +8596,7 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
     // make copy of input header, removing wcs keywords
     oheader = $.extend(true, {}, raw.header);
     for( key in oheader ){
-	if( oheader.hasOwnProperty(key) ){
+	if( Object.prototype.hasOwnProperty.call(oheader, key) ){
 	    if( wcsexp.test(key) ){
 		delete oheader[key];
 	    }
@@ -8615,7 +8613,7 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	    JS9.error("invalid wcs object input to reproject()");
 	}
 	for( key in nheader ){
-	    if( nheader.hasOwnProperty(key) ){
+	    if( Object.prototype.hasOwnProperty.call(nheader, key) ){
 		if( wcsexp.test(key) ){
 		    twcs[key] = nheader[key];
 		}
@@ -8912,7 +8910,7 @@ JS9.Image.prototype.filterRGBImage = function(...args){
     // no arg: return list of filters
     if( !filter ){
 	for( key in JS9.ImageFilters ){
-	    if( JS9.ImageFilters.hasOwnProperty(key) ){
+	    if( Object.prototype.hasOwnProperty.call(JS9.ImageFilters, key) ){
 		filters.push(key);
 	    }
 	}
@@ -8977,7 +8975,7 @@ JS9.Image.prototype.moveToDisplay = function(dname){
     this.xeqPlugins("image", "onimageclear");
     // make sure the main layers in the old display are in the new display
     for( key in odisplay.layers ){
-	if( odisplay.layers.hasOwnProperty(key) ){
+	if( Object.prototype.hasOwnProperty.call(odisplay.layers, key) ){
 	    if( (odisplay.layers[key].dtype === "main") &&
 		!ndisplay.layers[key] ){
 		ndisplay.newShapeLayer(key, odisplay.layers[key].opts);
@@ -8988,7 +8986,7 @@ JS9.Image.prototype.moveToDisplay = function(dname){
     // don't want them showing on the new image ...
     if( ndisplay.image ){
 	for( key in ndisplay.layers ){
-	    if( ndisplay.layers.hasOwnProperty(key) ){
+	    if( Object.prototype.hasOwnProperty.call(ndisplay.layers, key) ){
 		if( ndisplay.layers[key].dtype === "main" ){
 		    ndisplay.image.showShapeLayer(key, false, {local: true});
 		}
@@ -8998,7 +8996,7 @@ JS9.Image.prototype.moveToDisplay = function(dname){
     // re-assign each "main" layer from old display to new by:
     // saving the graphics, reassigning the canvas, restoring the graphics
     for( key in this.layers ){
-	if( this.layers.hasOwnProperty(key) ){
+	if( Object.prototype.hasOwnProperty.call(this.layers, key) ){
 	    layer = this.layers[key];
 	    dlayer = ndisplay.layers[key];
 	    if( dlayer ){
@@ -9022,7 +9020,7 @@ JS9.Image.prototype.moveToDisplay = function(dname){
     this.displayImage("all");
     // show shape layers in new display
     for( key in this.layers ){
-	if( this.layers.hasOwnProperty(key) ){
+	if( Object.prototype.hasOwnProperty.call(this.layers, key) ){
 	    this.showShapeLayer(key, true, {local: true});
 	}
     }
@@ -9116,7 +9114,7 @@ JS9.Image.prototype.saveSession = function(file, opts){
 	obj.layers = [];
 	for( key in im.layers ){
 	    // save each main layer so it can be reconstituted
-            if( im.layers.hasOwnProperty(key) ){
+            if( Object.prototype.hasOwnProperty.call(im.layers, key) ){
 		layer = im.layers[key];
 		dlayer = layer.dlayer;
 		// only save layers on main display
@@ -9165,7 +9163,7 @@ JS9.Image.prototype.saveSession = function(file, opts){
 	obj.params.crosshair = false;
 	return obj;
     };
-    if( !window.hasOwnProperty("saveAs") ){
+    if( !Object.prototype.hasOwnProperty.call(window, "saveAs") ){
 	JS9.error("no saveAs() available to save session");
     }
     // filename for saving
@@ -9318,7 +9316,7 @@ JS9.Image.prototype.xeqStashCall = function(xeqstash, exclArr){
     } else {
 	// backward compatibility: pre 3.1 used an object, not an array
 	for( key in xeqstash ){
-	    if( xeqstash.hasOwnProperty(key) ){
+	    if( Object.prototype.hasOwnProperty.call(xeqstash, key) ){
 		if( $.inArray(key, exclArr) >= 0 ){
 		    continue;
 		}
@@ -9343,7 +9341,7 @@ JS9.Image.prototype.xeqStashDiscard = function(xid){
     } else {
 	// pre 3.1 used an object
 	for( key in this.xeqstash ){
-	    if( this.xeqstash.hasOwnProperty(key) ){
+	    if( Object.prototype.hasOwnProperty.call(this.xeqstash, key) ){
 		if( xid === key || xid === this.xeqstash[key].id ){
 		    delete this.xeqstash[key];
 		}
@@ -9365,7 +9363,7 @@ JS9.Image.prototype.xeqPlugins = function(xtype, xname, xval){
     parr = this.display.pluginInstances;
     // look for plugin callbacks to execute
     for( pname in parr ){
-	if( parr.hasOwnProperty(pname) ){
+	if( Object.prototype.hasOwnProperty.call(parr, pname) ){
 	    pinst = parr[pname];
 	    popts = pinst.plugin.opts;
 	    if( pinst.isActive(xname) && typeof popts[xname] === "function" ){
@@ -9773,7 +9771,7 @@ JS9.Image.prototype.saveCatalog = function(fname, which){
     if( !fname.match(/\.cat$/) ){
 	fname += ".cat";
     }
-    if( window.hasOwnProperty("saveAs") ){
+    if( Object.prototype.hasOwnProperty.call(window, "saveAs") ){
 	JS9.saveAs(blob, fname);
     } else {
 	JS9.error("no saveAs() available to save catalog");
@@ -10070,7 +10068,8 @@ JS9.Display = function(el){
 	}
     }
     // add resize capability, if necessary
-    if( JS9.globalOpts.resizeHandle && window.hasOwnProperty("ResizeSensor") ){
+    if( JS9.globalOpts.resizeHandle                                  &&
+	Object.prototype.hasOwnProperty.call(window, "ResizeSensor") ){
 	this.divjq
 	    .css("resize", "both")
 	    .css("overflow", "hidden");
@@ -10601,7 +10600,7 @@ JS9.Display.prototype.resize = function(width, height, opts){
     }
     // change size of shape canvases
     for( key in this.layers ){
-	if( this.layers.hasOwnProperty(key) ){
+	if( Object.prototype.hasOwnProperty.call(this.layers, key) ){
 	    layer = this.layers[key];
 	    if( layer.dtype === "main" ){
 		layer.divjq.css("width", nwidth);
@@ -10630,7 +10629,7 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	    // current image: change object positions in displayed layers
 	    if( im === im.display.image ){
 		for( key in im.layers ){
-		    if( im.layers.hasOwnProperty(key) ){
+		    if( Object.prototype.hasOwnProperty.call(im.layers, key) ){
 			layer = im.layers[key];
 			if( layer.dlayer.type === "main" && !layer.json ){
 			    layer.canvas.getObjects().forEach(repos);
@@ -11223,7 +11222,7 @@ JS9.Display.prototype.loadSession = function(file, opts){
 	// reconstitute display parameters
 	if( jobj.display ){
 	    for( key in jobj.display ){
-		if( jobj.display.hasOwnProperty(key) ){
+		if( Object.prototype.hasOwnProperty.call(jobj.display, key) ){
 		    switch(key){
 		    case "blendMode":
 			JS9.BlendDisplay(jobj.display[key], {display: this});
@@ -11619,7 +11618,7 @@ JS9.Command = function(obj){
     let p;
     // copy properties to new object
     for( p in obj ){
-	if( obj.hasOwnProperty(p) ){
+	if( Object.prototype.hasOwnProperty.call(obj, p) ){
 	    this[p] = obj[p];
 	}
     }
@@ -12841,7 +12840,7 @@ JS9.Fabric.showShapeLayer = function(layerName, mode, opts){
 		dlayer.divjq.css("z-index", layer.zindex);
 		// unselect selected objects in lower-zindex groups
 		for( key in this.layers ){
-		    if( this.layers.hasOwnProperty(key) ){
+		    if( Object.prototype.hasOwnProperty.call(this.layers,key) ){
 			if( (layerName !== key) && this.layers[key].show ){
 			    tdlayer = this.display.layers[key];
 			    if( tdlayer.divjq.css("z-index") < layer.zindex ){
@@ -12861,7 +12860,8 @@ JS9.Fabric.showShapeLayer = function(layerName, mode, opts){
 	}
 	// remove resize object if we have no more hidden layers
 	for( xkey in this.layers ){
-	    if( this.layers.hasOwnProperty(xkey) && this.layers[xkey].json ){
+	    if( Object.prototype.hasOwnProperty.call(this.layers, xkey) &&
+		this.layers[xkey].json ){
 		left++;
 	    }
 	}
@@ -12927,7 +12927,7 @@ JS9.Fabric.displayShapeLayers = function(){
     // save old layers
     if( this.display.image && this.display.image.layers ){
 	for( key in this.display.image.layers ){
-	    if( this.display.image.layers.hasOwnProperty(key) ){
+	    if( Object.prototype.hasOwnProperty.call(this.display.image.layers, key) ){
 		this.display.image.showShapeLayer(key, false, {local: true});
 	    }
 	}
@@ -12935,7 +12935,7 @@ JS9.Fabric.displayShapeLayers = function(){
     // "this" points to the current image: display new layers
     if( this.layers ){
 	for( key in this.layers ){
-	    if( this.layers.hasOwnProperty(key) ){
+	    if( Object.prototype.hasOwnProperty.call(this.layers, key) ){
 		this.showShapeLayer(key, true, {local: true});
 	    }
 	}
@@ -12949,7 +12949,7 @@ JS9.Fabric.toggleShapeLayers = function(){
     if( this.toggleLayers ){
 	// toggleLayers => we are currently hidden, so display them
 	for( key in this.layers ){
-	    if( this.layers.hasOwnProperty(key) ){
+	    if( Object.prototype.hasOwnProperty.call(this.layers, key) ){
 		layer = this.layers[key];
 		if( layer && this.toggleLayers[key] ){
 		    this.showShapeLayer(key, true);
@@ -12961,7 +12961,7 @@ JS9.Fabric.toggleShapeLayers = function(){
 	// no toggleLayers => we are currently displayed, so hide them
 	this.toggleLayers = {};
 	for( key in this.layers ){
-	    if( this.layers.hasOwnProperty(key) ){
+	    if( Object.prototype.hasOwnProperty.call(this.layers, key) ){
 		if( key === "crosshair" ){
 		    continue;
 		}
@@ -13018,7 +13018,7 @@ JS9.Fabric.activeShapeLayer = function(s){
     if( !s ){
 	// no args: return layer with highest zindex
 	for( key in this.layers ){
-	    if( this.layers.hasOwnProperty(key) ){
+	    if( Object.prototype.hasOwnProperty.call(this.layers, key) ){
 		tlayer = this.layers[key];
 		if( tlayer.dlayer.dtype === "main" ){
 		    if( (tzindex === undefined) || (tlayer.zindex > tzindex) ){
@@ -13060,7 +13060,7 @@ JS9.Fabric.activeShapeLayer = function(s){
 	    layer.zindex = this.zlayer - 1;
 	    layer.dlayer.divjq.css("z-index", layer.zindex);
 	    for( key in this.layers ){
-		if( this.layers.hasOwnProperty(key) ){
+		if( Object.prototype.hasOwnProperty.call(this.layers, key) ){
 		    // if another layer has top zindex, switch with original
 		    // zindex of layer we are bringing to the top
 		    // duh ... don't reset the specified layer
@@ -13097,7 +13097,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	// look through the color keys for exact match
 	for( tkey in tagcolors ){
 	    // but make sure its a real property
-	    if( tagcolors.hasOwnProperty(tkey) ){
+	    if( Object.prototype.hasOwnProperty.call(tagcolors, tkey) ){
 		ctags = tkey.split("_");
 		// see if all elements match
 		if( $(tags).not(ctags).length === 0 &&
@@ -13111,7 +13111,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	if( !color ){
 	    for( tkey in tagcolors ){
 		// but make sure its a real property
-		if( tagcolors.hasOwnProperty(tkey) ){
+		if( Object.prototype.hasOwnProperty.call(tagcolors, tkey) ){
 		    ctags = tkey.split("_");
 		    if( $(tags).not(ctags).length === 0 ){
 			color = tagcolors[tkey];
@@ -13124,7 +13124,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	if( !color ){
 	    for( tkey in tagcolors ){
 		// but make sure its a real property
-		if( tagcolors.hasOwnProperty(tkey) ){
+		if( Object.prototype.hasOwnProperty.call(tagcolors, tkey) ){
 		    ctags = tkey.split("_");
 		    if( $(ctags).not(tags).length === 0 ){
 			color = tagcolors[tkey];
@@ -13542,7 +13542,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     }
     // separate opts and params
     for( key in opts ){
-	if( opts.hasOwnProperty(key) ){
+	if( Object.prototype.hasOwnProperty.call(opts, key) ){
 	    // eslint-disable no-fallthrough
 	    switch(key){
 	    case "tags":
@@ -14132,7 +14132,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
     }
     // construct groups, if necessary
     for( key in grp ){
-	if( grp.hasOwnProperty(key) ){
+	if( Object.prototype.hasOwnProperty.call(grp, key) ){
 	    this.groupShapes(layerName, grp[key],
 			     {groupid: key, select: false});
 	}
@@ -15527,7 +15527,7 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	}
 	// get new option names to export when saving regions
 	exports = this._exportShapeOptions(opts).filter( (item) => {
-	    return !obj.params.exports.hasOwnProperty(item);
+	    return !Object.prototype.hasOwnProperty.call(obj.params.exports, item);
 	});
 	sobj.params.exports = obj.params.exports.concat(exports);
 	// if stroke (color) is defined, we probably need to convert it to hex
@@ -16251,7 +16251,7 @@ JS9.Fabric.print = function(opts){
     html += `${divstr}<img src='${dataURL}'></div>`;
     // add layers
     for( key in this.layers ){
-	if( this.layers.hasOwnProperty(key) ){
+	if( Object.prototype.hasOwnProperty.call(this.layers, key) ){
 	    layer = this.layers[key];
 	    // output (showing) layers attached to the main display
 	    if( layer.dlayer.dtype === "main" && layer.show ){
@@ -16343,7 +16343,7 @@ JS9.Fabric.initGraphics = function(){
     JS9.Image.prototype.print = JS9.Fabric.print;
     // incorporate our defaults into fabric
     for( key in JS9.Fabric.opts ){
-	if( JS9.Fabric.opts.hasOwnProperty(key) ){
+	if( Object.prototype.hasOwnProperty.call(JS9.Fabric.opts, key) ){
 	    fabric.Object.prototype[key] = JS9.Fabric.opts[key];
 	}
     }
@@ -16596,7 +16596,7 @@ JS9.MouseTouch.Actions["wheel zoom"] = function(im, evt){
     nzoom = Math.round((nzoom + 0.00001) * 100) / 100;
     // see if any layers have many regions, thus requiring optimization
     for( key in im.layers ){
-	if( im.layers.hasOwnProperty(key) ){
+	if( Object.prototype.hasOwnProperty.call(im.layers, key) ){
 	    if( im.layers[key].show && im.layers[key].opts.panzoom ){
 		if( im.layers[key].canvas.size() > floor ){
 		    im.tmp.panzoomRefresh = im.tmp.panzoomRefresh || {};
@@ -16666,7 +16666,7 @@ JS9.MouseTouch.Actions["pan the image"] = function(im, ipos, evt){
 	}
 	// see if any layers have many regions, thus requiring optimization
 	for( key in im.layers ){
-	    if( im.layers.hasOwnProperty(key) ){
+	    if( Object.prototype.hasOwnProperty.call(im.layers, key) ){
 		if( im.layers[key].show && im.layers[key].opts.panzoom ){
 		    if( im.layers[key].canvas.size() > floor ){
 			im.tmp.panzoomRefresh = im.tmp.panzoomRefresh || {};
@@ -18872,7 +18872,7 @@ JS9.Regions.listRegions = function(which, opts, layerName){
     }
     // get array of colors associated with tags
     for( key in JS9.Regions.opts.tagcolors ){
-	if( JS9.Regions.opts.tagcolors.hasOwnProperty(key) ){
+	if( Object.prototype.hasOwnProperty.call(JS9.Regions.opts.tagcolors, key) ){
 	    tagcolors.push(JS9.Regions.opts.tagcolors[key]);
 	}
     }
@@ -19142,12 +19142,13 @@ JS9.Regions.parseRegions = function(s, opts){
 	while( (xarr = rexp.exec(s)) !== null ){
 	    key = xarr[1].toLowerCase();
 	    val = xarr[2].replace(/^['"{]|['"}]$/g, "");
-	    if( ds9opts.hasOwnProperty(key) &&
+	    if( Object.prototype.hasOwnProperty.call(ds9opts, key) &&
 		typeof ds9opts[key] === "function" ){
 		nobj = ds9opts[key](val);
 		for( key2 in nobj ){
-		    if( nobj.hasOwnProperty(key2) ){
-			if( key2 === "tags" && xobj.hasOwnProperty(key2) ){
+		    if( Object.prototype.hasOwnProperty.call(nobj, key2) ){
+			if( key2 === "tags"                                  &&
+			    Object.prototype.hasOwnProperty.call(xobj, key2) ){
 			    xobj[key2] += `,${nobj[key2]}`;
 			} else {
 			    xobj[key2] = nobj[key2];
@@ -19602,7 +19603,7 @@ JS9.Regions.saveRegions = function(fname, which, layer){
     // create the blob
     blob = new Blob([s], {type: "text/plain;charset=utf-8"});
     // save blob
-    if( window.hasOwnProperty("saveAs") ){
+    if( Object.prototype.hasOwnProperty.call(window, "saveAs") ){
 	JS9.saveAs(blob, fname);
     } else {
 	JS9.error("no saveAs() available to save region file");
@@ -21046,7 +21047,7 @@ JS9.memcpy = function(dst, dstOffset, src, srcOffset, length){
 // set explicit focus for IPython/Jupyter support
 JS9.jupyterFocus = function(el, el2){
     let eljq;
-    if( window.hasOwnProperty("Jupyter") ){
+    if( Object.prototype.hasOwnProperty.call(window, "Jupyter") ){
 	if( el instanceof jQuery ){
 	    eljq = el;
 	} else {
@@ -21099,8 +21100,8 @@ JS9.waiting = function(mode, display){
     let el, opts, tdisp;
     switch(mode){
     case true:
-	if( window.hasOwnProperty("Spinner") &&
-	    (JS9.globalOpts.waitType === "spinner") ){
+	if( Object.prototype.hasOwnProperty.call(window, "Spinner") &&
+	    (JS9.globalOpts.waitType === "spinner")                 ){
 	    if( display ){
 		if( typeof display === "object" ){
 		    el = display.divjq[0];
@@ -21126,8 +21127,8 @@ JS9.waiting = function(mode, display){
 	}
 	break;
     case false:
-	if( window.hasOwnProperty("Spinner") &&
-	    (JS9.globalOpts.waitType === "spinner") ){
+	if( Object.prototype.hasOwnProperty.call(window, "Spinner") &&
+	    (JS9.globalOpts.waitType === "spinner")                 ){
 	    if( JS9.spinner ){
 		JS9.spinner.spinner.stop();
 	    }
@@ -21186,8 +21187,8 @@ JS9.msgHandler =  function(msg, cb){
 		// is this the display object? see JS9.parsePublicArgs
 		if( obj                             &&
 		    (typeof obj === "object")       &&
-		    obj.hasOwnProperty("display")   &&
-		    (Object.keys(obj).length === 1) ){
+		    Object.prototype.hasOwnProperty.call(obj, "display")  &&
+		    (Object.keys(obj).length === 1)                       ){
 		    // remove the current display object
 		    args.pop();
 		    // return the new one
@@ -22338,14 +22339,16 @@ JS9.eventToCharStr = function(evt){
     }
     s = String(c);
     // normalize keyCode
-    if( _to_ascii.hasOwnProperty(s) ){
+    if( Object.prototype.hasOwnProperty.call(_to_ascii, s) ){
         c = _to_ascii[s];
     }
     if( !evt.shiftKey && (c >= 65 && c <= 90) ){
         c = String.fromCharCode(c + 32);
-    } else if( !evt.shiftKey && _specialKeys.hasOwnProperty(c) ){
+    } else if( !evt.shiftKey                                         &&
+	       Object.prototype.hasOwnProperty.call(_specialKeys, c) ){
         c = _specialKeys[c];
-    } else if( evt.shiftKey && _shiftUps.hasOwnProperty(c) ){
+    } else if( evt.shiftKey                                       &&
+	       Object.prototype.hasOwnProperty.call(_shiftUps, c) ){
         //get shifted keyCode value
         c = _shiftUps[c];
     } else {
@@ -22795,7 +22798,7 @@ JS9.raw2FITS = function(raw, opts){
 	    if( opts.addcr ){ t += "\n"; }
 	}
 	for( key in obj ){
-	    if( obj.hasOwnProperty(key) ){
+	    if( Object.prototype.hasOwnProperty.call(obj, key) ){
 		if( key === "js9Protocol" || key === "js9Endian" ){
 		    continue;
 		}
@@ -23221,7 +23224,8 @@ JS9.mergePrefs = function(obj){
     let otype, jtype, name;
     // merge preferences with js9 objects and data
     for( name in obj ){
-	if( obj.hasOwnProperty(name) && JS9.hasOwnProperty(name) ){
+	if( Object.prototype.hasOwnProperty.call(obj, name) &&
+	    Object.prototype.hasOwnProperty.call(JS9, name) ){
 	    jtype = typeof JS9[name];
 	    otype = typeof obj[name];
 	    if( (jtype === otype) || (otype === "string") ){
@@ -23283,7 +23287,7 @@ JS9.isTypedArray = function(obj){
         "[object Float64Array]": true
     };
     type = Object.prototype.toString.call(obj);
-    return types.hasOwnProperty(type);
+    return Object.prototype.hasOwnProperty.call(types, type);
 };
 
 // starbase table support
@@ -23624,7 +23628,7 @@ JS9.mouseDownCB = function(evt){
     if( !display.resizing ){
 	evt.preventDefault();
 	// begin actions for mouse and touch events
-	if( JS9.hasOwnProperty("MouseTouch") ){
+	if( Object.prototype.hasOwnProperty.call(JS9, "MouseTouch") ){
 	    JS9.MouseTouch.action(im, evt, "start");
 	}
 	// inside a region, clear region display and return;
@@ -23669,7 +23673,7 @@ JS9.mouseUpCB = function(evt){
     // sanity check
     if( !im ){
 	// handle supermenu clicks specially (even if no image is loaded)
-	if( JS9.hasOwnProperty("Menubar") ){
+	if( Object.prototype.hasOwnProperty.call(JS9, "Menubar") ){
 	    JS9.Menubar.onclick(evt.data);
 	}
 	return;
@@ -23685,7 +23689,7 @@ JS9.mouseUpCB = function(evt){
 	evt.preventDefault();
     }
     // end actions for mouse and touch events
-    if( JS9.hasOwnProperty("MouseTouch") ){
+    if( Object.prototype.hasOwnProperty.call(JS9, "MouseTouch") ){
 	JS9.MouseTouch.action(im, evt, "stop");
     }
     // in a region, update region string since we probably just modified it
@@ -23701,7 +23705,7 @@ JS9.mouseUpCB = function(evt){
 	if( isclick ){
 	    im.xeqPlugins("mouse", "onclick", evt);
 	    // handle supermenu clicks specially
-	    if( JS9.hasOwnProperty("Menubar") ){
+	    if( Object.prototype.hasOwnProperty.call(JS9, "Menubar") ){
 		JS9.Menubar.onclick(im.display);
 	    }
 	}
@@ -23808,11 +23812,11 @@ JS9.mouseMoveCB = function(evt){
 	}
     }
     // actions for mouse and touch events
-    if( JS9.hasOwnProperty("MouseTouch") ){
+    if( Object.prototype.hasOwnProperty.call(JS9, "MouseTouch") ){
 	JS9.MouseTouch.action(im, evt);
     }
     // actions for crosshair
-    if( JS9.hasOwnProperty("Crosshair") ){
+    if( Object.prototype.hasOwnProperty.call(JS9, "Crosshair") ){
 	if( im.tmp.arrowCrosshairVisible && !im.params.crosshair ){
 	    JS9.Crosshair.hide(im, im.ipos, evt);
 	}
@@ -23906,7 +23910,7 @@ JS9.wheelCB = function(evt){
     const display = evt.data;
     const im = display.image;
     if( display.mousetouchZoom && im         &&
-	JS9.hasOwnProperty("MouseTouch")     &&
+	Object.prototype.hasOwnProperty.call(JS9, "MouseTouch") &&
 	JS9.MouseTouch.Actions["wheel zoom"] ){
 	JS9.MouseTouch.Actions["wheel zoom"](im, evt);
 	// avoid page scroll if we are using the wheel for zooming
@@ -23937,7 +23941,7 @@ JS9.keyDownCB = function(evt){
     const im = display.image;
     evt.preventDefault();
     // actions for key press
-    if( JS9.hasOwnProperty("Keyboard") ){
+    if( Object.prototype.hasOwnProperty.call(JS9, "Keyboard") ){
 	ipos = im ? im.ipos : {x: null, y: null};
 	JS9.Keyboard.action(im, ipos, evt);
     }
@@ -24114,7 +24118,8 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 	if( this.status !== "active" ){
 	    return false;
 	}
-	if( cbname && !this.plugin.opts.hasOwnProperty(cbname) ){
+	if( cbname &&
+	    !Object.prototype.hasOwnProperty.call(this.plugin.opts, cbname) ){
 	    return false;
 	}
 	switch(this.winType){
@@ -24341,7 +24346,7 @@ JS9.instantiatePlugins = function(){
 JS9.initEmscripten = function(){
     let opts;
     // sanity check
-    if( window.hasOwnProperty("Astroem") ){ return; }
+    if( Object.prototype.hasOwnProperty.call(window, "Astroem") ){ return; }
     // load astroem, based on whether we have native WebAssembly or not
     opts = {responseType: "arraybuffer", allowCache: true};
     if( JS9.globalOpts.useWasm          &&
@@ -24379,7 +24384,7 @@ JS9.initEmscripten = function(){
 // initialize FITS support
 JS9.initFITS = function(){
     // initialize astronomy emscripten routines (wcslib, etc), if possible
-    if( window.hasOwnProperty("Astroem") ){
+    if( Object.prototype.hasOwnProperty.call(window, "Astroem") ){
 	JS9.vmalloc = Astroem.vmalloc;
 	JS9.vfree = Astroem.vfree;
 	JS9.vheap = Astroem.vheap;
@@ -24413,7 +24418,7 @@ JS9.initFITS = function(){
 	JS9.imsection = Astroem.imsection;
 	JS9.regcnts = Astroem.regcnts;
 	JS9.fitsLibrary("cfitsio");
-    } else if( window.hasOwnProperty("Fitsy") ){
+    } else if( Object.prototype.hasOwnProperty.call(window, "Fitsy") ){
 	JS9.fitsLibrary("fitsy");
     }
 };
@@ -24421,7 +24426,7 @@ JS9.initFITS = function(){
 // init colormaps
 JS9.initColormaps = function(){
     // sanity check
-    if( !JS9.hasOwnProperty("Colormap") ){ return; }
+    if( !Object.prototype.hasOwnProperty.call(JS9, "Colormap") ){ return; }
     // load colormaps
     JS9.checkNew(new JS9.Colormap("grey",
 	[[0,0], [1,1]],
@@ -24580,7 +24585,7 @@ JS9.initColormaps = function(){
 // init console commands
 JS9.initCommands = function(){
     // sanity check
-    if( !JS9.hasOwnProperty("Command") ){ return; }
+    if( !Object.prototype.hasOwnProperty.call(JS9, "Command") ){ return; }
     // load commands
     JS9.checkNew(new JS9.Command({
 	name: "analysis",
@@ -25204,7 +25209,8 @@ JS9.parsePublicArgs = function(args){
     const obj = argv[argv.length-1];
     // look for object containing display property as last arg
     if( obj && (typeof obj === "object") &&
-	obj.hasOwnProperty("display") && (Object.keys(obj).length === 1) ){
+	Object.prototype.hasOwnProperty.call(obj, "display") &&
+	(Object.keys(obj).length === 1)  ){
 	display = obj.display;
 	argv.pop();
     }
@@ -26614,7 +26620,7 @@ JS9.mkPublic("SaveColormap", function(...args){
     };
     arg1 = obj.argv[0];
     arg2 = obj.argv[1];
-    if( window.hasOwnProperty("saveAs") ){
+    if( Object.prototype.hasOwnProperty.call(window, "saveAs") ){
 	// check for json strings in arg1 and/or arg2
 	im = JS9.getImage(obj.display);
 	if( im ){
@@ -27320,7 +27326,7 @@ JS9.mkPublic("SelectDisplay", function(...args){
     if( !display ){
 	JS9.error("invalid display for select");
     }
-    if( !JS9.hasOwnProperty("Menubar") ){
+    if( !Object.prototype.hasOwnProperty.call(JS9, "Menubar") ){
 	JS9.error("Menubar is required for display selection");
     }
     JS9.Menubar.onclick(display);
@@ -27812,7 +27818,8 @@ JS9.init = function(){
     //
     // allow specification of installdir in js9prefs.js
     // check this manually: it's happening before processing the prefs
-    if( window.hasOwnProperty("JS9Prefs") && typeof JS9Prefs === "object" ){
+    if( Object.prototype.hasOwnProperty.call(window, "JS9Prefs") &&
+	typeof JS9Prefs === "object"                             ){
 	if( JS9Prefs.globalOpts && JS9Prefs.globalOpts.installDir ){
 	    JS9.INSTALLDIR = JS9Prefs.globalOpts.installDir;
 	}
@@ -27843,7 +27850,8 @@ JS9.init = function(){
     }
     JS9.TOROOT = JS9.INSTALLDIR.replace(/([^/.])+/g, "..");
     // if the js9 inline object exists, add it the JS9 object
-    if( window.hasOwnProperty("JS9Inline") && typeof JS9Inline === "object" ){
+    if( Object.prototype.hasOwnProperty.call(window, "JS9Inline") &&
+	typeof JS9Inline === "object"                             ){
 	JS9.inline = $.extend(true, {}, JS9Inline);
     }
     // set up the dynamic drive html window
@@ -27874,7 +27882,7 @@ JS9.init = function(){
 				    JS9.InstallDir("images/resize.gif")];
 	}
 	// once a window is loaded, set jupyter focus, if necessary
-	if( window.hasOwnProperty("Jupyter") ){
+	if( Object.prototype.hasOwnProperty.call(window, "Jupyter") ){
 	   $(JS9.lightOpts[JS9.LIGHTWIN].topid)
 		.arrive("input", (el) => {
 		    JS9.jupyterFocus($(el).parent());
@@ -27884,11 +27892,12 @@ JS9.init = function(){
     // use plotly if loaded separately, otherwise use internal flot
     JS9.globalOpts.plotLibrary = JS9.globalOpts.plotLibrary || "flot";
     if( (JS9.globalOpts.plotLibrary === "plotly") &&
-	!window.hasOwnProperty("Plotly") ){
+	!Object.prototype.hasOwnProperty.call(window, "Plotly") ){
 	JS9.globalOpts.plotLibrary = "flot";
     }
     // if js9 prefs were defined/loaded explicitly, merge properties
-    if( window.hasOwnProperty("JS9Prefs") && typeof JS9Prefs === "object" ){
+    if( Object.prototype.hasOwnProperty.call(window, "JS9Prefs") &&
+	typeof JS9Prefs === "object"                             ){
 	JS9.mergePrefs(JS9Prefs);
     } else {
 	// look for and load json pref files
@@ -27901,27 +27910,27 @@ JS9.init = function(){
 	}
     }
     // if JS9 prefs have regionOpts, transfer them to Regions.opts
-    if( JS9.hasOwnProperty("Regions") ){
+    if( Object.prototype.hasOwnProperty.call(JS9, "Regions") ){
 	$.extend(true, JS9.Regions.opts, JS9.regionOpts);
     }
     delete JS9.regionOpts;
     // if JS9 prefs have catalogOpts, transfer them to Catalogs.opts
-    if( JS9.hasOwnProperty("Catalogs") ){
+    if( Object.prototype.hasOwnProperty.call(JS9, "Catalogs") ){
 	$.extend(true, JS9.Catalogs.opts, JS9.catalogOpts);
     }
     delete JS9.catalogOpts;
     // if JS9 prefs have crosshairOpts, transfer them to Crosshair.opts
-    if( JS9.hasOwnProperty("Crosshair") ){
+    if( Object.prototype.hasOwnProperty.call(JS9, "Crosshair") ){
 	$.extend(true, JS9.Crosshair.opts, JS9.crosshairOpts);
     }
     delete JS9.crosshairOpts;
     // if JS9 prefs have gridOpts, transfer them to Grid.opts
-    if( JS9.hasOwnProperty("Grid") ){
+    if( Object.prototype.hasOwnProperty.call(JS9, "Grid") ){
 	$.extend(true, JS9.Grid.opts, JS9.gridOpts);
     }
     delete JS9.gridOpts;
     // if JS9 prefs have emscriptenOpts, transfer them to Module
-    if( JS9.hasOwnProperty("Module") ){
+    if( Object.prototype.hasOwnProperty.call(JS9, "Module") ){
 	$.extend(true, Module, JS9.emscriptenOpts);
     }
     delete JS9.emscriptenOpts;
@@ -27968,7 +27977,8 @@ JS9.init = function(){
 	JS9.globalOpts.resizeHandle = false;
     }
     // replace with global opts with user opts, if necessary
-    if( window.hasOwnProperty("localStorage") && JS9.globalOpts.localStorage ){
+    if( Object.prototype.hasOwnProperty.call(window, "localStorage") &&
+	JS9.globalOpts.localStorage                                  ){
 	try{ uopts = localStorage.getItem("globals"); }
 	catch(e){ uopts = null; }
 	if( uopts ){
@@ -28090,7 +28100,7 @@ JS9.init = function(){
 	});
     }, false);
     // initialize image filters
-    if( window.hasOwnProperty("ImageFilters") ){
+    if( Object.prototype.hasOwnProperty.call(window, "ImageFilters") ){
 	JS9.ImageFilters = ImageFilters;
     }
     // initialize colormaps

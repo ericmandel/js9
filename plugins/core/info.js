@@ -192,7 +192,7 @@ JS9.Info.display = function(type, message, target, force){
 	case "object":
 	    // process all key in the object
 	    for( key in message ){
-		if( message.hasOwnProperty(key) ){
+		if( Object.prototype.hasOwnProperty.call(message, key) ){
 		    // set value, if possible
 		    jel = info.jq.find(`[name='${key}']`);
 		    if( jel.length > 0 ){

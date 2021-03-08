@@ -86,7 +86,7 @@ const parseRegion = function(s){
     }
     // convert js9 json to ds9 comments
     for(const key in json){
-	if( json.hasOwnProperty(key) ){
+	if( Object.prototype.hasOwnProperty.call(json, key) ){
 	    switch(key){
 	    case "color":
 		if( json[key]

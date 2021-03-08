@@ -725,7 +725,7 @@ JS9.Prefs.init = function(){
 	html += `<center><b>${source.schema.description}</b></center><p>`;
 	props = source.schema.properties;
 	for( key in props ){
-	    if( props.hasOwnProperty(key) ){
+	    if( Object.prototype.hasOwnProperty.call(props, key) ){
 		obj = props[key];
 		prompt = obj.prompt || `${key}:`;
 		switch(obj.type){
@@ -762,8 +762,8 @@ JS9.Prefs.init = function(){
 	    html += `<input id='${this.id}_applyPrefs' name='Apply' type='button' class='button' value='Apply' onclick='JS9.Prefs.applyForm.call(this);' style='margin: 8px'>`;
 	}
 	// manage stored preferences
-	if( window.hasOwnProperty("localStorage") &&
-	    JS9.globalOpts.localStorage           ){
+	if( Object.prototype.hasOwnProperty.call(window, "localStorage") &&
+	    JS9.globalOpts.localStorage                                  ){
 	    html += `<input id='${this.id}_savePrefs' name='Save' type='button' class='button' value='Save' onclick='JS9.Prefs.saveForm.call(this)' style='margin: 8px'>`;
 	    html += `<input id='${this.id}_showPrefs' name='Show' type='button' class='button' value='Show Saved' onclick='JS9.Prefs.showForm.call(this)' style='margin: 8px'>`;
 	    html += "<input id='delete' name='Delete' type='button' class='button' value='Delete Saved' onclick='JS9.Prefs.deleteForm.call(this)' style='margin: 8px'>";
@@ -836,7 +836,7 @@ JS9.Prefs.saveForm = function(){
 	// only save props in the schema: e.g., don't save all of globalOpts
 	props = source.schema.properties;
 	for( key in props ){
-	    if( props.hasOwnProperty(key) ){
+	    if( Object.prototype.hasOwnProperty.call(props, key) ){
 		saveobj[key] = source.data[key];
 	    }
 	}

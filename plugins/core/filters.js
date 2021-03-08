@@ -265,7 +265,7 @@ JS9.Filters.init = function(opts){
 	html += `<div class='JS9FiltersLinegroup'>&nbsp;</div>`;
 	// add the arg filters
 	for( key in JS9.Filters.argfilters ){
-	    if( JS9.Filters.argfilters.hasOwnProperty(key) ){
+	    if( Object.prototype.hasOwnProperty.call(JS9.Filters.argfilters, key) ){
 		obj = JS9.Filters.argfilters[key];
 		mopts.push({name: key, 
 			    value: sprintf(JS9.Filters.argfilterHTML,
@@ -283,7 +283,7 @@ JS9.Filters.init = function(opts){
 	}
 	// add the noarg filterfs
 	for( key in JS9.Filters.noargfilters ){
-	    if( JS9.Filters.noargfilters.hasOwnProperty(key) ){
+	    if( Object.prototype.hasOwnProperty.call(JS9.Filters.noargfilters, key) ){
 		mopts.push({name: key, 
 			    value: sprintf(JS9.Filters.noargfilterHTML,
 					   key,
