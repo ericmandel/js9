@@ -1025,8 +1025,6 @@ const socketioHandler = function(socket) {
 	js9Queue[socket.js9.pageid] = socket.js9;
 	socket.js9.aworkDir = null;
 	socket.js9.rworkDir = null;
-	// save version of socket.io used in this connection
-	socket.js9.version = io.of("/").connected ? 2 : 3;
 	// create top-level workDir, if necessary
 	// Electron.js might not be in the default location
 	basedir = globalOpts.workDir;
@@ -1058,8 +1056,7 @@ const socketioHandler = function(socket) {
 	// can we find the helper program?
 	jpath = !!getFilePath(globalOpts.cmd, process.env.PATH, process.env);
 	// log results
-        clog("connect v%s: %s (%s)",
-	     socket.js9.version, myhost, JSON.stringify(socket.js9.displays));
+        clog("connect: %s (%s)", myhost, JSON.stringify(socket.js9.displays));
 	if( cbfunc ){ cbfunc({pageid: socket.js9.pageid, js9helper: jpath, dataPathModify: globalOpts.dataPathModify}); }
     });
     // on display: add a display to the display list
