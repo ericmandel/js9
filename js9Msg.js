@@ -26,10 +26,8 @@ const os = require('os'),
       open = require('open');
 
 // internal variables
-let s, msg, client, server;
-let sbase = "socket.io";
-let cbase = "socket.io-client";
-let version = 3;
+let s, msg;
+let client = "socket.io-client";
 let browser = "";
 let content = "";
 let webpage = "";
@@ -448,10 +446,6 @@ while( !done ){
       args.shift();
       verify = true;
       break;
-    case '--version':
-      args.shift();
-      version = parseInt(args.shift(), 10);
-      break;
     default:
       done = true;
       break;
@@ -483,16 +477,6 @@ if( !browser && ((args.length === 0) || (args[0] === "")) ){
     rl.pause();
     doserver = true;
 }
-
-// final socket.io configuration bases on version
-if( version === 3 ){
-    server = `${sbase}-3`;
-    client = `${cbase}-3`;
-} else {
-    server = sbase;
-    client = cbase;
-}
-sockopts.path = `/${server}/`;
 
 // debugging
 if( verify ){ console.log("connecting to: %s (%s)", helperURL, client); }
