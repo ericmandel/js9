@@ -111,7 +111,6 @@ JS9.PIXEL_RATIO = (function(){
 JS9.globalOpts = {
     helperType: "none",		// one of: sock.io, get, post, none
     helperPort: 2718,		// default port for node.js helper
-    socketioVersion: 3,		// use version 2 or 3 when connecting?
     requireHelper: false,       // throw error if helper is not available?
     allinoneHelper: false,      // allow allinone to use helper?
     processQueryParams: true,   // process query parameters from url?
