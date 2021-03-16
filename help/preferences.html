@@ -53,17 +53,15 @@ these objects is given below:
 <ol>
 <li><p><b>JS9.globalOpts:</b> this JavaScript object contains global
 information, including parameters concerned with the back-end services
-used by JS9. Currently, it allows you to specify the <b>helperPort</b>
-on which to connect. It also allows you to specify
-the <b>socketioVersion</b> to use for communication between your JS9
-display and the JS9 helper.  For most systems, the latest version of
-socket.io (version 3, as of 11/2020) is correct, but systems running
-versions of Node.js less than v12 should use socket.io version 2.
+used by JS9. Many of the most useful JS9 configuration parameters are
+contained in this object, including mouse/touch/keyboard actions,
+click to focus, catalog properties, image/table default
+dimensions/binning, and a host of other properties.
 
 <p>
 <li><p><b>JS9.imageOpts:</b> This JavaScript object contains initial
-values for image parameters such as: <b>contrast</b>, <b>bias</b>,
-whether to <b>invert</b> the
+values for parameters associated with individual images, such
+as: <b>contrast</b>, <b>bias</b>, whether to <b>invert</b> the
 colormap, <b>colormap</b>, <b>scale</b>, <b>WCS system</b> , <b>WCS
 units</b>, whether to display <b>value/position</b>, and whether to
 list regions when they change (<b>listonchange</b>).
@@ -75,10 +73,10 @@ file. You can set this variable if you have moved the location of the
 raw FITS files after generating the PNG files.
 
 <li><p><b>JS9.Regions.opts:</b> This JavaScript object contains
-default values for regions, including the initial size of various
-regions, initial inner and outer radii for annuli, initial angle,
-etc. You can set or override properties for this object by adding them
-to the <b>regionOpts</b> object in the js9prefs.js file.
+default values for individual regions, including the initial size of
+various regions, initial inner and outer radii for annuli, initial
+angle, etc. You can set or override properties for this object by
+adding them to the <b>regionOpts</b> object in the js9prefs.js file.
 
 <li><p><b>JS9.menuButtonOptsArr:</b> this JavaScript array of objects allows
 you to change and re-arrange which menu options are provided. If you
