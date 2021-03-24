@@ -1337,11 +1337,11 @@ const httpHandler = function(req, res){
 	if( cmd !== "alive" && jstr && jstr !== "null" ){
 	    try{ obj = JSON.parse(jstr); }
 	    catch(e){
-		htmlerr(`can't parse JSON object in http request: ${jstr}`);
+		htmlerr("can't parse JSON object in http request");
 		return;
 	    }
 	    if( typeof obj !== "object" ){
-		htmlerr(`invalid JSON object in http request: ${jstr}`);
+		htmlerr("invalid JSON object in http request");
 		return;
 	    }
 	}
@@ -1405,7 +1405,7 @@ const httpHandler = function(req, res){
 	s = `obj=${gobj.query}`;
 	try{ jstr = qs.parse(s).obj; }
 	catch(e){
-	    htmlerr(`can't parse JSON object in http GET request: ${s}`); 
+	    htmlerr("can't parse JSON object in http GET request");
 	    return;
 	}
 	docmd(cmd, jstr);
