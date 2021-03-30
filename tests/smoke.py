@@ -718,7 +718,7 @@ def maskOverlayTest(j):
     j.MaskImage(maskId, '{"mode":"overlay"}')
     displayMessage(j, 'j.SyncImages()')
     j.SyncImages(["flip", "pan", "rot90", "zoom"], [maskId])
-    sleep(5)
+    sleep(2)
 
 def smokeTests():
     """

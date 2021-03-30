@@ -1,3 +1,4 @@
+import os
 import time
 import sys
 import json
@@ -6,8 +7,10 @@ from astropy.io import fits
 
 def sleep(timeout=1):
     """
-    sleep, usually for 1 second
+    sleep, usually for 1 second, use env to set globally for debugging
     """
+    if os.environ.get('JS9_TEST_TIMEOUT'):
+        timeout = int(os.environ.get('JS9_TEST_TIMEOUT'));
     time.sleep(timeout)
 
 def waitStatus(j, wtype='Load'):
