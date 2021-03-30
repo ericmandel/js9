@@ -564,6 +564,9 @@ smoke3:		FORCE
 
 smokes:		smoke smoke2 smoke3
 
+threeways:	FORCE
+		@(cd tests/threeways && threeloop)
+
 viewreadme:	FORCE
 		@(grip)
 
