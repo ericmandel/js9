@@ -143,8 +143,12 @@ for details. The workaround (as discussed in that security page) is to
 turn off the <b>privacy.file_unique_origin</b> preference in
 <b>about:config</b>.
 <p>
-It also doesn't work with Safari for some versions of JS9, i.e., it seems to
-work with v3.3 and v3.4 but not v3.3.1. No idea why!
+It also doesn't work with Safari for some versions of JS9, i.e., it
+seems to work with v3.3 and v3.4 but not v3.3.1. No idea why, but if
+you have enabled the <b>Develop</b> menu in Safari, you can
+choose <b>Disable Local File Restrictions</b>. (For Develop menu:
+choose Safari -> Preferences, click Advanced, then select "Show
+Develop menu in menu bar").
 <p>
 You can bypass the whole file:// CORS problem by using a Python web
 server instead. For example, if you start the server in the js9 directory:
