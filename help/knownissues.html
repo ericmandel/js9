@@ -112,6 +112,49 @@ a PNG file of size 1024x1024 should be fine, while a file of size
 <b>Resolved Issues:</b>
 
 <ol>
+
+<li><b>All platforms (April 5, 2021 : resolved)</b>
+<p>
+One of the simplest ways to use JS9 locally is by means of the file://
+URI scheme, e.g., point your browser to file:///home/me/js9/js9.html.
+<p>
+This does not work in Google Chrome because Chrome does not permit a
+local HTML file to read other local files. You can read a relatively
+emotional argument about this restriction at:
+<pre>
+    https://code.google.com/p/chromium/issues/detail?id=37586
+</pre>
+<p>
+The workaround is to start Chrome with the 
+--allow-file-access-from-files switch. On Linux:
+<pre>
+    chrome --allow-file-access-from-files
+</pre>
+On a Mac:
+<pre>
+    open /Applications/Google\ Chrome.app --args --allow-file-access-from-files
+</pre>
+It also does not work on Firefox starting with version 68. See:
+<pre>
+https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors/CORSRequestNotHttp
+</pre>
+for details. The workaround (as discussed in that security page) is to
+turn off the <b>privacy.file_unique_origin</b> preference in
+<b>about:config</b>.
+<p>
+It also doesn't work with Safari for some versions of JS9, i.e., it seems to
+work with v3.3 and v3.4 but not v3.3.1. No idea why!
+<p>
+You can bypass the whole file:// CORS problem by using a Python web
+server instead. For example, if you start the server in the js9 directory:
+<pre>
+  python3 -u -m http.server 8000
+</pre>
+you then can load the js9.html page at:
+<pre>
+  http://localhost:8000/js9.html
+</pre>
+
 <li><b>Safari (October 4, 2016 : resolved)</b>
 <p>
 On Mac OSX, if the Terminal running the js9 messaging script is
@@ -141,36 +184,6 @@ memory management within JS9 (at the expense of speed).
 <p>
 The 64-bit Chrome can make use of 2Gb of memory.
 
-<li><b>All platforms using Chrome and Firefox (April 23, 2020 : resolved)</b>
-<p>
-One of the simplest ways to use JS9 locally is by means of the file://
-URL scheme, e.g., point your browser to file:///home/me/js9/js9basics.html.
-<p>
-This does not work in Google Chrome because Chrome does not permit a
-local HTML file to read other local files. You can read a relatively
-emotional argument about this restriction at:
-<pre>
-    https://code.google.com/p/chromium/issues/detail?id=37586
-</pre>
-<p>
-The workaround is to start Chrome with the 
---allow-file-access-from-files switch. On Linux:
-<pre>
-    chrome --allow-file-access-from-files
-</pre>
-On a Mac:
-<pre>
-    open /Applications/Google\ Chrome.app --args --allow-file-access-from-files
-</pre>
-It also does not work on Firefox starting with version 68. See:
-<pre>
-https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors/CORSRequestNotHttp
-</pre>
-for details. The workaround (as discussed in that security page) is to
-turn off the <b>privacy.file_unique_origin</b> preference in
-<b>about:config</b>.
-<p>
-
 <li><b>All platforms (May 20, 2013: resolved)</b>
 <p>
 If the "load image" command is part of a group of commands passed to
@@ -188,7 +201,7 @@ further processing commands).
 
 </ol>
 
-<h5>Last updated: April 23, 2020</h5>
+<h5>Last updated: April 5, 2021</h5>
 </div>
 
 </body>
