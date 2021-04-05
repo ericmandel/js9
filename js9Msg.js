@@ -216,29 +216,31 @@ JS9Msg.prototype.findWebpage = function(){
 // start up browser and load web page
 // changes globals: browser
 JS9Msg.prototype.startBrowser = function(){
-    let switches;
+    let args;
     const opts = {wait: false};
     switch(browser){
     case "chrome":
 	switch(os.type()){
 	case "Darwin":
 	    browser = "google chrome";
-	    switches = "--allow-file-access-from-files";
+	    args = ["--allow-file-access-from-files"];
 	    break;
 	case "Linux":
-	    switches = "--allow-file-access-from-files";
+	    args = ["--allow-file-access-from-files"];
 	    break;
 	}
 	break;
     }
     if( browser ){
-	if( switches ){
-	    opts.app = [browser, switches];
+	if( args ){
+	    opts.app = {name: browser, arguments: args};
 	} else {
-	    opts.app = browser;
+	    opts.app = {name: browser};
 	}
     }
-    if( verify ){ console.log("webpage, browser: %s, %s", webpage, browser); }
+    if( verify ){
+	console.log("webpage: %s, browser: %s %s", webpage, browser, args||"");
+    }
     return open(webpage, opts);
 };
 
