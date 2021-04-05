@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+# set -x
 
 WEBPAGE=$HOME/js9/tests/threeways/threeways_app.html
 WIDTH=660
@@ -20,5 +20,5 @@ while true; do
         $PYTHON threeways.py
         METHOD="shell"
     fi
-    sleep 5
+    sleep 3
 done
