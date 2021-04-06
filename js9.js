@@ -15708,13 +15708,13 @@ JS9.Fabric.refreshShapes = function(layerName){
     if( !layerName ){ return; }
     // convenience variables
     opts = {mode: 1, sticky: false, savewcsconfig: true, saveid: true};
+    // temporarily turn off plugin execution to avoid firing regions callbacks
+    txeq = JS9.globalOpts.xeqPlugins;
+    JS9.globalOpts.xeqPlugins = false;
     // temporarily change wcs system to be independent of image coords
     // (in case we copied regions from one image to another)
     owcssys = this.getWCSSys();
     if( owcssys === "image" ){
-	// temporarily turn off plugin execution
-	txeq = JS9.globalOpts.xeqPlugins;
-	JS9.globalOpts.xeqPlugins = false;
 	// get a wcs sys independent of image coords
 	if( this.validWCS() ){
 	    this.setWCSSys("native", false);
@@ -15755,9 +15755,9 @@ JS9.Fabric.refreshShapes = function(layerName){
 	this.setWCSSys(owcssys, false);
 	// update shapes to use the original coord system
 	this.updateShapes(layerName, "all", "refresh");
-	// restore plugin execution
-	JS9.globalOpts.xeqPlugins = txeq;
     }
+    // restore plugin execution
+    JS9.globalOpts.xeqPlugins = txeq;
     return this;
 };
 
