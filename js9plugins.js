@@ -13575,10 +13575,10 @@ JS9.Sync.xeqSync = function(arr){
 			// not exist in the target, and update those which do.
 			if( !rarr ){
 			    // get current regions, if necessary
-			    rarr = this.getShapes("regions");
+			    rarr = this.getShapes("regions", "all");
 			}
 			// get regions in the target
-			xarr = xim.getShapes("regions");
+			xarr = xim.getShapes("regions", "all");
 			// sync all current regions to the target,
 			// either adding or updating
 			for(j=0; j<rarr.length; j++){
@@ -13627,7 +13627,7 @@ JS9.Sync.xeqSync = function(arr){
 			case "remove":
 			    // get all regions in the target
 			    if( !xarr ){
-				xarr = xim.getShapes("regions");
+				xarr = xim.getShapes("regions", "all");
 			    }
 			    for(k=0; k<xarr.length; k++){
 				xobj = xarr[k];
@@ -13664,7 +13664,7 @@ JS9.Sync.xeqSync = function(arr){
 			    }
 			    // get target regions, if necessary
 			    if( !xarr ){
-				xarr = xim.getShapes("regions");
+				xarr = xim.getShapes("regions", "all");
 			    }
 			    for(k=0; k<xarr.length; k++){
 				xobj = xarr[k];
