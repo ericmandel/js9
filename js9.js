@@ -7451,8 +7451,8 @@ JS9.Image.prototype.dataminmax = function(dmin, dmax){
     params = this.params;
     data = this.raw.data;
     // rescale?
-    reminscale = Number.isNaN(params.scalemin) || JS9.isNull(params.scalemin);
-    remaxscale = Number.isNaN(params.scalemax) || JS9.isNull(params.scalemax);
+    reminscale = Number.isNaN(params.scalemin) || !Number.isFinite(params.scalemin) || JS9.isNull(params.scalemin);
+    remaxscale = Number.isNaN(params.scalemax) || !Number.isFinite(params.scalemax) || JS9.isNull(params.scalemax);
     // might have to redo scaling if it's tied to current data min or max
     if( params.scaleclipping === "dataminmax" ){
 	if( (raw.dmin === params.scalemin) || JS9.isNull(raw.dmin) ){
@@ -7490,10 +7490,10 @@ JS9.Image.prototype.dataminmax = function(dmin, dmax){
 		}
 	    }
 	} else {
-	    // float data: ignore NaN
+	    // float data: ignore NaN, infinity
 	    for(i=0; i<data.length; i++){
 		val = data[i];
-		if( !Number.isNaN(val) ){
+		if( !Number.isNaN(val) && Number.isFinite(val) ){
 		    if( val < raw.dmin ){ raw.dmin = val; }
 		    if( val > raw.dmax ){ raw.dmax = val; }
 		}
@@ -21929,7 +21929,8 @@ JS9.handleImageFile = function(file, options, handler){
 	    hdu.dmin = Number.MAX_VALUE;
 	    hdu.dmax = Number.MIN_VALUE;
 	    for(i=0; i< h*w; i++){
-		if( !Number.isNaN(hdu.data[i]) ){
+		if( !Number.isNaN(hdu.data[i])   &&
+		    Number.isFinite(hdu.data[i]) ){
 		    hdu.dmin = Math.min(hdu.dmin, hdu.data[i]);
 		    hdu.dmax = Math.max(hdu.dmax, hdu.data[i]);
 		}
