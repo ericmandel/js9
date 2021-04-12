@@ -3353,6 +3353,9 @@ For example:
     # all regions except red ones
     JS9.ChangeRegions("!red", {"color": "cyan"});
 
+    # not selected regions
+    JS9.ChangeRegions("!selected", {"color": "cyan"});
+
     # circles having tag 'foo1' and ellipses having tag 'foo2'
     JS9.GetRegions("(circle && foo1) || (ellipse && foo2)");
 </pre>
@@ -6230,7 +6233,7 @@ See js9onchange.html for an example of using this callback function.
 
 <p><hr><p>
 
-<h5>Last updated: August 17, 2020</h5>
+<h5>Last updated: April 12, 2021</h5>
 </div>
 
 </body>
