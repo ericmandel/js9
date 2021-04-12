@@ -17197,10 +17197,11 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	return(String(val));
     };
     const replaceNewline = (s) => {
-	let t;
-	s = s || "";
-	t = s.replace(/\n/g, "\\n");
-	return t;
+	const nl = String.fromCharCode(13, 10);
+	if( typeof s === "string" ){
+	    return s.replace(/\\n/g, nl);
+	}
+	return s;
     };
     // which wcssys do we use? edit version, if available
     if( obj && obj.pub ){
@@ -18019,11 +18020,11 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	return parseFloat(s);
     };
     const replaceNewline = (s) => {
-	let t;
 	const nl = String.fromCharCode(13, 10);
-	s = s || "";
-	t = s.replace(/\\n/g, nl);
-	return t;
+	if( typeof s === "string" ){
+	    return s.replace(/\\n/g, nl);
+	}
+	return s;
     };
     // set physical to image conversion, if possible
     if( this.lcs && this.lcs.physical ){
@@ -18092,7 +18093,7 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	case "text":
 	    if( obj.type === "text" ){
 		if( newval(obj, key, val) ){
-		    opts[key] = replaceNewline(getval(val));
+		    opts[key] = replaceNewline(val);
 		}
 	    }
 	    break;
@@ -18143,7 +18144,7 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	case "childtext":
 	    if( obj.type !== "text" ){
 		if( newval(obj, key, val) ){
-		    opts.text = replaceNewline(getval(val));
+		    opts.text = replaceNewline(val);
 		}
 	    }
 	    break;
