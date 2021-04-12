@@ -15020,7 +15020,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     // wcs processing
     if( this.validWCS() ){
 	updatewcs(this.raw.wcs, layer, pub, tstr, angstr, opts, pub);
-	if( obj.params.wcsconfig && obj.params.wcsconfig.wcssys ){
+	if( mode !== "export"                                   &&
+	    obj.params.wcsconfig && obj.params.wcsconfig.wcssys ){
 	    txeq = JS9.globalOpts.xeqPlugins;
 	    JS9.globalOpts.xeqPlugins = false;
 	    owcssys = this.getWCSSys();
