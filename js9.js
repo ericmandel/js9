@@ -15446,6 +15446,10 @@ JS9.Fabric.getShapes = function(layerName, shape, opts){
 	// add this region to the output array
 	shapes.push(myshape);
     });
+    // sort shapes by id to maintain original order of creation
+    shapes.sort((a, b) => {
+	return (a.id||0) - (b.id||0);
+    });
     return shapes;
 };
 
