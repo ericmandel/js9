@@ -14167,9 +14167,14 @@ JS9.Fabric._parseShapes = function(layerName, selection, opts){
     JS9.tmp.regSelect = { layer: layerName, im: this, all: [] };
     canvas.getObjects().forEach( (o) => {
 	let groupid;
+	// ordinary shapes
 	if( o.params ){
-	    JS9.tmp.regSelect.all.push(o.params.id);
+	    // but not child shapes
+	    if( !o.params.parent ){
+		JS9.tmp.regSelect.all.push(o.params.id);
+	    }
 	} else if( o.type === "group" ){
+	    // groups
 	    groupid = this.lookupGroup(o);
 	    if( groupid ){
 		JS9.tmp.regSelect.all.push(groupid);
