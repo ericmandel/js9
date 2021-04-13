@@ -180,12 +180,14 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     var bin = 1;
     var binMode = 0;
     var bmode = function(x){
+	// deepscan-disable-next-line COMPARE_INCOMPATIBLE_TYPE_STRICTLY
 	if( x && (x === 1 || x === 'a') ){
 	    return 1;
 	}
 	return 0;
     };
     var unbmode = function(x){
+	// deepscan-disable-next-line COMPARE_INCOMPATIBLE_TYPE_STRICTLY
 	if( x && (x === 1 || x === 'a') ){
 	    return 'a';
 	}
