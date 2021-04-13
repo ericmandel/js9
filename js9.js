@@ -23526,7 +23526,7 @@ JS9.strtoscaled = function(s){
 JS9.cleanPath = function(s, what){
     let t;
     // vulnerability hints culled from https://html5sec.org/
-    const xssreg = /(<(animation|form|math|maction|svg|script|video)\s|<\?xml|javascript:|on.*=|on.*&equals;|alert\(|alert&lpar;)|window\./i;
+    const xssreg = /(<(animation|form|math|maction|svg|script|video)\s|<\?xml|javascript:|on.*&equals;|alert\(|alert&lpar;)|window\./i;
     if( !s ){ return ""; }
     // check for xss vulnerabilities (but not within cfitsio brackets)
     t = s.replace(/\[.*\]/, "");
