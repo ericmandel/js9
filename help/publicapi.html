@@ -372,12 +372,12 @@ See <a href="serverside.js">Server-side Analysis Tasks</a> for more information.
   
 <h5 id="JS9.GetStatus">Get Processing Status</h5>
 <p>
-<code class="api">status = JS9.GetStatus(id, type)</code>
+<code class="api">status = JS9.GetStatus(type, id)</code>
 <p>
 where:
 <ul>
-<li><b>id</b>: the id or image handle of the image
 <li><b>type</b>: the type of status
+<li><b>id</b>: the id or image handle of the image
 </ul>
 returns:
 <ul>
@@ -404,7 +404,7 @@ Thus, to check for image load, one can do this in Python:
     ...
     j = JS9()
     j.Load(hdul, tfits)
-    while j.GetStatus(tfits, "load") != "complete":
+    while j.GetStatus("load", tfits) != "complete":
         time.sleep(0.1)
     j.SetZoom(2)
 </pre>
@@ -424,7 +424,7 @@ returns:
 This routine returns the status of the load of this image.
 Provided for backward compatibility, it simply calls the more general
 <a href="#JS9.GetStatus"><b>JS9.GetStatus()</b></a> routine with
-"Load" as the second argument.
+"Load" as the first argument.
 <p>
 A status of "complete" means that the image is fully loaded. Other
 statuses include:
