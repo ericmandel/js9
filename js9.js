@@ -158,6 +158,7 @@ JS9.globalOpts = {
     regToClipboard: false,	// copy all region changes to pseudo-clipboard?
     regGroupConflict: "skip",	// group conflicts: error or skip
     regConfigAddParens: true,	// does the reg configure gui try to add parens?
+    regEditChildText: true,	// allow a region to edit its child text?
     regDisplay: "lightwin",	// "lightwin" or "display"
     reConfigSize: "medium",	// "small", "medium"
     htimeout:  10000,		// connection timeout for the helper connect
@@ -17556,8 +17557,10 @@ JS9.Regions.initConfigForm = function(obj, opts){
     if( obj.type !== "text" && obj.params.children ){
 	$(`${form}.childtext`)
 	    .removeClass("nodisplay");
-	$(`${form}[name='childtext']`)
-	    .prop("readonly", obj.params.children.length > 0);
+	if( !JS9.globalOpts.regEditChildText  ){
+	    $(`${form}[name='childtext']`)
+		.prop("readonly", obj.params.children.length > 0);
+	}
     }
     // init options, if necessary
     if( opts.firsttime ){
@@ -17890,7 +17893,8 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	    return val === "selected";
 	}
 	if( key === "childtext" ){
-	    if( obj.params.children && obj.params.children.length > 0 ){
+	    if( obj.params.children && obj.params.children.length > 0 &&
+		!JS9.globalOpts.regEditChildText                      ){
 		return false;
 	    }
 	    return val !== "";
