@@ -26486,6 +26486,7 @@ JS9.mkPublic("GetLoadStatus", function(...args){
 // http://stackoverflow.com/questions/400212/how-do-i-copy-to-the-clipboard-in-javascript
 JS9.mkPublic("CopyToClipboard", function(text, im){
     let msg, successful, textArea;
+    const x = $(document).scrollLeft(), y = $(document).scrollTop();
     // save text for pseudo-pasting
     JS9.clipboard = text;
     // tmp textarea which from which the selection will be copied
@@ -26539,10 +26540,11 @@ JS9.mkPublic("CopyToClipboard", function(text, im){
 	msg = "ERROR";
     }
     document.body.removeChild(textArea);
-    // refocus on display
-    // otherwise, the next keydown has no effect
+    // refocus on display, but undo any scrolling
+    // (otherwise, the next keydown has no effect)
     if( im && im.display ){
 	im.display.displayConjq.focus();
+	window.scrollTo(x, y);
     }
     return msg;
 });
