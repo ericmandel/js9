@@ -17267,7 +17267,9 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    break;
 	case "radii":
 	    if( obj.pub.radii ){
-		if( JS9.notWCS(wcssys) || !obj.pub.wcsconfig.wcsstr ){
+		if( JS9.notWCS(wcssys)        ||
+		    !obj.pub.wcsconfig        ||
+		    !obj.pub.wcsconfig.wcsstr ){
 		    val = obj.pub.imstr
 			.replace(/^annulus\(/,"").replace(/\)$/,"")
 			.split(",").slice(2).join(",");
@@ -17375,7 +17377,9 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    }
 	    break;
 	case "regstr":
-	    if( JS9.notWCS(wcssys) || !obj.pub.wcsconfig.wcsstr ){
+	    if( JS9.notWCS(wcssys)        ||
+		!obj.pub.wcsconfig        ||
+		!obj.pub.wcsconfig.wcsstr ){
 		val = `${obj.pub.imsys};${obj.pub.imstr}`;
 	    } else {
 		val = `${obj.pub.wcsconfig.wcssys};${obj.pub.wcsconfig.wcsstr}`;
@@ -17398,7 +17402,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
 		}
 		break;
 	    default:
-		if( obj.pub.wcsconfig.ra !== undefined ){
+		if( obj.pub.wcsconfig && JS9.notNull(obj.pub.wcsconfig.ra) ){
 		    val = sprintf("%.6f", obj.pub.wcsconfig.ra);
 		} else if( obj.pub.x !== undefined ){
 		    val = sprintf("%.1f", obj.pub.x);
@@ -17423,7 +17427,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
 		}
 		break;
 	    default:
-		if( obj.pub.wcsconfig.dec !== undefined ){
+		if( obj.pub.wcsconfig && JS9.notNull(obj.pub.wcsconfig.dec) ){
 		    val = sprintf("%.6f", obj.pub.wcsconfig.dec);
 		} else if( obj.pub.y !== undefined ){
 		    val = sprintf("%.1f", obj.pub.y);
@@ -17448,7 +17452,8 @@ JS9.Regions.initConfigForm = function(obj, opts){
 		}
 		break;
 	    default:
-		if( obj.pub.wcsconfig.wcssizestr !== undefined ){
+		if( obj.pub.wcsconfig                         &&
+		    JS9.notNull(obj.pub.wcsconfig.wcssizestr) ){
 		    val = fmt(obj.pub.wcsconfig.wcssizestr[0]);
 		} else if( obj.pub[key] !== undefined ){
 		    val = fmt(obj.pub[key]);
@@ -17470,7 +17475,8 @@ JS9.Regions.initConfigForm = function(obj, opts){
 		}
 		break;
 	    default:
-		if( obj.pub.wcsconfig.wcssizestr !== undefined ){
+		if( obj.pub.wcsconfig                         &&
+		    JS9.notNull(obj.pub.wcsconfig.wcssizestr) ){
 		    val = fmt(obj.pub.wcsconfig.wcssizestr[1]);
 		} else if( obj.pub[key] !== undefined ){
 		    val = fmt(obj.pub[key]);
@@ -17968,7 +17974,7 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	    return fmtcheck(obj.pub.lcs.y, JS9.saostrtod(val));
 	}
 	if( key === "ra" ){
-	    if( obj.pub.wcsconfig.wcsposstr ){
+	    if( obj.pub.wcsconfig && obj.pub.wcsconfig.wcsposstr ){
 		return fmtcheck(JS9.saostrtod(obj.pub.wcsconfig.wcsposstr[0]),
 				JS9.saostrtod(val));
 	    } else if( obj.pub.wcsposstr ){
@@ -17978,7 +17984,7 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	    return false;
 	}
 	if( key === "dec" ){
-	    if( obj.pub.wcsconfig.wcsposstr ){
+	    if( obj.pub.wcsconfig && obj.pub.wcsconfig.wcsposstr ){
 		return fmtcheck(JS9.saostrtod(obj.pub.wcsconfig.wcsposstr[1]),
 				JS9.saostrtod(val));
 	    } else if( obj.pub.wcsposstr ){
@@ -18209,7 +18215,7 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	    if( newval(obj, key, val) ){
 		opts.ra = val;
 		if( opts.dec === undefined ){
-		    if( obj.pub.wcsconfig.wcsposstr ){
+		    if( obj.pub.wcsconfig && obj.pub.wcsconfig.wcsposstr ){
 			opts.dec = obj.pub.wcsconfig.wcsposstr[1];
 		    } else if( obj.pub.wcsposstr ){
 			opts.dec = obj.pub.wcsposstr[1];
@@ -18221,7 +18227,7 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	    if( newval(obj, key, val) ){
 		opts.dec = val;
 		if( opts.ra === undefined ){
-		    if( obj.pub.wcsconfig.wcsposstr ){
+		    if( obj.pub.wcsconfig && obj.pub.wcsconfig.wcsposstr ){
 			opts.ra = obj.pub.wcsconfig.wcsposstr[0];
 		    } else if( obj.pub.wcsposstr ){
 			opts.ra = obj.pub.wcsposstr[0];
