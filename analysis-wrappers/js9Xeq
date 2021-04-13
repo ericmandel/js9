@@ -396,15 +396,36 @@ loadproxy)
           fi
         fi
       else
-	# better be a known image file type
-        f=`echo $s | egrep -o '(FITS|JPEG|PNG) image data' | awk '{print $1}'`
-	case "$f" in
+        # for ms-dos gip'ed file, there is no filename in the
+        # try to get filename from url (this is how ESA HST archive does it)
+        echo $s | egrep "gzip compressed data, from FAT" 1>/dev/null 2>&1
+        if [ $? = 0 ]; then
+          # look for original file + .gz (unless ofile was specified)
+          if [ x"$2" = x ]; then
+            f=`echo "$URL" | sed -n 's/.*=\([^=]*\.fits\{0,1\}\).*/\1/gp'`
+            if [ x"$f" != x ]; then
+              ext="${f##*.}"
+              if [ x"$ext" = xgz ]; then
+                NFILE="$f"
+              else
+                NFILE="$f".gz
+              fi
+              if [ x"$NFILE" != x"$OFILE" ]; then
+                mv $OFILE $NFILE && OFILE="$NFILE"
+              fi
+            fi
+          fi
+        else
+	  # better be a known image file type
+          f=`echo $s | egrep -o '(FITS|JPEG|PNG) image data' | awk '{print $1}'`
+	  case "$f" in
 	    FITS|JPEG|PNG)
 	    ;;
 	    *)	rm -rf $OFILE
 		error "$OFILE is not a FITS, JPEG, or PNG image file"
 	    ;;
-	 esac
+	  esac
+        fi
       fi
       # tell JS9 the new file name to load
       echo "${JS9_WORKDIR}/$OFILE"
