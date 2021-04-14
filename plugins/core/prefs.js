@@ -493,6 +493,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "boolean",
 	    "helper": "region menu selections create regions?"
 	},
+	"regSyncTextColor": {
+	    "type": "boolean",
+	    "helper": "sync region text color with main color?"
+	},
 	"regToClipboard": {
 	    "type": "boolean",
 	    "helper": "region mods to pseudo-clipboard?"

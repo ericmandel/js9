@@ -158,7 +158,7 @@ JS9.globalOpts = {
     regToClipboard: false,	// copy all region changes to pseudo-clipboard?
     regGroupConflict: "skip",	// group conflicts: error or skip
     regConfigAddParens: true,	// does the reg configure gui try to add parens?
-    regEditChildText: true,	// allow a region to edit its child text?
+    regSyncTextColor: true,	// sync region text color with main color?
     regDisplay: "lightwin",	// "lightwin" or "display"
     reConfigSize: "medium",	// "small", "medium"
     htimeout:  10000,		// connection timeout for the helper connect
@@ -13819,15 +13819,24 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 	s.params.children.push({id: t.params.id, obj: t});
 	// update the parent
 	this._updateShape(layerName, s, null, "addchild", s.params);
-    } else if( s.params.children && (opts.text || opts.textOpts) ){
+    } else if( s.params.children && s.params.children.length > 0 &&
+	       (opts.text || opts.textOpts || opts.color)        ){
 	// process parameters passed to existing text children
 	for(i=0; i<s.params.children.length; i++){
 	    child = s.params.children[i].obj;
+	    // change text opts, if necessary
 	    topts = $.extend(true, {}, opts.textOpts || {});
+	    // change text, if necessary
 	    if( opts.text ){
 		topts.text = opts.text;
 	    }
-	    this.changeShapes(layerName, child.params.id, topts);
+	    // sync text color with parent color, if necessary
+	    if( opts.color && !topts.color && JS9.globalOpts.regSyncTextColor ){
+		topts.color = opts.color;
+	    }
+	    if( Object.keys(topts).length > 0 ){
+		this.changeShapes(layerName, child.params.id, topts);
+	    }
 	}
     }
 };
@@ -17566,12 +17575,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
     // edit-able parameters
     // child text display for shapes, editable if no existing children yet
     if( obj.type !== "text" && obj.params.children ){
-	$(`${form}.childtext`)
-	    .removeClass("nodisplay");
-	if( !JS9.globalOpts.regEditChildText  ){
-	    $(`${form}[name='childtext']`)
-		.prop("readonly", obj.params.children.length > 0);
-	}
+	$(`${form}.childtext`).removeClass("nodisplay");
     }
     // init options, if necessary
     if( opts.firsttime ){
@@ -17904,11 +17908,16 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	    return val === "selected";
 	}
 	if( key === "childtext" ){
-	    if( obj.params.children && obj.params.children.length > 0 &&
-		!JS9.globalOpts.regEditChildText                      ){
+	    if( obj.params.children && obj.params.children.length > 0 ){
+		if( obj.params.children[0].obj        &&
+		    obj.params.children[0].obj.params ){
+		    return val !== obj.params.children[0].obj.params.text;
+		}
 		return false;
+	    } else if( obj.params ){
+		return val !== obj.params.text;
 	    }
-	    return val !== "";
+	    return false;
 	}
 	if( key === "strokeWidth" ){
 	    if( obj.params && obj.params.sw1 ){
@@ -17968,10 +17977,10 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	    }
 	}
 	if( key === "px" && obj.pub.lcs ){
-	    return fmtcheck(obj.pub.lcs.x, JS9.saostrtod(val));
+	    return fmtcheck(obj.pub.lcs.x.toFixed(1), val);
 	}
 	if( key === "py" && obj.pub.lcs ){
-	    return fmtcheck(obj.pub.lcs.y, JS9.saostrtod(val));
+	    return fmtcheck(obj.pub.lcs.y.toFixed(1), val);
 	}
 	if( key === "ra" ){
 	    if( obj.pub.wcsconfig && obj.pub.wcsconfig.wcsposstr ){
