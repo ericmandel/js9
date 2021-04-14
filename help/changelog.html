@@ -13,6 +13,13 @@
 
 <h3> Public Release 3.4 (TDB)</h3>
 <ul>
+<li> region editor now permits parent to change child's text
+<li> changeShapes syncs child text color to main color (via regSyncTextColor)
+<li> getShapes: now returns shapes in order in which they were loaded
+<li> loadproxy: add support for ms-dos gzip files
+<li> handle Infinity when getting scale min,max
+<li> js9helper: change html error message to avoid 'Invalid character' error
+<li> parameterize direction of mouse wheel zoom
 <li> add skip factor to wheel zoom to avoid pileup
 <li> globalOpts.mousetouchLimit limits zoom-out to size of image (def: true)
 <li> don't display regions when GUI zooming an image with many (>500) regions
