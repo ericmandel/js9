@@ -404,7 +404,7 @@ Thus, to check for image load, one can do this in Python:
     ...
     j = JS9()
     j.Load(hdul, tfits)
-    while j.GetStatus("load", tfits) != "complete":
+    while j.GetStatus("load", tfits).strip() != "complete":
         time.sleep(0.1)
     j.SetZoom(2)
 </pre>
