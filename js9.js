@@ -17914,10 +17914,8 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 		    return val !== obj.params.children[0].obj.params.text;
 		}
 		return false;
-	    } else if( obj.params ){
-		return val !== obj.params.text;
 	    }
-	    return false;
+	    return val !== obj.params.text;
 	}
 	if( key === "strokeWidth" ){
 	    if( obj.params && obj.params.sw1 ){
