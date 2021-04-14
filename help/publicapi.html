@@ -3794,6 +3794,22 @@ described in the
 section. However, you cannot (yet)
 change the shape itself (e.g., from "box" to "circle".) See js9onchange.html
 for examples of how to use this routine.
+<p>
+By default, if you change the color of a region, the color of the text
+associated with that region also will be changed:
+<pre>
+    # color of text associated with this region also will be changed to red
+    JS9.ChangeRegions("circle", {"color": "red"});
+</pre>
+You can turn off synchronization of text colors either by setting the
+<b>JS9.globalOpts.regSyncTextColor</b> site property to <b>false</b> or
+by setting the <b>synctextcolor</b> option to <b>false</b> in the opts object:
+<pre>
+    # color of text associated with this region will not be changed to red
+    JS9.ChangeRegions("circle", {"color":"red", "synctextcolor":false});
+</pre>
+Note that you also can change the <b>JS9.globalOpts.regSyncTextColor</b>
+property via the <b>Global</b> tab of the <b>Preferences</b> plugin.
 
 <h5 id="JS9.CopyRegions">Copy one or more regions to another image</h5>
 <p>
@@ -6233,7 +6249,7 @@ See js9onchange.html for an example of using this callback function.
 
 <p><hr><p>
 
-<h5>Last updated: April 12, 2021</h5>
+<h5>Last updated: April 14, 2021</h5>
 </div>
 
 </body>

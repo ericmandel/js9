@@ -13831,7 +13831,8 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 		topts.text = opts.text;
 	    }
 	    // sync text color with parent color, if necessary
-	    if( opts.color && !topts.color && JS9.globalOpts.regSyncTextColor ){
+	    if( JS9.globalOpts.regSyncTextColor && !topts.color &&
+		opts.synctextcolor !== false    &&  opts.color  ){
 		topts.color = opts.color;
 	    }
 	    if( Object.keys(topts).length > 0 ){
