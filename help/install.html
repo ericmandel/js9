@@ -14,7 +14,9 @@
 <h3>Summary for the Impatient</h3>
 <ul>
 <li> retrieve and unpack the source code tar file or clone the js9 repository
-<li> JS9 is now ready for drag-and-drop image files using the file:// URI
+<li> run a simple web server in the js9 dir: python3 -u -m http.server 8000
+<li> load localhost:8080/js9.html
+<li> JS9 is now ready for drag-and-drop image files
 <li> run "./mkjs9 -q" to set up the js9 command-line script in its simplest form
 <li> to install JS9 into a web server tree, run configure with this switch:
 <pre>
@@ -52,33 +54,55 @@ Once you have cloned JS9, you can retrieve the latest update:
 </pre>
 Note that the main JS9 web site runs the latest software from GitHub.
 
-<h3>Run JS9 using the file:// URI</h3>
-After the source code is retrieved, you should be able to load any of the
-js9*.html web pages into your browser using the file:// URI. For
-example, if you unpacked the tar file into /Users/me on a Mac, then
-you can point your browser to:
+<h3>Run JS9 using a simple web server or maybe using the file:// URI</h3>
+After the source code is retrieved, you can start using JS9 immediately
+by running a Python3 web server in the js9 directory, e.g.:
 <pre>
-    file:///Users/me/js9-[version]/js9basics.html
+  # web pages are loaded relative to the directory in which the server is run
+  # use any port number of your choice, above 1024
+  python3 -u -m http.server 8000
 </pre>
-to see the basic JS9 demo page. You then can drag any FITS image file onto
-the JS9 display and view it, change contrast/bias, colormaps,
-scale, create regions, etc. Furthermore, if you load the imexam web page:
+You then can load web pages using localhost:8000 as the domain, e.g.:
 <pre>
-    file:///Users/me/js9-[version]/js9imexam.html
+  # basic js9 web page
+  http://localhost:8000/js9.html
+  # demo web page with imexam plugins
+  http://localhost:8000/demos/js9imexam.html
 </pre>
-you can move a region around and run browser-based analysis as
-the region changes.
+You can drag any FITS image file onto the JS9 display and view
+it, change contrast/bias, colormaps, scale, create regions, etc.
+
 <p>
-NB: The file://URI does not work in Google Chrome: Chrome doesn't
-permit a local HTML file to read other local files. The workaround is
-to start Chrome with the --allow-file-access-from-files switch:
+You also should be able to load any of the JS9 web pages into your
+browser using the file:// URI and no web server. For example, if you
+unpacked the tar file into /Users/me on a Mac, then you should be able
+to point your browser to:
+<pre>
+    file:///Users/me/js9-[version]/js9.html
+</pre>
+to see the basic JS9 page without starting a web server.
+<p>
+Unfortunately, browser developers are making use of the file://URI
+increasingly difficult. By default, it does not work in Google Chrome,
+since default Chrome doesn't permit a local HTML file to read other
+local files. Instead, you must start Chrome with the 
+--allow-file-access-from-files switch:
 <pre>
     # Linux:
     chrome --allow-file-access-from-files
     # Mac:
     open /Applications/Google\ Chrome.app --args --allow-file-access-from-files
 </pre>
-Firefox and Safari do not have this restriction.
+<p>
+Firefox now also restricts use of the file:// URI, as documented
+<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors/CORSRequestNotHttp" target="_blank">here</a>. For Firefox, the work-around is turn off
+the <b>privacy.file_unique_origin</b> preference in <b>about:config</b>.
+<p>
+If you want to use the file:// URL, please glance at
+<a href="./knownissues.html">Known Issues</a> to check the latest
+reports about using the file:// URI. It seems that browser developers
+are slowly adding more and more restrictions ...
+
 <p>
 If you just want to run JS9 in this simple way, you are done. However,
 you might want to edit the js9prefs.js file to set up default values
@@ -94,11 +118,11 @@ external messaging.
 
 <p>
 Running JS9 on the desktop simply requires that you install
-<a href="http://electron.atom.io">Electron.js</a>, an app building
+<a href="https://www.electronjs.org/">Electron.js</a>, an app building
 platform that combines Node.js and the Chrome libraries.  To install
-Electron, go to the release page:
-<a href="http://electron.atom.io/releases/">
-http://electron.atom.io/releases</a>, choose the latest available
+Electron, go to the
+<a href="https://github.com/electron/electron/releases">
+Electron GitHub release page</a>, choose the latest available
 stable release, and download the zip file for your platform.  On a
 Mac, Electron.app should be installed in the /Applications or
 ~/Applications folder. On Linux, the electron program should be placed
@@ -350,7 +374,7 @@ available on GitHub:
 </pre>
 
 
-<h5>Last updated: April 22, 2019</h5>
+<h5>Last updated: April 15, 2021</h5>
 </div>
 
 </body>

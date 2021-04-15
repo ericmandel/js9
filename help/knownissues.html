@@ -15,6 +15,52 @@
 
 <ol>
 
+<li><b>All platforms (Always : unresolved)</b>
+<p>
+One of the simplest ways to use JS9 locally is by means of the file://
+URI scheme, e.g., point your browser to file:///home/me/js9/js9.html.
+<p>
+This does not work in Google Chrome because Chrome does not permit a
+local HTML file to read other local files. You can read a relatively
+emotional argument about this restriction at:
+<pre>
+    https://code.google.com/p/chromium/issues/detail?id=37586
+</pre>
+<p>
+The workaround is to start Chrome with the 
+--allow-file-access-from-files switch. On Linux:
+<pre>
+    chrome --allow-file-access-from-files
+</pre>
+On a Mac:
+<pre>
+    open /Applications/Google\ Chrome.app --args --allow-file-access-from-files
+</pre>
+It also does not work on Firefox starting with version 68. See:
+<pre>
+https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors/CORSRequestNotHttp
+</pre>
+for details. The workaround (as discussed in that security page) is to
+turn off the <b>privacy.file_unique_origin</b> preference in
+<b>about:config</b>.
+<p>
+It also doesn't work with Safari for some versions of JS9, i.e., it
+seems to work with v3.3 and v3.4 but not v3.3.1. No idea why, but if
+you have enabled the <b>Develop</b> menu in Safari, you can
+choose <b>Disable Local File Restrictions</b>. (For Develop menu:
+choose Safari -> Preferences, click Advanced, then select "Show
+Develop menu in menu bar").
+<p>
+You can bypass the whole file:// CORS problem by using a Python web
+server instead. For example, if you start the server in the js9 directory:
+<pre>
+  python3 -u -m http.server 8000
+</pre>
+you then can load the js9.html page at:
+<pre>
+  http://localhost:8000/js9.html
+</pre>
+
 <li><b>Desktop app (February 11, 2021 : unresolved)</b>
 <p>
 When the js9 script is run with the -b (start a browser) switch on a Mac:
@@ -113,52 +159,6 @@ a PNG file of size 1024x1024 should be fine, while a file of size
 <b>Resolved Issues:</b>
 
 <ol>
-
-<li><b>All platforms (April 5, 2021 : resolved)</b>
-<p>
-One of the simplest ways to use JS9 locally is by means of the file://
-URI scheme, e.g., point your browser to file:///home/me/js9/js9.html.
-<p>
-This does not work in Google Chrome because Chrome does not permit a
-local HTML file to read other local files. You can read a relatively
-emotional argument about this restriction at:
-<pre>
-    https://code.google.com/p/chromium/issues/detail?id=37586
-</pre>
-<p>
-The workaround is to start Chrome with the 
---allow-file-access-from-files switch. On Linux:
-<pre>
-    chrome --allow-file-access-from-files
-</pre>
-On a Mac:
-<pre>
-    open /Applications/Google\ Chrome.app --args --allow-file-access-from-files
-</pre>
-It also does not work on Firefox starting with version 68. See:
-<pre>
-https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors/CORSRequestNotHttp
-</pre>
-for details. The workaround (as discussed in that security page) is to
-turn off the <b>privacy.file_unique_origin</b> preference in
-<b>about:config</b>.
-<p>
-It also doesn't work with Safari for some versions of JS9, i.e., it
-seems to work with v3.3 and v3.4 but not v3.3.1. No idea why, but if
-you have enabled the <b>Develop</b> menu in Safari, you can
-choose <b>Disable Local File Restrictions</b>. (For Develop menu:
-choose Safari -> Preferences, click Advanced, then select "Show
-Develop menu in menu bar").
-<p>
-You can bypass the whole file:// CORS problem by using a Python web
-server instead. For example, if you start the server in the js9 directory:
-<pre>
-  python3 -u -m http.server 8000
-</pre>
-you then can load the js9.html page at:
-<pre>
-  http://localhost:8000/js9.html
-</pre>
 
 <li><b>Safari (October 4, 2016 : resolved)</b>
 <p>
