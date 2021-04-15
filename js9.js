@@ -21646,7 +21646,7 @@ JS9.getImage = function(id){
     im = JS9.lookupImage(id);
     // then look for a display id
     if( !im ){
-	display = JS9.lookupDisplay(id);
+	display = JS9.lookupDisplay(id, false);
 	// return associated image, if possible
 	if( display ){
 	    im = display.image;
