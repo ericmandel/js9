@@ -3430,6 +3430,8 @@ more properties, of which the most important are:
 <li><b>points</b>: array of objects containing x and y offsets from the center for polygons
 <li><b>angle</b>: angle in degrees for box, ellipse, cross regions
 <li><b>color</b>: region color (string name or #rrggbb syntax)
+<li><b>strokeWidth</b>: line (stroke) width of the region
+<li><b>strokeDashArray</b>: array specifying dash pattern, e.g, [3,1]
 <li><b>text</b>: text associated with text region or for a child region of this region
 <li><b>data</b>: this property can be an object, string, number,
 etc. and will be carried along with the region, and returned as a
@@ -3810,6 +3812,24 @@ by setting the <b>synctextcolor</b> option to <b>false</b> in the opts object:
 </pre>
 Note that you also can change the <b>JS9.globalOpts.regSyncTextColor</b>
 property via the <b>Global</b> tab of the <b>Preferences</b> plugin.
+<p>
+If you pass the empty string to <b>color</b>, <b>strokeWidth</b>,
+or <b>strokeDashArray</b>, the specified property will be reset as follows:
+<ul>
+<li><b>color</b>: reset based on source/bkgd include/exclude tags
+<li><b>strokeWidth</b>: reset to initial JS9.Fabric.opts.strokeWidth value
+<li><b>strokeDashArray</b>: reset to a solid line
+</ul>
+For example:
+<pre>
+    # change circles to be red with a dash pattern
+    JS9.ChangeRegions("circle", {color:"red", strokeDashArray:[3,1]});
+
+    # reset color and dash pattern
+    JS9.ChangeRegions("circle", {color:"", strokeDashArray:""});
+</pre>
+
+<p>
 
 <h5 id="JS9.CopyRegions">Copy one or more regions to another image</h5>
 <p>

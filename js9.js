@@ -13311,6 +13311,13 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     } else {
 	zoom = 1;
     }
+    // look for reset directives (empty strings)
+    if( opts.strokeDashes === "" || opts.strokeDashArray === "" ){
+	opts.strokeDashArray = [];
+    }
+    if( opts.strokeWidth === "" ){
+	opts.strokeWidth = JS9.Fabric.opts.strokeWidth;
+    }
     // shape-specific processing
     switch(opts.shape){
     case "annulus":
@@ -13781,7 +13788,7 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 	}
 	npos = this.displayToImagePos(dpos);
 	topts = {x: npos.x, y: npos.y, angle: -s.angle,
-		 color: s.stroke, text: opts.text,
+		 color: s.stroke, text: opts.text, tags: s.params.tags,
 		 parent: "TBD", rtn: "object"};
 	if( opts.textOpts ){
 	    topts = $.extend(true, {}, topts, opts.textOpts);
@@ -13819,8 +13826,8 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 	s.params.children.push({id: t.params.id, obj: t});
 	// update the parent
 	this._updateShape(layerName, s, null, "addchild", s.params);
-    } else if( s.params.children && s.params.children.length > 0 &&
-	       (opts.text || opts.textOpts || opts.color)        ){
+    } else if( s.params.children && s.params.children.length > 0       &&
+	       (opts.text || opts.textOpts || JS9.notNull(opts.color)) ){
 	// process parameters passed to existing text children
 	for(i=0; i<s.params.children.length; i++){
 	    child = s.params.children[i].obj;
@@ -13831,8 +13838,8 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 		topts.text = opts.text;
 	    }
 	    // sync text color with parent color, if necessary
-	    if( JS9.globalOpts.regSyncTextColor && !topts.color &&
-		opts.synctextcolor !== false    &&  opts.color  ){
+	    if( JS9.globalOpts.regSyncTextColor && !topts.color            &&
+		opts.synctextcolor !== false    && JS9.notNull(opts.color) ){
 		topts.color = opts.color;
 	    }
 	    if( Object.keys(topts).length > 0 ){
@@ -15579,8 +15586,8 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	obj.params = $.extend(false, {}, obj.params, sobj.params);
 	// if strokeWidth is specified, we change params.sw1,
 	// which will be used by the rescaleBorder routine below
-	if( opts.strokeWidth ){
-	    obj.params.sw1 = opts.strokeWidth;
+	if( sobj.opts.strokeWidth ){
+	    obj.params.sw1 = sobj.opts.strokeWidth;
 	}
 	// shape-specific post-processing
 	// mainly: change of size => remove size-based scaling factor
@@ -18135,19 +18142,39 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	    }
 	    break;
 	case "strokeDashes":
-	    nval = val.trim().split(/\s+/);
-	    if( (multi && val) || newval(obj, key, nval) ){
-		if( nval.length === 0 ){
-		    opts.strokeDashArray = [];
-		} else {
-		    opts.strokeDashArray = nval.map( s => parseInt(s, 10) );
+	    if( val === "" ){
+		opts.strokeDashArray = [];
+	    } else {
+		nval = val.trim().split(/\s+/);
+		if( (multi && val) || newval(obj, key, nval) ){
+		    if( nval.length === 0 ){
+			opts.strokeDashArray = [];
+		    } else {
+			opts.strokeDashArray = nval.map( s => parseInt(s, 10) );
+		    }
 		}
 	    }
 	    break;
 	case "strokeWidth":
-	    nval = parseInt(val, 10);
-	    if( (multi && val) || (!multi && newval(obj, key, nval)) ){
-		opts[key] = getval(nval);
+	    if( val === "" ){
+		opts[key] = "";
+	    } else {
+		if( JS9.isNumber(val) ){
+		    nval = parseInt(val, 10);
+		    if( nval <= 0 ){
+			opts[key] = "";
+		    } else if( (multi && val)                     ||
+			       (!multi && newval(obj, key, nval)) ){
+			opts[key] = getval(nval);
+		    }
+		}
+	    }
+	    break;
+	case "color":
+	    if( val === "" ){
+		opts[key] = "";
+	    } else if( newval(obj, key, val) ){
+		opts[key] = getval(val);
 	    }
 	    break;
 	case "tags":
