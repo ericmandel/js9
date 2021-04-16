@@ -120,7 +120,7 @@ JS9.globalOpts = {
     allowFileWasm: true,	// allow file:// to use wasm?
     transforms: ["flip", "rot90", "rotate"], // order for processing transforms
     rotateRelative: false,	// is setRotate() relative or absolute?
-    clickToFocus: true,		// how to change focus on the display
+    clickToFocus: false,	// how to change focus on the display
     winType: "light",		// plugin window: "light" or "new"
     sortPreloads: true,         // sort preloads into original order after load?
     defcolor: "#00FF00",	// graphics color when all else fails
