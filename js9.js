@@ -13827,15 +13827,17 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 	s.params.children.push({id: t.params.id, obj: t});
 	// update the parent
 	this._updateShape(layerName, s, null, "addchild", s.params);
-    } else if( s.params.children && s.params.children.length > 0       &&
-	       (opts.text || opts.textOpts || JS9.notNull(opts.color)) ){
+    } else if( s.params.children && s.params.children.length > 0 &&
+	       (JS9.notNull(opts.text)     ||
+		JS9.notNull(opts.textOpts) ||
+		JS9.notNull(opts.color))   ){
 	// process parameters passed to existing text children
 	for(i=0; i<s.params.children.length; i++){
 	    child = s.params.children[i].obj;
 	    // change text opts, if necessary
 	    topts = $.extend(true, {}, opts.textOpts || {});
 	    // change text, if necessary
-	    if( opts.text ){
+	    if( JS9.notNull(opts.text) ){
 		topts.text = opts.text;
 	    }
 	    // sync text color with parent color, if necessary
