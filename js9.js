@@ -243,6 +243,7 @@ JS9.globalOpts = {
 	S: "select all regions",
 	"M-s": "toggle shape layers plugin",
 	u: "undo remove of region(s)",
+	U: "unselect all regions",
 	x: "flip image around x axis",
 	y: "flip image around y axis",
         "9": "rotate image by 90 degrees",

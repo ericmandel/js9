@@ -5795,6 +5795,19 @@ JS9.Keyboard.Actions["select all regions"] = function(im, ipos, evt){
     canvas.renderAll();
 };
 
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["unselect all regions"] = function(im, ipos, evt){
+    let layer, canvas;
+    // sanity check
+    if( !im || fabric.major_version === 1 ){ return; }
+    layer = im.layer || "regions";
+    canvas = im.layers[layer].canvas;
+    if( canvas.getActiveObject() ){
+	canvas.discardActiveObject();
+    }
+    canvas.renderAll();
+};
+
 JS9.Keyboard.Actions["refresh image"] = function(im, ipos, evt){
     // sanity check
     if( !im ){ return; }
@@ -9005,6 +9018,7 @@ JS9.Menubar.createMenus = function(){
 	    items.removeRegions  = xname("remove");
 	    items.sep2 = "------";
 	    items.selectRegions = xname("select all");
+	    items.unselectRegions = xname("unselect all");
 	    items.selectedRegions = xname("selected ...");
 	    items.sep3 = "------";
 	    items.onchange = {
@@ -9077,6 +9091,11 @@ JS9.Menubar.createMenus = function(){
 			    case "selectRegions":
 				if( Object.prototype.hasOwnProperty.call(JS9, "Keyboard") ){
 				    JS9.Keyboard.Actions["select all regions"](uim, uim.ipos);
+				}
+				break;
+			    case "unselectRegions":
+				if( Object.prototype.hasOwnProperty.call(JS9, "Keyboard") ){
+				    JS9.Keyboard.Actions["unselect all regions"](uim, uim.ipos);
 				}
 				break;
 			    case "selectedRegions":

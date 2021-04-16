@@ -606,6 +606,19 @@ JS9.Keyboard.Actions["select all regions"] = function(im, ipos, evt){
     canvas.renderAll();
 };
 
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["unselect all regions"] = function(im, ipos, evt){
+    let layer, canvas;
+    // sanity check
+    if( !im || fabric.major_version === 1 ){ return; }
+    layer = im.layer || "regions";
+    canvas = im.layers[layer].canvas;
+    if( canvas.getActiveObject() ){
+	canvas.discardActiveObject();
+    }
+    canvas.renderAll();
+};
+
 JS9.Keyboard.Actions["refresh image"] = function(im, ipos, evt){
     // sanity check
     if( !im ){ return; }

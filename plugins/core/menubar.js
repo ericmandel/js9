@@ -2252,6 +2252,7 @@ JS9.Menubar.createMenus = function(){
 	    items.removeRegions  = xname("remove");
 	    items.sep2 = "------";
 	    items.selectRegions = xname("select all");
+	    items.unselectRegions = xname("unselect all");
 	    items.selectedRegions = xname("selected ...");
 	    items.sep3 = "------";
 	    items.onchange = {
@@ -2324,6 +2325,11 @@ JS9.Menubar.createMenus = function(){
 			    case "selectRegions":
 				if( Object.prototype.hasOwnProperty.call(JS9, "Keyboard") ){
 				    JS9.Keyboard.Actions["select all regions"](uim, uim.ipos);
+				}
+				break;
+			    case "unselectRegions":
+				if( Object.prototype.hasOwnProperty.call(JS9, "Keyboard") ){
+				    JS9.Keyboard.Actions["unselect all regions"](uim, uim.ipos);
 				}
 				break;
 			    case "selectedRegions":
