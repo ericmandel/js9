@@ -6417,7 +6417,7 @@ JS9.Magnifier.init = function(width, height){
 };
 
 // display the magnified image on the magnifier canvas
-JS9.Magnifier.display = function(im, ipos){
+JS9.Magnifier.display = function(im, ipos, render){
     let pos, tval, magDisp, zoom;
     let canvas, sx, sy, sw, sh, dx, dy, dw, dh;
     // sanity check
@@ -6484,11 +6484,17 @@ JS9.Magnifier.display = function(im, ipos){
     // overlay regions by drawing the fabric.js canvas into the magnifier
     if( JS9.globalOpts.magnifierRegions &&
 	im.display.layers && im.display.layers.regions ){
+	// make sure fabric canvas is up to date, if necessary
+	if( render ){
+	    im.display.layers.regions.canvas.renderAll();
+	}
+	// get underlying html canvas
 	canvas = im.display.layers.regions.canvas.getElement();
 	sx *= fabric.devicePixelRatio;
 	sy *= fabric.devicePixelRatio;
 	sw *= fabric.devicePixelRatio;
 	sh *= fabric.devicePixelRatio;
+	// write it into the magnifier display
 	magDisp.context.drawImage(canvas, sx, sy, sw, sh, dx, dy, dw, dh);
     }
     // stuff we only do once
@@ -6506,6 +6512,13 @@ JS9.Magnifier.display = function(im, ipos){
 			 width: zoom, height: zoom});
 	im.magnifier.ozoom = im.magnifier.zoom;
     }
+};
+
+// display the magnified image on the magnifier canvas
+// sets flag to update the fabric.js canvas so that changed regions
+// are visible in the magnifier
+JS9.Magnifier.display2 = function(im, ipos){
+    JS9.Magnifier.display(im, ipos, true);
 };
 
 // zoom the rectangle inside the magnifier (RGB) image
@@ -6557,7 +6570,7 @@ JS9.Magnifier.clear = function(im){
     return im;
 };
 
-// add this plugin into JS9
+// add plugin to JS9
 JS9.RegisterPlugin(JS9.Magnifier.CLASS, JS9.Magnifier.NAME, JS9.Magnifier.init,
 		   {menuItem: "Magnifier",
 		    help: "help/magnifier.html",
@@ -6566,6 +6579,7 @@ JS9.RegisterPlugin(JS9.Magnifier.CLASS, JS9.Magnifier.NAME, JS9.Magnifier.init,
 		    toolbarHTML: JS9.Magnifier.HTML,
 		    onplugindisplay: JS9.Magnifier.display,
 		    onregionsmove: JS9.Magnifier.display,
+		    onregionschange: JS9.Magnifier.display2,
 		    onmousemove: JS9.Magnifier.display,
 		    onimagedisplay: JS9.Magnifier.display,
 		    onimageclose: JS9.Magnifier.clear,
