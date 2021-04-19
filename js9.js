@@ -14131,6 +14131,10 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	}
 	// and then rescale the stroke width
 	s.rescaleBorder();
+	// non-changeable shapes go to back
+	if( s.params.changeable === false ){
+	    canvas.sendToBack(s);
+	}
 	// might need to make a text shape as a child of this shape
 	this._handleChildText(layerName, s, opts);
 	// update the shape info, but not TBD children (will get done later)
@@ -15705,6 +15709,10 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	}
 	// make sure border width is correct
 	obj.rescaleBorder();
+	// non-changeable shapes go to back
+	if( obj.params.changeable === false ){
+	    canvas.sendToBack(obj);
+	}
 	// update children
 	JS9.Fabric.updateChildren(layer.dlayer, obj, "moving");
 	JS9.Fabric.updateChildren(layer.dlayer, obj, "scaling");
