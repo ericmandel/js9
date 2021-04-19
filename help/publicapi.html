@@ -3440,6 +3440,7 @@ property by the <b>JS9.GetRegions()</b> call.
 Other available properties include:
 <ul>
 <li><b>changeable</b>: if false, region cannot be moved, resized, rotated
+<li><b>locked</b>: 'opposite alias' of changeable
 <li><b>movable</b>: if false, region cannot be moved
 <li><b>resizable</b>: if false, region cannot be resized or rotated
 <li><b>rotatable</b>: if false, region cannot be rotated
@@ -3454,10 +3455,6 @@ Other available properties include:
 <li><b>fontWeight</b>: font parameter for text region
 <li><b>sticky</b>: if true, region doesn't change during pan, zoom, rotate, flip
 <li><b>preservedcoords</b>: if true, the region is sticky, and display coordinates are preserved during save and copy operations (see below for more info)
-</ul>
-Deprecated properties:
-<ul>
-<li><b>fixinplace</b>: opposite of changeable
 </ul>
 Here are some examples of ways to create regions:
 <pre>
@@ -4504,6 +4501,7 @@ property by the
 Other available properties include:
 <ul>
 <li><b>changeable</b>: if false, region cannot be moved, resized, rotated
+<li><b>locked</b>: 'opposite alias' of changeable
 <li><b>movable</b>: if false, region cannot be moved
 <li><b>resizable</b>: if false, region cannot be resized or rotated
 <li><b>rotatable</b>: if false, region cannot be rotated
@@ -4517,10 +4515,6 @@ Other available properties include:
 <li><b>fontSize</b>: font parameter for text region
 <li><b>fontStyle</b>: font parameter for text region
 <li><b>fontWeight</b>: font parameter for text region
-</ul>
-Deprecated properties:
-<ul>
-<li><b>fixinplace</b>: opposite of changeable
 </ul>
 
 <h5 id="JS9.RemoveShapes">Remove one or more shapes from the specified shape layer</h5>

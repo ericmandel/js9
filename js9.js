@@ -12455,12 +12455,17 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	dlayer.opts.selectable = false;
 	dlayer.opts.evented = false;
     }
-    // changeable: short-hand for allowing objects to move and resize
-    // fixinplace: the opposite, for backward compatibility
+    // deprecated
     if( (dlayer.opts.changeable === undefined) &&
-	(dlayer.opts.fixinplace !== undefined)  ){
+	(dlayer.opts.fixinplace !== undefined) ){
 	dlayer.opts.changeable = !dlayer.opts.fixinplace;
     }
+    // locked: opposite alias of changeable
+    if( (dlayer.opts.changeable === undefined) &&
+	(dlayer.opts.locked !== undefined)     ){
+	dlayer.opts.changeable = !dlayer.opts.locked;
+    }
+    // changeable: short-hand for allowing objects to move and resize
     if( dlayer.opts.changeable ){
 	dlayer.opts.hasControls = true;
 	dlayer.opts.hasRotatingPoint = true;
@@ -13659,10 +13664,17 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	JS9.globalOpts.controlsMatchRegion === "border" ){
 	nopts.borderColor = nopts.stroke;
     }
-    if( (nparams.changeable === undefined)     &&
+    // deprecated
+    if( (nparams.changeable === undefined)  &&
 	(nparams.fixinplace !== undefined)  ){
 	nparams.changeable = !nparams.fixinplace;
     }
+    // locked: opposite alias of changeable
+    if( (nparams.changeable === undefined)  &&
+	(nparams.locked !== undefined)      ){
+	nparams.changeable = !nparams.locked;
+    }
+    // changeable: short-hand for allowing objects to move and resize
     if( nparams.changeable !== undefined ){
 	tf = !nparams.changeable;
 	nopts.lockMovementX = tf;
@@ -15520,13 +15532,17 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	    zoom = 1;
 	}
 	// combine the objects parameters with the new options
-	// clearing some of the old ones first
+	// clearing some of the old ones first to avoid conflicts
 	if( opts.radii ){
 	    obj.params.radii = [];
 	}
 	if( opts.tags ){
 	    obj.params.tags = [];
 	}
+	if( opts.locked !== undefined ){
+	    delete obj.params.changeable;
+	}
+	// combine new opts with old opts
 	bopts = $.extend(true, {}, obj.params, opts);
 	// parse options and generate new obj and params
 	sobj = this._parseShapeOptions(layerName, bopts, obj);
@@ -17040,7 +17056,8 @@ JS9.Regions.opts = {
     // mouse double-click processing
     onmousedblclick(im, xreg, evt, target){
 	let params = target.params;
-	if( (params && !params.winid && params.changeable !== false) ||
+//	if( (params && !params.winid && params.changeable !== false) ||
+	if( (params && !params.winid )                               ||
 	    (!params && target.type === "activeSelection")           ||
 	    (!params && target.type === "group")                     ){
 	    im.displayRegionsForm(target);
@@ -17212,7 +17229,7 @@ JS9.Regions.displayConfigForm = function(shape, opts){
 // initialize the region config form
 // call using image context
 JS9.Regions.initConfigForm = function(obj, opts){
-    let i, key, val, el, el2, wcssys, twcssys, mover, mout, p1, p2;
+    let i, key, val, el, el2, wcssys, twcssys, mover, mout, p1, p2, cmode;
     let s, s2, s3, s4, winid, wid, form, otitle, fav, arr, ao, grp, o, objs;
     let multi = false;
     const wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
@@ -17249,6 +17266,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	// fake obj: makes the checks easier, avoid if( obj ... ) everywhere
 	obj = defobj;
     }
+    cmode = obj.params.changeable === false;
     // opts is optional
     opts = opts || {};
     // where to we get winid?
@@ -17437,6 +17455,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
 		}
 		break;
 	    }
+	    $(`${form}[name='${key}']`).prop("readonly", cmode);
 	    break;
 	case "ypos":
 	    switch(wcssys){
@@ -17462,6 +17481,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
 		}
 		break;
 	    }
+	    $(`${form}[name='${key}']`).prop("readonly", cmode);
 	    break;
 	case "radius":
 	case "oradius":
@@ -17488,6 +17508,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
 		}
 		break;
 	    }
+	    $(`${form}[name='${key}']`).prop("readonly", cmode);
 	    break;
 	case "height":
 	case "r2":
@@ -17511,6 +17532,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
 		}
 		break;
 	    }
+	    $(`${form}[name='${key}']`).prop("readonly", cmode);
 	    break;
 	case "wcssys":
 	case "savewcs":
@@ -17684,17 +17706,10 @@ JS9.Regions.initConfigForm = function(obj, opts){
     } else {
 	$(`${form}[name='listonchange']`).prop("checked", false);
     }
-    if( (obj.params.changeable === undefined)  &&
-	(obj.params.fixinplace !== undefined)  ){
-	obj.params.changeable = !obj.params.fixinplace;
-    }
-    if( obj.params.changeable === undefined ){
-	obj.params.changeable = true;
-    }
-    if( obj.params.changeable ){
-	$(`${form}[name='changeable']`).prop("checked", true);
+    if( obj.params.changeable !== false ){
+	$(`${form}[name='locked']`).prop("checked", false);
     } else {
-	$(`${form}[name='changeable']`).prop("checked", false);
+	$(`${form}[name='locked']`).prop("checked", true);
     }
     if( obj.params.sticky ){
 	$(`${form}[name='sticky']`).prop("checked", true);
@@ -17805,10 +17820,14 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    }
 	}
     } else {
-	// grey-out read-only text
+	// grey-out read-only text input
 	$(form).find("input:text[readonly]")
-	    .css("border-color", "A5A5A5")
+	    .css("border-color", "#A5A5A5")
 	    .css("background", "#E9E9E9");
+	// regular text input
+	$(form).find("input:text:not([readonly])")
+	    .css("border-color", "#E9E9E9")
+	    .css("background", "white");
 	switch(obj.pub.shape){
 	case "box":
 	case "cross":
@@ -18023,6 +18042,17 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 		return false;
 	    } else {
 		return fmtcheck(obj.pub.sticky||false, val);
+	    }
+	}
+	if( key === "locked" ){
+	    if( multi ){
+		return false;
+	    } else {
+		if( obj.params.changeable !== false ){
+		    return val === false;
+		} else {
+		    return val === true;
+		}
 	    }
 	}
 	if( key === "listonchange" ){
@@ -18428,6 +18458,11 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 		} else if( obj.pub.id !== undefined ){
 		    opts[key] = obj.pub.id;
 		}
+	    }
+	    break;
+	case "locked":
+	    if( newval(obj, key, !getval(val)) ){
+		opts.changeable = !getval(val);
 	    }
 	    break;
 	case "misc":
