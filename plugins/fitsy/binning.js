@@ -1,83 +1,50 @@
-/*globals $, JS9, Fitsy */
+/*globals $, JS9 */
 
 "use strict";
 
 (function() {
 
     function reBinImage(div, display) {
-	let hdu, opts, npos;
+	let opts, npos;
 	let im   = JS9.GetImage({display: display});
 	let form = $(div).find(".js9BinningForm")[0];
-	let rebin = function(im, hdu, display){
-	    let ss;
-	    let rexp = /(\[.*[a-zA-Z0-9_].*\])\[.*\]/;
-	    let topts = {display: display};
-	    if( form.separate.checked ){
-		// replace old extensions with new
-		// would be better to combine them, but ...
-		if( form.filter.value ){
-		    ss = '[' + form.filter.value.replace(/\s+/g,"") + ']';
-		    topts.id = im.id.replace(rexp, "$1") + ss;
-		    if( im.fitsFile ){
-			topts.file = im.fitsFile.replace(rexp, "$1") + ss;
-		    } else {
-			topts.file = topts.id;
-		    }
-		}
-		JS9.checkNew(new JS9.Image(hdu, topts));
-	    } else {
-		JS9.RefreshImage(hdu, topts);
-	    }
-	};
-	if ( !im || !im.raw ) { return; }
-
-	hdu = im.raw.hdu;
-
-	switch(JS9.fitsLibrary()){
-	case "fitsy":
-	    if ( hdu.imtab === "image" ) {
-		JS9.error("image binning not implemented");
-	    } else {
-		opts = $.extend(true, {}, JS9.fits.opts,
-	        { table: { xcen: form.xcen.value , ycen: form.ycen.value,
-			   xdim: form.xdim.value , ydim: form.ydim.value,
-			   bin: form.bin.value , filter: form.filter.value }
-	        });
-		Fitsy.readTableHDUData(hdu.fits, hdu, opts, function(hdu){
-		    rebin(im, hdu, display);
-		});
-	    }
-	    break;
-	case "cfitsio":
-	    opts = {xcen: 0, ycen: 0, xdim: 0, ydim: 0, bin: 1, filter: ""};
-	    if( JS9.isNumber(form.xcen.value) ){
-		opts.xcen = parseFloat(form.xcen.value);
-	    }
-	    if( JS9.isNumber(form.ycen.value) ){
-		opts.ycen = parseFloat(form.ycen.value);
-	    }
-	    npos = im.maybePhysicalToImage({x: opts.xcen, y: opts.ycen});
-	    if( npos ){
-		opts.xcen = npos.x;
-		opts.ycen = npos.y;
-	    }
-	    if( JS9.isNumber(form.xdim.value) ){
-		opts.xdim = Math.floor(parseFloat(form.xdim.value));
-	    }
-	    if( JS9.isNumber(form.ydim.value) ){
-		opts.ydim = Math.floor(parseFloat(form.ydim.value));
-	    }
-	    if( JS9.isNumber(form.bin.value) ){
-		opts.bin = parseFloat(form.bin.value);
-	    } else {
-		opts.bin = form.bin.value;
-	    }
-	    opts.filter = form.filter.value;
-	    opts.separate = $(form.separate).prop("checked");
-	    opts.binMode = $('input[name="binmode"]:checked').val();
-	    im.displaySection(opts);
-	    break;
+	// sanity check
+	if( !im || !im.raw ) { return; }
+	// initialize opts
+	opts = {xcen:0, ycen:0, xdim:0, ydim:0, bin:1, filter:"", columns:""};
+	// get opts from form
+	if( JS9.isNumber(form.xcen.value) ){
+	    opts.xcen = parseFloat(form.xcen.value);
 	}
+	if( JS9.isNumber(form.ycen.value) ){
+	    opts.ycen = parseFloat(form.ycen.value);
+	}
+	npos = im.maybePhysicalToImage({x: opts.xcen, y: opts.ycen});
+	if( npos ){
+	    opts.xcen = npos.x;
+	    opts.ycen = npos.y;
+	}
+	if( JS9.isNumber(form.xdim.value) ){
+	    opts.xdim = Math.floor(parseFloat(form.xdim.value));
+	}
+	if( JS9.isNumber(form.ydim.value) ){
+	    opts.ydim = Math.floor(parseFloat(form.ydim.value));
+	}
+	if( JS9.isNumber(form.bin.value) ){
+	    opts.bin = parseFloat(form.bin.value);
+	} else {
+	    opts.bin = form.bin.value;
+	}
+	opts.filter = form.filter.value;
+	opts.columns = form.columns.value;
+	// if columns changed, we have to reset the center to 0
+	if( im.raw.hdu.table && im.raw.hdu.table.columns !== opts.columns ){
+	    opts. xcen = 0;
+	    opts. ycen = 0;
+	}
+	opts.separate = $(form.separate).prop("checked");
+	opts.binMode = $('input[name="binmode"]:checked').val();
+	im.displaySection(opts);
     }
 
     function centerBinImage(xdim, ydim, div, display) {
@@ -129,6 +96,7 @@
 		    form.xdim.value = String(Math.floor(hdu.table.xdim));
 		    form.ydim.value = String(Math.floor(hdu.table.ydim));
 		    form.filter.value = hdu.table.filter || "";
+		    form.columns.value = hdu.table.columns || "";
 		    form.bin.disabled = false;
 		    form.xcen.disabled = false;
 		    form.ycen.disabled = false;
@@ -136,6 +104,7 @@
 		    form.ydim.disabled = false;
 		    // form.binmode.disabled = false;
 		    form.filter.disabled = false;
+		    form.columns.disabled = false;
 		} else {
 		    hdu.bin = hdu.bin || 1;
 		    bin = hdu.bin > 0 ? hdu.bin : 1 / Math.abs(hdu.bin);
@@ -158,23 +127,18 @@
 		    form.bin.value = String(hdu.bin);
 		    form.xdim.value = String(Math.floor(hdu.naxis1 * bin));
 		    form.ydim.value = String(Math.floor(hdu.naxis2 * bin));
-		    if( JS9.globalOpts.enableImageFilter ){
-			form.filter.value = im.raw.filter || "";
-		    } else {
-			form.filter.value = "";
-		    }
+		    form.filter.value = "";
+		    form.columns.value = "";
 		    form.bin.disabled = false;
 		    form.xcen.disabled = false;
 		    form.ycen.disabled = false;
 		    form.xdim.disabled = false;
 		    form.ydim.disabled = false;
 		    form.binmode.disabled = false;
-		    if( JS9.globalOpts.enableImageFilter ){
-			form.filter.disabled = false;
-		    } else {
-			form.filter.disabled = true;
-			form.filter.style.backgroundColor="#E0E0E0";
-		    }
+		    form.filter.disabled = true;
+		    form.filter.style.backgroundColor="#E0E0E0";
+		    form.columns.disabled = true;
+		    form.columns.style.backgroundColor="#E0E0E0";
 		}
 		if( hdu.binMode === "a" ){
 		    $('input:radio[class="avg-pixels"]').prop('checked',true);
@@ -249,9 +213,15 @@
 		   </tr>`;
 	}
 	html += `  <tr>	<td>Filter:</td>
-			<td colspan="2"><textarea name=filter rows="1" cols="22" style="text-align:left;" autocapitalize="off" autocorrect="off"></textarea></td>
+			<td colspan="2"><textarea name=filter rows="1" cols="22" style="padding-left:5px; text-align:left;" autocapitalize="off" autocorrect="off"></textarea></td>
 			<td>&nbsp(event/row filter for table)</td>
 		   </tr>
+
+		   <tr>	<td>Columns:</td>
+			<td colspan="2"><textarea name=columns rows="1" cols="22" style="padding-left:5px; text-align:left;" autocapitalize="off" autocorrect="off"></textarea></td>
+			<td>&nbsp(alt binning cols for table)</td>
+		   </tr>
+
 	           <tr>	<td>Separate:</td>
                         <td><input type=checkbox name=separate class="js9-binning-sep" style="text-align:left;"></td>
 			<td></td>
@@ -303,6 +273,6 @@
 
 	    help:     "fitsy/binning.html",
 
-            winDims: [520, 280]
+            winDims: [520, 320]
     });
 }());

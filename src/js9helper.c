@@ -573,6 +573,7 @@ int copyImageSection(fitsfile *ifptr, fitsfile *ofptr,
 /* process this command */
 static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
 {
+  char *tfilter;
   char *s=NULL;
   char *t=NULL;
   char *jdir=NULL;
@@ -586,7 +587,7 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
   double bin;
   double cens[2];
   char extname[FLEN_CARD];
-  char *cols[2] = {"X", "Y"};
+  char *cols = "X Y";
   char *ofile="stdout";
   char *section=NULL;
   char *filter=NULL;
@@ -680,7 +681,13 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
       ofile = args[0];
       section = args[1];
       if( narg >= 3 && args[2] ){
-	filter = args[2];
+	tfilter = strdup(args[2]);
+	filter = (char *)tfilter;
+	t = strstr(tfilter, "@@");
+	if( t ){
+	  *t = '\0';
+	  cols = t+2;
+	}
       }
       if( narg >= 4 && args[3] ){
 	slice = args[3];
@@ -793,6 +800,9 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
       closeFITSFile(ifptr, &tstatus);
       tstatus=0;
       closeFITSFile(ofptr, &tstatus);
+      if( tfilter ){
+	free(tfilter);
+      }
       return 0;
 #else
       fprintf(stderr,

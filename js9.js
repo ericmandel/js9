@@ -2146,6 +2146,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     }
     // save filter, if necessary
     this.raw.filter = opts.filter || "";
+    this.raw.columns = opts.columns || "";
     // image or table?
     if( hdu.imtab ){
 	this.imtab = hdu.imtab;
@@ -2194,8 +2195,6 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     if( !oraw ){
 	this.binning.obin = this.binning.bin;
     }
-    // init WCS, if possible
-    this.initWCS();
     // reset the wcssys and wcsunits to previous, if necessary
     if( owcssys ){
 	this.setWCSSys(owcssys);
@@ -2203,6 +2202,15 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     if( owcsunits ){
 	this.setWCSUnits(owcsunits);
     }
+    // init WCS, if necessary
+    if( oraw && oraw.header.CTYPE1 && oraw.header.CTYPE2 &&
+	this.raw.header.CTYPE1 && this.raw.header.CTYPE2 &&
+	(oraw.header.CTYPE1 !== this.raw.header.CTYPE1   ||
+	 oraw.header.CTYPE2 !== this.raw.header.CTYPE2)  ){
+	this.initWCS();
+    }
+    // re-init wcs
+    this.initWCS();
     // init the logical coordinate system, if possible
     this.initLCS();
     // get hdu info, if possible
@@ -3640,7 +3648,7 @@ JS9.Image.prototype.maybePhysicalToImage = function(pos){
 
 // extract and display a section of an image, with table filtering
 JS9.Image.prototype.displaySection = function(opts, func){
-    let oproxy, hdu, from, obj, oreg, nim, topts;
+    let s, oproxy, hdu, from, obj, oreg, nim, topts;
     let ipos, lpos, npos, tbin, arr, sect;
     const getval3 = (val1, val2, val3) => {
 	let res;
@@ -3950,6 +3958,7 @@ JS9.Image.prototype.displaySection = function(opts, func){
 	sect.xdim = Math.floor(hdu.naxis1 * sect.bin);
 	sect.ydim = Math.floor(hdu.naxis2 * sect.bin);
 	sect.filter = this.raw.filter || "";
+	sect.columns = this.raw.columns || "";
     }
     // allow binning relative to current, e.g., *2, /4, +1, -3
     if( typeof opts.bin === "string" ){
@@ -4022,6 +4031,10 @@ JS9.Image.prototype.displaySection = function(opts, func){
     opts.filter = getval3(opts.filter, sect.filter, "");
     // save the filter, if necessary
     this.raw.filter = opts.filter || "";
+    // columns
+    opts.columns = getval3(opts.columns, sect.columns, "");
+    // save the columns, if necessary
+    this.raw.columns = opts.columns || "";
     // start the waiting!
     if( opts.waiting !== false ){
 	JS9.waiting(true, this.display);
@@ -4053,8 +4066,9 @@ JS9.Image.prototype.displaySection = function(opts, func){
 	    }
 	    arr.push({name: "bin", value: opts.bin});
 	    delete opts.bin;
-	    arr.push({name: "filter", value: opts.filter || ""});
-	    // hack: pass filter along so it can reach binning plugin
+	    s = `${opts.filter||""}@@${opts.cols||""}`;
+	    arr.push({name: "filter", value: s});
+	    // hack: pass filter and columns along to reach binning plugin
 	    // delete opts.filter;
 	    // get image section from external file
 	    arr.push({name: "slice", value: opts.slice||""});
@@ -4072,6 +4086,7 @@ JS9.Image.prototype.displaySection = function(opts, func){
 		delete opts.extension;
 	    }
 	    obj.cmd += this.expandMacro(" $xdim@$xcen,$ydim@$ycen,$bin $filter $slice", arr);
+console.log("imsection: %s", JSON.stringify(obj));
 	    JS9.helper.send("imsection", obj, (r) => {
 		let obj, jobj, rarr, f, pf;
 		if( typeof r === "object" ){

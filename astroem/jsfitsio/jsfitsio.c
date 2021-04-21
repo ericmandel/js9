@@ -849,7 +849,7 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
 }
 
 // filterTableToImage: filter a binary table, create a temp image
-fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
+fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char *cols,
 			     int *dims, double *cens, double bin, int *status){
   int i, dim1, dim2, hpx, tstatus;
   int imagetype=TINT, naxis=2, recip=0;
@@ -857,6 +857,7 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
   float weight=1;
   double xcen, ycen;
   double minin[IDIM], maxin[IDIM], binsizein[IDIM];
+  char *s, *t;
   char keyname[FLEN_KEYWORD];
   char param[FLEN_CARD];
   char comment[FLEN_CARD];
@@ -920,9 +921,19 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
     bin = 1.0 / fabs(bin);
   }
   wtcol[0] = '\0';
-  if( cols && cols[0] && cols[1] ){
-    strcpy(colname[0], cols[0]);
-    strcpy(colname[1], cols[1]);
+  if( cols ){
+    s = (char *)strdup(cols);
+    t = (char *)strtok(s, " ,");
+    if( t ){
+      strncpy(colname[0], t, FLEN_VALUE);
+      colname[0][FLEN_VALUE-1] = '\0';
+    }
+    t = (char *)strtok(NULL, " ,");
+    if( t ){
+      strncpy(colname[1], t, FLEN_VALUE);
+      colname[1][FLEN_VALUE-1] = '\0';
+    }
+    free(s);
   } else {
     colname[0][0] = '\0';
     colname[1][0] = '\0';

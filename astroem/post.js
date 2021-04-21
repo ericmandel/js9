@@ -172,7 +172,7 @@ Module["error"] = function(s, e) {
 // fits object contains fptr
 Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     var i, ofptr, hptr, status, datalen, extnum, extname;
-    var buf, bufptr, buflen, bufptr2, slice, doerr, ctype1, xbin;
+    var buf, bufptr, buflen, bufptr2, slice, doerr, ctype1, xbin, columns;
     var filter = null;
     var fptr = fits.fptr;
     var cens = [0, 0];
@@ -273,6 +273,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	hptr = _malloc(28);
 	if( opts.table ){
 	    if( opts.table.filter ){ filter = opts.table.filter; }
+	    if( opts.table.columns ){ columns = opts.table.columns; }
 	    if( opts.table.bin ){ bin = opts.table.bin; }
 	    if( opts.table.binMode ){ binMode = bmode(opts.table.binMode); }
 	    // backward compatibity with pre-v1.12 globals
@@ -292,6 +293,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	if( opts.xcen ){ cens[0] = opts.xcen; }
 	if( opts.ycen ){ cens[1] = opts.ycen; }
 	if( opts.filter ){ filter = opts.filter; }
+	if( opts.columns ){ columns = opts.columns; }
 	if( opts.bin ){ bin = opts.bin; }
 	if( opts.binMode ){ binMode = bmode(opts.binMode); }
 	setValue(hptr,    dims[0], "i32");
@@ -315,9 +317,9 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	}
 	try{
 	    ofptr = ccall("filterTableToImage", "number",
-            ["number", "string", "number", "number", "number", "number",
+            ["number", "string", "string", "number", "number", "number",
 	     "number"],
-	    [fptr, filter, 0, hptr, hptr+8, bin, hptr+24]);
+	    [fptr, filter, columns, hptr, hptr+8, bin, hptr+24]);
 	}
 	catch(e){
 	    doerr = true;
@@ -329,6 +331,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	hdu.table.ycen = getValue(hptr+16,  "double");
 	hdu.table.bin = bin;
 	hdu.table.filter = filter;
+	hdu.table.columns = columns;
 	status  = getValue(hptr+24, "i32");
 	_free(hptr);
 	Module["errchk"](status);

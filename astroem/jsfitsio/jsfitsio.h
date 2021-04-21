@@ -4,7 +4,7 @@ fitsfile *openFITSFile(char *ifile, int iomode, char *extlist, int *hdutype,
 fitsfile *openFITSMem(void **buf, size_t *buflen, char *extlist, 
 		      int *hdutype, int *status);
 
-fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
+fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char *cols,
 			     int *dims, double *cens, double bin, int *status);
 
 int *getImageToArray(fitsfile *fptr, int *dims, double *cens,
