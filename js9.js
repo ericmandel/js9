@@ -10130,8 +10130,6 @@ JS9.Display = function(el){
     // display-based mouse/touch actions initially from global
     this.mouseActions = JS9.globalOpts.mouseActions.slice(0);
     this.touchActions = JS9.globalOpts.touchActions.slice(0);
-    // display-based scroll-based zoom initially from global
-    this.mousetouchZoom = JS9.globalOpts.mousetouchZoom;
     // add event handlers
     this.divjq.on("mouseenter", this, (evt) => {
 	return JS9.mouseEnterCB(evt);
@@ -16489,7 +16487,7 @@ JS9.MouseTouch.isPinch = function(im, evt){
     // sanity check
     if( !im ){ return -1; }
     display = im.display;
-    if( !display.mousetouchZoom || (im.pos.touches.length !== 2) ){
+    if( !JS9.globalOpts.mousetouchZoom || (im.pos.touches.length !== 2) ){
 	return -1;
     }
     switch(display.ispinch ){
@@ -16629,15 +16627,14 @@ JS9.MouseTouch.Actions["change contrast/bias"].stop = function(im, ipos, evt){
 
 // zoom the image
 JS9.MouseTouch.Actions["wheel zoom"] = function(im, evt){
-    let ozoom, nzoom, maxzoom, display, key;
+    let ozoom, nzoom, maxzoom, key;
     let floor = JS9.globalOpts.panzoomRefreshLimit;
     let got = 0;
     const delta = evt.originalEvent.deltaY * Math.sign(JS9.DIRZOOM);
     // sanity check
     if( !im ){ return; }
     // is scroll to zoom turned on?
-    display = im.display;
-    if( !display.mousetouchZoom ){
+    if( !JS9.globalOpts.mousetouchZoom ){
 	return;
     }
     // prevent pileup
@@ -16860,7 +16857,7 @@ JS9.MouseTouch.mousetouchzoom = function(id, target){
     const mode = target.checked;
     // change global blink mode
     if( display ){
-	display.mousetouchZoom = mode;
+	JS9.globalOpts.mousetouchZoom = mode;
     }
 };
 
@@ -16992,7 +16989,7 @@ JS9.MouseTouch.init = function(){
         .html(s)
 	.appendTo(this.mousetouchContainer);
     // set initial value of scroll
-    if( this.display.mousetouchZoom ){
+    if( JS9.globalOpts.mousetouchZoom ){
 	this.mousetouchContainer.find("input").attr("checked", true);
     }
 };
@@ -24026,7 +24023,7 @@ JS9.mouseOutCB = function(evt){
 JS9.wheelCB = function(evt){
     const display = evt.data;
     const im = display.image;
-    if( display.mousetouchZoom && im         &&
+    if( im && JS9.globalOpts.mousetouchZoom                     &&
 	Object.prototype.hasOwnProperty.call(JS9, "MouseTouch") &&
 	JS9.MouseTouch.Actions["wheel zoom"] ){
 	JS9.MouseTouch.Actions["wheel zoom"](im, evt);
