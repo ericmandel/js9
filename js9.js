@@ -4086,7 +4086,6 @@ JS9.Image.prototype.displaySection = function(opts, func){
 		delete opts.extension;
 	    }
 	    obj.cmd += this.expandMacro(" $xdim@$xcen,$ydim@$ycen,$bin $filter $slice", arr);
-console.log("imsection: %s", JSON.stringify(obj));
 	    JS9.helper.send("imsection", obj, (r) => {
 		let obj, jobj, rarr, f, pf;
 		if( typeof r === "object" ){
