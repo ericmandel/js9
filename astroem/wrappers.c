@@ -37,6 +37,9 @@
 /* must match Module['rootdir'] in post.js! */
 #define ROOTDIR "/"
 
+/* which seperation algorithm? */
+#define CALC_SEPARATION 0
+
 /* static return buffer */
 static char rstr[SZ_LINE];
 static char *fstr;
@@ -75,8 +78,7 @@ void emscripten_exit_with_live_runtime(void);
  */
 
 /* upper to lower case */
-static void culc(char *s)
-{
+static void culc(char *s){
   while(*s){
     if( isupper((int)*s) )
       *s = tolower(*s);
@@ -85,8 +87,7 @@ static void culc(char *s)
 }
 
 /* lower to upper case */
-static void cluc(char *s)
-{
+static void cluc(char *s){
   while(*s){
     if( islower((int)*s) )
       *s = toupper(*s);
@@ -94,8 +95,8 @@ static void cluc(char *s)
   }
 }
 
-static int nowhite (char *c, char *cr)
-{
+/* written by lvs ... so long ago */
+static int nowhite (char *c, char *cr){
   char *cr0;    /* initial value of cr */
   int n;        /* the number of characters */
 
@@ -418,12 +419,12 @@ char *reg2wcsstr(int n, char *regstr){
   char *targs=NULL, *targ=NULL;
   char *mywcssys=NULL;
   int mywcsunits;
+  int narg;
   int alwaysdeg = 0;
   int nq = 0;
   double sep = 0.0;
   double dval1, dval2, dval3, dval4;
   double rval1, rval2, rval3, rval4;
-
   if( info && info->wcs ){
     mywcssys = wcssys(n, NULL);
     mywcsunits = info->wcsunits;
@@ -540,6 +541,7 @@ char *reg2wcsstr(int n, char *regstr){
 	    }
 	  }
 	} else {
+#if CALC_SEPARATION
 	  /* use successive x1,y1,x2,y2 to calculate separation (arcsecs) */
 	  while( (dval1=strtod(s1, &s2)) && (dval2=strtod(s2, &s1)) &&
 		 (dval3=strtod(s1, &s2)) && (dval4=strtod(s2, &s1)) ){
@@ -569,13 +571,54 @@ char *reg2wcsstr(int n, char *regstr){
 	      break;
 	    }
 	  }
+#else
+	  /* separation (nb: already in degrees) is passed into the routine */
+	  /* used because calc'ing the separation introduces tiny discrepancy */
+	  for(narg=0; (sep=strtod(s1, &s2)) && (s1 != s2);){
+	    /* convert to proper units */
+	    switch(mywcsunits){
+	    case WCS_DEGREES:
+	      snprintf(tbuf, SZ_LINE, ",%.6f", sep);
+	      strncat(str, tbuf, SZ_LINE-1);
+	      break;
+	    case WCS_SEXAGESIMAL:
+	      if( sep < 1 ){
+		snprintf(tbuf, SZ_LINE, ",%.6f\"", sep * 3600.0);
+		strncat(str, tbuf, SZ_LINE-1);
+	      } else {
+		snprintf(tbuf, SZ_LINE, ",%.6fd", sep);
+		strncat(str, tbuf, SZ_LINE-1);
+	      }
+	      break;
+	    default:
+	      snprintf(tbuf, SZ_LINE, ",%.6f", sep);
+	      strncat(str, tbuf, SZ_LINE-1);
+	      break;
+	    }
+	    // point to next value
+	    s1 = s2;
+	    // done with size args?
+	    narg++;
+	    if( !strcmp(s, "box") ){
+	      if( narg == 2 ){ break; }
+	    } else if( !strcmp(s, "circle") ){
+	      if( narg == 1 ){ break; }
+	    } else if( !strcmp(s, "cross") ){
+	      if( narg == 2 ){ break; }
+	    } else if( !strcmp(s, "ellipse") ){
+	      if( narg == 2 ){ break; }
+	    }
+	  }
+#endif
 	}
-	/* output angle, as needed */
+	/* angle, if needed */
 	if( !strcmp(s, "box")     || !strcmp(s, "cross") ||
 	    !strcmp(s, "ellipse") || !strcmp(s, "text")  ){
-	  while( dval1 < 0 ) dval1 += (2.0 * PI);
-	  snprintf(tbuf, SZ_LINE, ",%.6f", RAD2DEG(dval1));
-	  strncat(str, tbuf, SZ_LINE-1);
+	  if( (dval1=strtod(s1, &s2)) && (s1 != s2) ){
+	    while( dval1 < 0 ) dval1 += (2.0 * PI);
+	    snprintf(tbuf, SZ_LINE, ",%.6f", RAD2DEG(dval1));
+	    strncat(str, tbuf, SZ_LINE-1);
+	  }
 	}
 	/* close region */
 	if( s ){
