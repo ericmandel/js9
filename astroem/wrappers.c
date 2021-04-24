@@ -406,7 +406,7 @@ char *wcsunits(int n, char *s){
 }
 
 /* convert image values to wcs values in a region (see fitshelper.c) */
-char *reg2wcsstr(int n, char *regstr){
+char *reg2wcsstr(int n, char *regstr, int mode){
   Info info = getinfo(n);
   char tbuf[SZ_LINE];
   char tbuf2[SZ_LINE];
@@ -425,6 +425,7 @@ char *reg2wcsstr(int n, char *regstr){
   double sep = 0.0;
   double dval1, dval2, dval3, dval4;
   double rval1, rval2, rval3, rval4;
+  double cdelt[2];
   if( info && info->wcs ){
     mywcssys = wcssys(n, NULL);
     mywcsunits = info->wcsunits;
@@ -541,15 +542,66 @@ char *reg2wcsstr(int n, char *regstr){
 	    }
 	  }
 	} else {
-#if CALC_SEPARATION
-	  /* use successive x1,y1,x2,y2 to calculate separation (arcsecs) */
-	  while( (dval1=strtod(s1, &s2)) && (dval2=strtod(s2, &s1)) &&
-		 (dval3=strtod(s1, &s2)) && (dval4=strtod(s2, &s1)) ){
-	    /* convert image x,y to ra,dec */
-	    pix2wcs(info->wcs, dval1, dval2, &rval1, &rval2);
-	    pix2wcs(info->wcs, dval3, dval4, &rval3, &rval4);
-	    /* calculate and output separation between the two points */
-	    sep = wcsdist(rval1, rval2, rval3, rval4);
+	  if( mode == 0 ){
+	    // abs of cdelt values to convert angular distance to pixels
+	    if( !info->wcs->coorflip ){
+	      cdelt[0] = info->wcs->cdelt[0];
+	      cdelt[1] = info->wcs->cdelt[1];
+	    }
+	    else{
+	      cdelt[0] = info->wcs->cdelt[1];
+	      cdelt[1] = info->wcs->cdelt[0];
+	    }
+	    cdelt[0] = fabs(cdelt[0]);
+	    cdelt[1] = fabs(cdelt[1]);
+	    /* separation in pixels is passed into the routine */
+	    /* used because calc'ing introduces tiny discrepancy */
+	    for(narg=0; (dval1=strtod(s1, &s2)) && (s1 != s2);){
+	      sep = dval1 * cdelt[narg % 2];
+	      /* convert to proper units */
+	      switch(mywcsunits){
+	      case WCS_DEGREES:
+		snprintf(tbuf, SZ_LINE, ",%.6f", sep);
+		strncat(str, tbuf, SZ_LINE-1);
+		break;
+	      case WCS_SEXAGESIMAL:
+		if( sep < 1 ){
+		  snprintf(tbuf, SZ_LINE, ",%.6f\"", sep * 3600.0);
+		  strncat(str, tbuf, SZ_LINE-1);
+		} else {
+		  snprintf(tbuf, SZ_LINE, ",%.6fd", sep);
+		  strncat(str, tbuf, SZ_LINE-1);
+		}
+		break;
+	      default:
+		snprintf(tbuf, SZ_LINE, ",%.6f", sep);
+		strncat(str, tbuf, SZ_LINE-1);
+		break;
+	      }
+	      // point to next value
+	      s1 = s2;
+	      // done with size args?
+	      narg++;
+	      if( !strcmp(s, "box") ){
+		if( narg == 2 ){ break; }
+	      } else if( !strcmp(s, "circle") ){
+		if( narg == 1 ){ break; }
+	      } else if( !strcmp(s, "cross") ){
+		if( narg == 2 ){ break; }
+	      } else if( !strcmp(s, "ellipse") ){
+		if( narg == 2 ){ break; }
+	      }
+	    }
+	  } else {
+	    /* use successive x1,y1,x2,y2 to calculate separation (arcsecs) */
+	    while( (dval1=strtod(s1, &s2)) && (dval2=strtod(s2, &s1)) &&
+		   (dval3=strtod(s1, &s2)) && (dval4=strtod(s2, &s1)) ){
+	      /* convert image x,y to ra,dec */
+	      pix2wcs(info->wcs, dval1, dval2, &rval1, &rval2);
+	      pix2wcs(info->wcs, dval3, dval4, &rval3, &rval4);
+	      /* calculate and output separation between the two points */
+	      sep = wcsdist(rval1, rval2, rval3, rval4);
+	    }
 	    /* convert to proper units */
 	    switch(mywcsunits){
 	    case WCS_DEGREES:
@@ -571,45 +623,6 @@ char *reg2wcsstr(int n, char *regstr){
 	      break;
 	    }
 	  }
-#else
-	  /* separation (nb: already in degrees) is passed into the routine */
-	  /* used because calc'ing the separation introduces tiny discrepancy */
-	  for(narg=0; (sep=strtod(s1, &s2)) && (s1 != s2);){
-	    /* convert to proper units */
-	    switch(mywcsunits){
-	    case WCS_DEGREES:
-	      snprintf(tbuf, SZ_LINE, ",%.6f", sep);
-	      strncat(str, tbuf, SZ_LINE-1);
-	      break;
-	    case WCS_SEXAGESIMAL:
-	      if( sep < 1 ){
-		snprintf(tbuf, SZ_LINE, ",%.6f\"", sep * 3600.0);
-		strncat(str, tbuf, SZ_LINE-1);
-	      } else {
-		snprintf(tbuf, SZ_LINE, ",%.6fd", sep);
-		strncat(str, tbuf, SZ_LINE-1);
-	      }
-	      break;
-	    default:
-	      snprintf(tbuf, SZ_LINE, ",%.6f", sep);
-	      strncat(str, tbuf, SZ_LINE-1);
-	      break;
-	    }
-	    // point to next value
-	    s1 = s2;
-	    // done with size args?
-	    narg++;
-	    if( !strcmp(s, "box") ){
-	      if( narg == 2 ){ break; }
-	    } else if( !strcmp(s, "circle") ){
-	      if( narg == 1 ){ break; }
-	    } else if( !strcmp(s, "cross") ){
-	      if( narg == 2 ){ break; }
-	    } else if( !strcmp(s, "ellipse") ){
-	      if( narg == 2 ){ break; }
-	    }
-	  }
-#endif
 	}
 	/* angle, if needed */
 	if( !strcmp(s, "box")     || !strcmp(s, "cross") ||

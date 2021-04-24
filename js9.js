@@ -75,7 +75,7 @@ JS9.CLIPBOARDERROR = "the local clipboard (which only holds data copied from wit
 JS9.CLIPBOARDERROR2 = "the local clipboard (which only holds data copied from within JS9) does not contain any regions";
 JS9.URLEXP = /^(https?|ftp):\/\//; // url to determine a web page
 JS9.WCSEXP = /^(fk4|fk5|icrs|galactic|ecliptic|image|physical|linear)$/;
-JS9.CALCSEP = false;		// must match #define in astroem/wrappers.c
+JS9.REG2WCS = 0;		// 0 -> simple, 1 -> calculate sep
 
 // https://hacks.mozilla.org/2013/04/detecting-touch-its-the-why-not-the-how/
 JS9.TOUCHSUPPORTED = (Object.prototype.hasOwnProperty.call(window, "ontouchstart") || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
@@ -14675,7 +14675,6 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     let opos, dist, txeq, owcssys, imforce, agroup, apos;
     const pub = {};
     const layer = this.layers[layerName];
-    const wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
     const moderexp = /^(child||export|unexport|move|mouseout)$/;
     const tr  = (x) => { return x.toFixed(2); };
     const tr4 = (x) => { return x.toFixed(4); };
@@ -14696,7 +14695,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	// generate WCS strings iff updateWCS is true
 	if( (opts.updateWCS !== false) &&
 	    (opts.updateWCS || layer.opts.updateWCS) ){
-	    obj.wcsstr = JS9.reg2wcs(wcs, regstr).replace(/;$/, "");
+	    obj.wcsstr = JS9.reg2wcs(wcs, regstr, JS9.REG2WCS)
+		            .replace(/;$/, "");
 	    // add angle to line, if possible
 	    if( pub.shape === "line" && angstr ){
 		obj.wcsstr = obj.wcsstr.replace(/} *$/, angstr + "}");
@@ -14951,10 +14951,10 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    radius = objs[i].radius * scalex;
 	    tval1 = radius * bin;
 	    pub.imstr += tr(tval1);
-	    if( JS9.CALCSEP ){
+	    if( JS9.REG2WCS ){
 		tstr += `${pub.x} ${pub.y} ${pub.x + radius} ${pub.y} `;
 	    } else {
-		tstr += `${Math.abs(radius * wcsinfo.cdelt1)} `;
+		tstr += `${radius} `;
 	    }
 	    if( i === (olen - 1) ){
 		pub.imstr += ")";
@@ -14978,10 +14978,10 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    pub.lcs.height = tval2;
 	}
 	pub.imstr = `${pub.shape}(${tr(px)},${tr(py)},${tr(tval1)},${tr(tval2)},${tr4(pub.angle)})`;
-	if( JS9.CALCSEP ){
+	if( JS9.REG2WCS ){
 	    tstr = `${pub.shape} ${pub.x} ${pub.y} ${pub.x} ${pub.y} ${pub.x + pub.width} ${pub.y} ${pub.x} ${pub.y} ${pub.x} ${pub.y + pub.height} ${pub.angle * Math.PI / 180.0}`;
 	} else {
-	    tstr = `${pub.shape} ${pub.x} ${pub.y} ${Math.abs(pub.width * wcsinfo.cdelt1)} ${Math.abs(pub.height * wcsinfo.cdelt2)} ${pub.angle * Math.PI / 180.0}`;
+	    tstr = `${pub.shape} ${pub.x} ${pub.y} ${pub.width} ${pub.height} ${pub.angle * Math.PI / 180.0}`;
 	}
 	break;
     case "circle":
@@ -14991,10 +14991,10 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    pub.lcs.radius = tval1;
 	}
 	pub.imstr = `circle(${tr(px)},${tr(py)},${tr(tval1)})`;
-	if( JS9.CALCSEP ){
+	if( JS9.REG2WCS ){
 	    tstr = `circle ${pub.x} ${pub.y} ${pub.x} ${pub.y} ${pub.x + pub.radius} ${pub.y}`;
 	} else {
-	    tstr = `circle ${pub.x} ${pub.y} ${Math.abs(pub.radius * wcsinfo.cdelt1)}`;
+	    tstr = `circle ${pub.x} ${pub.y} ${pub.radius}`;
 	}
 	break;
     case "ellipse":
@@ -15007,10 +15007,10 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    pub.lcs.r2 = tval2;
 	}
 	pub.imstr = `ellipse(${tr(px)},${tr(py)},${tr(tval1)},${tr(tval2)},${tr4(pub.angle)})`;
-	if( JS9.CALCSEP ){
+	if( JS9.REG2WCS ){
 	    tstr = `ellipse ${pub.x} ${pub.y} ${pub.x} ${pub.y} ${pub.x + pub.r1} ${pub.y} ${pub.x} ${pub.y} ${pub.x} ${pub.y + pub.r2} ${pub.angle * Math.PI / 180.0}`;
 	} else {
-	    tstr = `ellipse ${pub.x} ${pub.y} ${Math.abs(pub.r1 * wcsinfo.cdelt1)} ${Math.abs(pub.r2 * wcsinfo.cdelt2)} ${pub.angle * Math.PI / 180.0}`;
+	    tstr = `ellipse ${pub.x} ${pub.y} ${pub.r1} ${pub.r2} ${pub.angle * Math.PI / 180.0}`;
 	}
 	break;
     case "point":
