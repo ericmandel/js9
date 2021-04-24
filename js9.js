@@ -75,7 +75,7 @@ JS9.CLIPBOARDERROR = "the local clipboard (which only holds data copied from wit
 JS9.CLIPBOARDERROR2 = "the local clipboard (which only holds data copied from within JS9) does not contain any regions";
 JS9.URLEXP = /^(https?|ftp):\/\//; // url to determine a web page
 JS9.WCSEXP = /^(fk4|fk5|icrs|galactic|ecliptic|image|physical|linear)$/;
-JS9.REG2WCS = 0;		// 0 -> simple, 1 -> calculate sep
+JS9.REGSIZE = 0;		// 0 -> cdelt, 1 -> ang sep (regions use #0)
 
 // https://hacks.mozilla.org/2013/04/detecting-touch-its-the-why-not-the-how/
 JS9.TOUCHSUPPORTED = (Object.prototype.hasOwnProperty.call(window, "ontouchstart") || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
@@ -14695,7 +14695,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	// generate WCS strings iff updateWCS is true
 	if( (opts.updateWCS !== false) &&
 	    (opts.updateWCS || layer.opts.updateWCS) ){
-	    obj.wcsstr = JS9.reg2wcs(wcs, regstr, JS9.REG2WCS)
+	    obj.wcsstr = JS9.reg2wcs(wcs, regstr, JS9.REGSIZE)
 		            .replace(/;$/, "");
 	    // add angle to line, if possible
 	    if( pub.shape === "line" && angstr ){
@@ -14951,7 +14951,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    radius = objs[i].radius * scalex;
 	    tval1 = radius * bin;
 	    pub.imstr += tr(tval1);
-	    if( JS9.REG2WCS ){
+	    if( JS9.REGSIZE ){
 		tstr += `${pub.x} ${pub.y} ${pub.x + radius} ${pub.y} `;
 	    } else {
 		tstr += `${radius} `;
@@ -14978,7 +14978,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    pub.lcs.height = tval2;
 	}
 	pub.imstr = `${pub.shape}(${tr(px)},${tr(py)},${tr(tval1)},${tr(tval2)},${tr4(pub.angle)})`;
-	if( JS9.REG2WCS ){
+	if( JS9.REGSIZE ){
 	    tstr = `${pub.shape} ${pub.x} ${pub.y} ${pub.x} ${pub.y} ${pub.x + pub.width} ${pub.y} ${pub.x} ${pub.y} ${pub.x} ${pub.y + pub.height} ${pub.angle * Math.PI / 180.0}`;
 	} else {
 	    tstr = `${pub.shape} ${pub.x} ${pub.y} ${pub.width} ${pub.height} ${pub.angle * Math.PI / 180.0}`;
@@ -14991,7 +14991,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    pub.lcs.radius = tval1;
 	}
 	pub.imstr = `circle(${tr(px)},${tr(py)},${tr(tval1)})`;
-	if( JS9.REG2WCS ){
+	if( JS9.REGSIZE ){
 	    tstr = `circle ${pub.x} ${pub.y} ${pub.x} ${pub.y} ${pub.x + pub.radius} ${pub.y}`;
 	} else {
 	    tstr = `circle ${pub.x} ${pub.y} ${pub.radius}`;
@@ -15007,7 +15007,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    pub.lcs.r2 = tval2;
 	}
 	pub.imstr = `ellipse(${tr(px)},${tr(py)},${tr(tval1)},${tr(tval2)},${tr4(pub.angle)})`;
-	if( JS9.REG2WCS ){
+	if( JS9.REGSIZE ){
 	    tstr = `ellipse ${pub.x} ${pub.y} ${pub.x} ${pub.y} ${pub.x + pub.r1} ${pub.y} ${pub.x} ${pub.y} ${pub.x} ${pub.y + pub.r2} ${pub.angle * Math.PI / 180.0}`;
 	} else {
 	    tstr = `ellipse ${pub.x} ${pub.y} ${pub.r1} ${pub.r2} ${pub.angle * Math.PI / 180.0}`;
@@ -19422,6 +19422,11 @@ JS9.Regions.parseRegions = function(s, opts){
 	if( iswcs || liswcs ){
 	    // convert to degrees, if necessary
 	    if( v.dtype === "r" ){ v.dval = v.dval * 180 / Math.PI; }
+	    // angular separation is not implemented
+	    // region wcs size is always based on cdelt
+	    if( JS9.REGSIZE !== 0 ){
+		JS9.error("region size based on ang sep is not implemented");
+	    }
 	    // wcs-based size
 	    cstr = `cdelt${which}`;
 	    v.dval = Math.abs(v.dval / wcsinfo[cstr]);

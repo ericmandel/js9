@@ -406,7 +406,7 @@ char *wcsunits(int n, char *s){
 }
 
 /* convert image values to wcs values in a region (see fitshelper.c) */
-char *reg2wcsstr(int n, char *regstr, int mode){
+char *reg2wcsstr(int n, char *regstr, int sizmode){
   Info info = getinfo(n);
   char tbuf[SZ_LINE];
   char tbuf2[SZ_LINE];
@@ -542,7 +542,7 @@ char *reg2wcsstr(int n, char *regstr, int mode){
 	    }
 	  }
 	} else {
-	  if( mode == 0 ){
+	  if( sizmode == 0 ){
 	    // abs of cdelt values to convert angular distance to pixels
 	    if( !info->wcs->coorflip ){
 	      cdelt[0] = info->wcs->cdelt[0];
@@ -594,6 +594,8 @@ char *reg2wcsstr(int n, char *regstr, int mode){
 	    }
 	  } else {
 	    /* use successive x1,y1,x2,y2 to calculate separation (arcsecs) */
+	    /* this is not how regions are meant to work, but we leave the
+	       algorithm here as a reminder */
 	    while( (dval1=strtod(s1, &s2)) && (dval2=strtod(s2, &s1)) &&
 		   (dval3=strtod(s1, &s2)) && (dval4=strtod(s2, &s1)) ){
 	      /* convert image x,y to ra,dec */
