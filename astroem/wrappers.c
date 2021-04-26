@@ -419,7 +419,7 @@ char *reg2wcsstr(int n, char *regstr, int sizmode){
   char *targs=NULL, *targ=NULL;
   char *mywcssys=NULL;
   int mywcsunits;
-  int narg;
+  int narg = 0;
   int alwaysdeg = 0;
   int nq = 0;
   double sep = 0.0;
@@ -556,7 +556,13 @@ char *reg2wcsstr(int n, char *regstr, int sizmode){
 	    cdelt[1] = fabs(cdelt[1]);
 	    /* separation in pixels is passed into the routine */
 	    /* used because calc'ing introduces tiny discrepancy */
-	    for(narg=0; (dval1=strtod(s1, &s2)) && (s1 != s2);){
+	    while( s1 && *s1 ){
+	      dval1 = strtod(s1, &s2);
+	      /* end of input? */
+	      if( s1 == s2 ){
+		break;
+	      }
+	      /* convert pixels to degrees */
 	      sep = dval1 * cdelt[narg % 2];
 	      /* convert to proper units */
 	      switch(mywcsunits){

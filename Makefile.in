@@ -556,13 +556,22 @@ smoke2:		FORCE
 		  python3 tests/smoke2.py)
 
 smoke3:		FORCE
+		@(X=`js9 targets`; 					\
+	          echo "$$X" | egrep -q -s '^ERROR|^0$$|^$$';		\
+		  if [ $$? = 0 ]; then					\
+			js9 -a -v --webpage tests/smoke.html --savedir `pwd` --width 1060 --height 670 & \
+			sleep 3;					\
+		  fi;							\
+		  python3 tests/smoke3.py)
+
+smoke4:		FORCE
 		@(echo "testing js9 shell scripting ...";               \
 		  tests/ebands;                                         \
 		  echo "testing hostfs support ...";                    \
 		  js9 -a -v --hostfs true --cmdfile tests/ecnts.js;     \
 		  rm -f countsInRegions.log);
 
-smokes:		smoke smoke2 smoke3
+smokeall:	smoke smoke2 smoke3 smoke4
 
 threeways:	FORCE
 		@(cd tests/threeways && threeloop)
