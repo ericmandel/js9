@@ -28,6 +28,9 @@ https://groups.google.com/forum/#!topic/emscripten-discuss/JDaNHIRQ_G4
 #define max(a,b) (a>=b?a:b)
 #define min(a,b) (a<=b?a:b)
 
+#define MAXINT  2147483647
+#define MININT -2147483648
+
 // emscripten does not have access to unlimited memory, unfortunately
 #define MAX_MEMORY 2000000000
 static long max_memory = MAX_MEMORY;
@@ -363,6 +366,9 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   int tstatus = 0;
   int doscale = 0;
   int dobin = 0;
+#if __EMSCRIPTEN__
+  int doconvert64 = 0;
+#endif
   void *obuf, *rbuf;
   long totim, totpix, totbytes;
   long naxes[IDIM], fpixel[IDIM], lpixel[IDIM], myfpixel[IDIM], inc[IDIM];
@@ -568,6 +574,14 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
       dobin = 'a';
     }
   }
+  // in javascript, there is no 64-bit typed array support other than BitInt64,
+  // which strictly requires bigint values, so we convert to double float
+#if __EMSCRIPTEN__
+  if( *bitpix == 64 ){
+    *bitpix = -64;
+    doconvert64 = 1;
+  }
+#endif
   // allocate space for the pixel array
   // scaled integer data => float
   // binned sum integer data => int
@@ -809,7 +823,6 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
       free(rbuf);
     }
   }
-
   // average, if necessary
   if( dobin == 'a' ){
     if( bin >= 1 ){
@@ -844,7 +857,40 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
       }
     }
   }
-  // return pixel buffer (and section dimensions)
+  // if we converted bitpix 64 to -64, check if we can convert back to 32
+#if __EMSCRIPTEN__
+  if( doconvert64 ){
+    // ensure dobuf points to obuf (in case we read the whole section)
+    dobuf = (double *)obuf;
+    // are all pixel values are in range of 32 bit ints?
+    for(i=0; i<totpix; i++){
+      if( (dobuf[i] > MAXINT) || (dobuf[i] < MININT) ){
+	// data is out of 32-bit range, leave as double
+        doconvert64 = 0;
+	break;
+      }
+    }
+    // if so, we can convert the output to int 32 data
+    if( doconvert64 ){
+      // allocate buffer for int data
+      if( !(iobuf = (int *)calloc(totpix, sizeof(int))) ){
+	*status = MEMORY_ALLOCATION;
+	return NULL;
+      }
+      // convert to int
+      for(i=0; i<totpix; i++){
+	iobuf[i] = (int)round(dobuf[i]);
+      }
+      // free original double data
+      free(obuf);
+      // point to int data
+      obuf = iobuf;
+      // change bitpix to int 32
+      *bitpix = 32;
+    }
+  }
+#endif
+  // return pixel buffer
   return obuf;
 }
 

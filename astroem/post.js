@@ -459,6 +459,9 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     case -64:
 	hdu.image = new Float64Array(HEAPF64.subarray(bufptr/8, bufptr/8+datalen));
 	break;
+    default:
+	Module["error"](`${hdu.bitpix}-bit FITS data is not supported`);
+	break;
     }
     // get section header cards as a string
     hptr = _malloc(20);

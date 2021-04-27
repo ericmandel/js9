@@ -1961,6 +1961,9 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     case -64:
 	this.raw.data = new Float64Array(hdu.image);
 	break;
+    default:
+	JS9.error(`unsupported bitpix: ${this.raw.bitpix}`);
+	break;
     }
     // array of cards
     this.raw.card = hdu.card;
@@ -8059,6 +8062,9 @@ JS9.Image.prototype.rawDataLayer = function(...args){
 	    case -64:
 		nraw.data = new Float64Array(oraw.height * oraw.width);
 		break;
+	    default:
+		JS9.error(`unsupported bitpix: ${opts.bitpix}`);
+		break;
 	    }
 	    // copy data and convert data type
 	    nlen = nraw.width * nraw.height;
@@ -8085,6 +8091,9 @@ JS9.Image.prototype.rawDataLayer = function(...args){
 		break;
 	    case -64:
 		nraw.data = new Float64Array(oraw.data);
+		break;
+	    default:
+		JS9.error(`unsupported bitpix: ${oraw.bitpix}`);
 		break;
 	    }
 	}
@@ -21138,6 +21147,9 @@ JS9.getRawCopy = function(oraw, bitpix){
     case -64:
 	nraw.data = new Float64Array(oraw.data);
 	break;
+    default:
+	JS9.error(`unsupported bitpix: ${nraw.bitpix}`);
+	break;
     }
     return nraw;
 };
@@ -21169,7 +21181,8 @@ JS9.getRawLine = function(oraw, ooff, nraw, noff){
 	nbuf = new Float64Array(nraw.data.buffer, noff, oraw.width);
 	break;
     default:
-	JS9.error(`unknown bitpix value for flip: ${oraw.bitpix}`);
+	JS9.error(`unsupported bitpix: ${oraw.bitpix}`);
+	break;
     }
     return [obuf, nbuf];
 };
