@@ -13,6 +13,13 @@
 
 <h3> Public Release 3.4 (TDB)</h3>
 <ul>
+<li> reg2wcsstr should not perform size calculation, use "cdelt" instead
+<li> changing a region now shows immediately in the magnifier
+<li> push unchangeable regions to back of fabric stack
+<li> add 'locked' as opposite alias to 'changeable' for locking regions
+<li> add support for 'locked' in region editor
+<li> add support for binning tables on alt columns
+<li> make mouseTouchZoom global instead of tied to a display
 <li> turn off clickToFocus by default, way too many clicks (e.g. using menus)
 <li> GetImage: don't throw if named image not available (return null instead)
 <li> changing a region now shows immediately in the magnifier
@@ -41,7 +48,7 @@
 <li> update eslint to 7.21.0 and make it happy
 <li> update socket.io 3.1.2, then 4.0.1, remove 2.4.1 (now supported by v3+)
 <li> update npm dependencies: uuid, rimraf, open, ps-node, table-parser
-<li> update emscripten to v2.0.16
+<li> update emscripten to v2.0.18
 </ul>
 
 <h3> Patch Release 3.3.1 (December 15, 2020)</h3>
