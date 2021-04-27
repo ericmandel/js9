@@ -209,8 +209,6 @@ PROGS =		js9helper
 
 ALLPROGS =	$(PROGS) tpos
 
-TESTPROGS =	pngdisp cimtest
-
 INCLUDES =	js9helper.h
 
 SCRIPTS =	scripts/funhist2flot scripts/funcnts2flot scripts/fits2png \
@@ -221,8 +219,6 @@ SCRIPTS2 =	js9 js9msg js9load js9wait
 UTILLIB	=	libutil.a
 
 TPOSOBJS =	tpos.o @CFITSIOOBJS@
-
-CIMTESTOBJS =	cimtest.o @CFITSIOOBJS@
 
 ifeq ($(FITSLIB), cfitsio)
 HELPEROBJS =	js9helper.o jsfitsio.o listhdu.o healpix.o
@@ -582,7 +578,7 @@ viewreadme:	FORCE
 clean:		FORCE
 		@($(RM) *.a *.so *.dylib *.o *.exe core core.* errs *pure* \
 			foo* *~ \#* TAGS *.E a.out errors \
-			$(UTILLIB) $(ALLPROGS) $(TESTPROGS) $(CGIFILES) \
+			$(UTILLIB) $(ALLPROGS) $(CGIFILES) \
 			gmon.out *.pg *.bak  \
 			*js9Prefs.json-orig *js9prefs.js-orig \
 			config.info config.log ltest \

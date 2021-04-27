@@ -143,7 +143,7 @@ void imstat(void *buf, int idim1, int idim2, int bitpix, int n){
 
 int main(int argc, char *argv[])
 {
-  char *colname[2] = {"X", "Y"};
+  char *colname = "X Y";
   char *ifile = NULL;
   char *ifilter=NULL;
   char *tfilter=NULL;
