@@ -101,7 +101,7 @@ JS9.Info.init = function(){
 // display a message on the image canvas or info plugin
 // call with display as context
 JS9.Info.display = function(type, message, target, force){
-    let s, t;
+    let s, t, v;
     let tobj, split, area, tokens, rexp, color, info, key, el, jel, rid, im;
     let disp = this;
     // backward compatibility -- allow context to be Image
@@ -196,7 +196,17 @@ JS9.Info.display = function(type, message, target, force){
 		    // set value, if possible
 		    jel = info.jq.find(`[name='${key}']`);
 		    if( jel.length > 0 ){
-			jel.val(message[key]);
+			// key-specific processing
+			switch(key){
+			case "val":
+			    v = message.val3;
+			    break;
+			default:
+			    v = message[key];
+			    break;
+			}
+			// set the value
+			jel.val(v);
 		    }
 		}
 	    }
