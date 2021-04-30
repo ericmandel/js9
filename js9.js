@@ -12884,6 +12884,7 @@ JS9.Fabric.showShapeLayer = function(layerName, mode, opts){
 			}
 		    }
 		}
+		this.restoreSelection(layerName);
 	    });
 	}
 	// remove resize object if we have no more hidden layers
@@ -12926,6 +12927,7 @@ JS9.Fabric.showShapeLayer = function(layerName, mode, opts){
 	    }
 	    jobj = canvas.toJSON(layer.dlayer.el);
 	    layer.json = JSON.stringify(jobj);
+	    this.saveSelection(layerName);
 	    canvas.selection = false;
 	    // push towards the bottom of the pile
 	    if( dlayer ){
@@ -15839,11 +15841,15 @@ JS9.Fabric.refreshShapes = function(layerName){
 	// get current regions (i.e., before update to current configuration)
 	regstr = this.listRegions("all", opts, layerName);
 	if( regstr ){
+	    // save selection (remove shapes destroys it)
+	    this.saveSelection(layerName);
 	    // remove current regions (including unremovable ones)
 	    this.removeShapes(layerName, "all", {overrideRemovable: true,
 						 sticky: false});
 	    // add back regions in current configuration
 	    this.addShapes(layerName, regstr, {restoreid: true});
+	    // restore selection
+	    this.restoreSelection(layerName);
 	}
     }
     // restore wcs system, if necessary
@@ -16320,6 +16326,53 @@ JS9.resetPolygonCenter = function(poly){
     poly.setCoords();
 };
 
+// save selection for later restore
+// call using image context
+JS9.Fabric.saveSelection = function(layerName){
+    let i, layer, canvas, obj, ao;
+    let savesel = [];
+    layer = this.getShapeLayer(layerName);
+    if( !layer ){ return; }
+    canvas = layer.canvas;
+    ao = canvas.getActiveObjects();
+    for(i=0; i<ao.length; i++){
+	obj = ao[i];
+	if( obj.params ){
+	    savesel.push(obj.params.id);
+	}
+    }
+    if( savesel.length ){
+	layer.savesel = savesel;
+    }
+};
+
+// restore previously saved selection
+// call using image context
+JS9.Fabric.restoreSelection = function(layerName){
+    let i, id, layer, canvas, nsel;
+    let nselarr = [];
+    layer = this.getShapeLayer(layerName);
+    if( !layer || !layer.savesel || !layer.savesel.length ){ return; }
+    canvas = layer.canvas;
+    canvas.getObjects().forEach( (o) => {
+	for(i=0; i<layer.savesel.length; i++){
+	    id = layer.savesel[i];
+	    if( o.params && o.params.id === id ){
+		nselarr.push(o);
+		break;
+	    }
+	}
+    });
+    if( nselarr.length ){
+	nsel = new fabric.ActiveSelection(nselarr, {
+	    canvas: canvas
+	});
+	canvas.setActiveObject(nsel);
+	this.updateShapes(layerName, nselarr, "restore");
+    }
+    delete layer.savesel;
+};
+
 // Print support
 // call using image context
 JS9.Fabric.print = function(opts){
@@ -16428,6 +16481,8 @@ JS9.Fabric.initGraphics = function(){
     JS9.Image.prototype.ungroupShapes = JS9.Fabric.ungroupShapes;
     JS9.Image.prototype.listGroups = JS9.Fabric.listGroups;
     JS9.Image.prototype.lookupGroup = JS9.Fabric.lookupGroup;
+    JS9.Image.prototype.saveSelection = JS9.Fabric.saveSelection;
+    JS9.Image.prototype.restoreSelection = JS9.Fabric.restoreSelection;
     // shape layer methods
     JS9.Image.prototype.getShapeLayer = JS9.Fabric.getShapeLayer;
     JS9.Image.prototype.showShapeLayer = JS9.Fabric.showShapeLayer;
