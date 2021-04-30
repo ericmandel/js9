@@ -15408,7 +15408,8 @@ JS9.Fabric.ungroupShapes = function(layerName, groupid, opts){
 // remove the active shape
 // eslint-disable-next-line no-unused-vars
 JS9.Fabric.removeShapes = function(layerName, shape, opts){
-    let i, layer, canvas;
+    let i, layer, canvas, ao;
+    let undoao = false;
     const lopts = {mode: 1, includedcoords: true};
     const arr = [];
     const grp = [];
@@ -15418,6 +15419,10 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
     canvas = layer.canvas;
     // opts is optional
     opts = opts || {};
+    // list active objects
+    if( canvas.getActiveObject() ){
+	ao = canvas.getActiveObjects();
+    }
     // save regions for unremove?
     if( layerName === "regions" && JS9.globalOpts.unremoveReg ){
 	this.regstack.push(this.listRegions(shape, lopts, layerName));
@@ -15458,6 +15463,10 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
 		    grp.push(obj.params.groupid);
 		}
 	    }
+	    // possibly mark active object for removal
+	    if( ao && $.inArray(obj, ao) >= 0 ){
+		undoao = true;
+	    }
 	    // mark for removal
 	    arr.push(obj);
 	}
@@ -15470,8 +15479,8 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
     for(i=0; i<arr.length; i++){
 	canvas.remove(arr[i]);
     }
-    // handle changed selected group specially (fabric.js nuance)
-    if( canvas.getActiveObject() ){
+    // discard active object if we just deleted one of its shapes
+    if( undoao ){
 	canvas.discardActiveObject();
     }
     canvas.renderAll();
