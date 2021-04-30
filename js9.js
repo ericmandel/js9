@@ -15464,7 +15464,7 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
 		}
 	    }
 	    // possibly mark active object for removal
-	    if( ao && $.inArray(obj, ao) >= 0 ){
+	    if( ao && !undoao && $.inArray(obj, ao) >= 0 ){
 		undoao = true;
 	    }
 	    // mark for removal
