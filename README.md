@@ -116,7 +116,7 @@ JS9 is distributed under the terms of The MIT License.
 
 What's the release history?
 ---------------------------
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4739157.svg)](https://doi.org/10.5281/zenodo.4739157)  __v3.4__ &nbsp; (05/05/2021)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4739157.svg)](https://doi.org/10.5281/zenodo.4739157)  __v3.4.0__ &nbsp; (05/05/2021)
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4322843.svg)](https://doi.org/10.5281/zenodo.4322843) __v3.3.1__ &nbsp; (12/15/2020)
 
