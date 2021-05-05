@@ -27,8 +27,8 @@ var JS9 = (function(){
 // module header
 const JS9 = {};
 JS9.NAME = "JS9";		// The name of this namespace
-JS9.VERSION = "3.3.1";		// The version of this namespace
-JS9.COPYRIGHT = "Copyright (c) 2012-2020 Smithsonian Institution";
+JS9.VERSION = "3.4";		// The version of this namespace
+JS9.COPYRIGHT = "Copyright (c) 2012-2021 Smithsonian Institution";
 JS9.ABOUT = `JS9 ${JS9.VERSION}: astronomical image display everywhere\nEric Mandel, Alexey Vikhlinin\ncontact: emandel@cfa.harvard.edu\n${JS9.COPYRIGHT}`;
 
 // internal defaults (not usually changed by users)

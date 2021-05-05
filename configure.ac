@@ -1,7 +1,7 @@
 #	This file is an input file used by the GNU "autoconf" program to
 #	generate the file "configure", which is run during JS9 installation
 #	to configure the system for the local environment.
-AC_INIT(js9, 3.3.1, emandel@cfa.harvard.edu, js9)
+AC_INIT(js9, 3.4, emandel@cfa.harvard.edu, js9)
 
 AC_MSG_CHECKING(for web install directory)
 AC_ARG_WITH(webdir,
