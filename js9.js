@@ -6901,6 +6901,9 @@ JS9.Image.prototype.setColormap = function(...args){
     };
     const setStatic = (a) => {
 	let i, j, color, dval;
+	if( this.cmapObj.name === "private" ){
+	    JS9.error("can't set the colors in a private colormap");
+	}
 	for(i=0; i<a.length; i++){
 	    if( !$.isArray(a[i]) || typeof a[i][0] !== "string" ){ continue; }
 	    for(j=0; j<this.staticObj.colors.length; j++){
@@ -6963,9 +6966,6 @@ JS9.Image.prototype.setColormap = function(...args){
 	    break;
 	default:
 	    if( this.cmapObj && this.cmapObj.type === "static" ){
-		if( this.cmapObj.name === "private" ){
-		    JS9.error("can't set the colors in a private colormap");
-		}
 		if( $.isArray(arg) ){
 		    setStatic(arg);
 		} else if( typeof arg === "string" && arg.charAt(0) === '[' ){
