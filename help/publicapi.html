@@ -1390,13 +1390,16 @@ range will be transparent. For example:
 sets the opacity of red pixels to 0.5, turns on the green pixels, and turns
 off the blue pixels in the currently active static colormap.
 <p>
-Note that PNG and JPEG images have a "private" colormap associated with them,
-which is an approximation of the original colors used in these images.
-You can set this colormap by specifying "private":
+Finally, note that PNG and JPEG images have a "private" colormap
+associated with them, which is an approximation of the original colors
+used in these images.  You can set this colormap by specifying
+"private":
 <pre>
   SetColormap("private");
 </pre>
-This private colormap is static: you cannot change contrast and bias.
+This private colormap is static: you cannot change contrast and
+bias. It also cannot be modified using <b>staticOpts</b> because there is
+no <b>color</b> string value associated with each entry in the colormap.
 
 <h5 id="JS9.SaveColormap">Save colormap(s)</h5>
 <p>
