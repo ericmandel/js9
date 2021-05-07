@@ -2213,6 +2213,11 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	 oraw.header.CTYPE2 !== this.raw.header.CTYPE2)  ){
 	this.initWCS();
     }
+    // save offscreen data if necessary
+    if( JS9.notNull(hdu.img) ){
+	this.png = {image: hdu.img};
+	this.mkOffScreenCanvas();
+    }
     // re-init wcs
     this.initWCS();
     // init the logical coordinate system, if possible
@@ -2863,8 +2868,8 @@ JS9.Image.prototype.mkRGBImage = function(){
 	    return this;
 	}
     }
-    // if we have static RGB file, use the RGB colors from the image
-    if( this.rgbFile ){
+    // if we have an RGB file or image overlay, use offsreen RGB colors
+    if( this.rgbFile || this.params.overlay ){
 	wrgb = sect.width / sect.zoom;
 	hrgb = sect.height / sect.zoom;
 	xrgb = sect.x0;
@@ -3382,8 +3387,8 @@ JS9.Image.prototype.displayImage = function(imode, opts){
     mode.display = true;
     // and always call plugins
     mode.plugins = true;
-    // if we have a static RGB image, we skip some steps
-    if( this.rgbFile ){
+    // if we have an RGB file or image overlay, skip some steps
+    if( this.rgbFile || this.params.overlay ){
 	mode.colors = false;
 	mode.scaled = false;
     }
@@ -6868,6 +6873,8 @@ JS9.Image.prototype.setColormap = function(...args){
 	default:
 	    break;
 	}
+	// new colormap, turn off image overlay
+	this.params.overlay = false;
     };
     const setContrastBias = (arg1, arg2) => {
 	arg1 = parseFloat(arg1);
@@ -6921,6 +6928,8 @@ JS9.Image.prototype.setColormap = function(...args){
 		}
 	    }
 	}
+	// new colormap, turn off image overlay
+	this.params.overlay = false;
     }
     // is this core service disabled?
     // (only if the colormap has been set at least once!)
@@ -6932,6 +6941,11 @@ JS9.Image.prototype.setColormap = function(...args){
 	switch(arg){
 	case "rgb":
 	    this.display.rgb.active = !this.display.rgb.active;
+	    break;
+	case "overlay":
+	    if( this.offscreen ){
+		this.params.overlay = !this.params.overlay;
+	    }
 	    break;
 	case "invert":
 	    this.params.invert = !this.params.invert;
@@ -7164,8 +7178,22 @@ JS9.Image.prototype.getParam = function(param){
 // set an image param value
 JS9.Image.prototype.setParam = function(param, value){
     let i, idx, ovalue, obj;
+    const getval = (s) => {
+	if( s === "true" ){
+	    return true;
+	}
+	if( s === "false" ){
+	    return false;
+	}
+	if( !JS9.isNumber(s) ){
+	    return s;
+	}
+	return parseFloat(s);
+    };
     // sanity check
     if( !param ){ return null; }
+    // convert strings to values
+    value = getval(value);
     // merge in new params
     if( param === "all" && typeof value === "object" ){
 	$.extend(true, this.params, value);
@@ -7252,6 +7280,9 @@ JS9.Image.prototype.setParam = function(param, value){
     case "bias":
 	obj = this.getColormap();
 	this.setColormap(obj.colormap, obj.contrast, value);
+	break;
+    case "overlay":
+	this.displayImage();
 	break;
     case "flip":
 	this.setFlip("reset");
@@ -16673,8 +16704,8 @@ JS9.MouseTouch.Actions["change contrast/bias"] = function(im, ipos, evt){
     if( im.clickInRegion || JS9.specialKey(evt) ){
 	return;
     }
-    // static RGB image: no contrast/bias
-    if( im.rgbFile ){
+    // if we have an RGB file or image overlay, no contrast/bias
+    if( im.rgbFile || im.params.overlay ){
 	return;
     }
     // get canvas position
@@ -22138,7 +22169,7 @@ JS9.handleImageFile = function(file, options, handler){
 		      NAXIS2: h};
 	    hdu = {filename: file.name,
 		   naxis: 2, axis: [0, w, h], bitpix: -32, bin: 1,
-		   head: header, data: grey};
+		   head: header, data: grey, img: img};
 	    hdu.dmin = Number.MAX_VALUE;
 	    hdu.dmax = Number.MIN_VALUE;
 	    for(i=0; i< h*w; i++){

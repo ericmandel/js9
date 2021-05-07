@@ -8787,6 +8787,12 @@ JS9.Menubar.createMenus = function(){
 	    if( tdisp.rgb.active ){
 		items.rgb.icon = JS9.globalOpts.menuSelected;
 	    }
+	    if( tdisp.image && tdisp.image.offscreen && !tdisp.image.rgbFile ){
+		items.overlay = xname("image overlay");
+		if( tdisp.image.params.overlay ){
+		    items.overlay.icon = JS9.globalOpts.menuSelected;
+		}
+	    }
 	    items[`sep${n++}`] = "------";
 	    // plugins
 	    for(i=0; i<JS9.plugins.length; i++){
