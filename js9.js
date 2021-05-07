@@ -1055,7 +1055,6 @@ JS9.Image = function(file, params, func){
 	break;
     case "string":
 	// save source
-	// save source
 	if( localOpts && localOpts.source ){
 	    this.source = localOpts.source;
 	} else {
