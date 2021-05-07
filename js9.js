@@ -23695,33 +23695,39 @@ JS9.parseStaticColors = function(arr){
 	    // format: ["color" or [r:,g:,b:,a:], min, max]
 	    a = arr[i];
 	}
-	// sanity check for color name
-	if( !a[0] ){ JS9.error(`no color specified: ${arr[i]}`); }
-	// color name can be any valid tiny color format
-	try{ t = tinycolor(a[0]); }
-	catch(e){ JS9.error(`invalid color: ${a[0]}`); }
-	// process min:max variations
-	if( JS9.isNull(a[1]) ){
-	    a[1] = 1;
-	    a[2] = Infinity;
-	} else if( a[1] === "" ){
-	    a[1] = -Infinity;
-	} else {
-	    a[1] = parseFloat(a[1]);
-	}
-	if( JS9.isNull(a[2]) ){
-	    a[2] = a[1];
-	} else 	if( a[2] === "" ){
-	    a[2] = Infinity;
-	} else {
-	    a[2] = parseFloat(a[2]);
-	}
-	// save this color object
-	sobj = {active: true,
-		red: t._r, green: t._g, blue: t._b, alpha: t._a * 255,
-		min: a[1], max: a[2]};
-	if( typeof a[0] === "string" ){
-	    sobj.name = a[0];
+	// canonical array
+	if( $.isArray(a) ){
+	    // sanity check for color name
+	    if( !a[0] ){ JS9.error(`no color specified: ${arr[i]}`); }
+	    // color name can be any valid tiny color format
+	    try{ t = tinycolor(a[0]); }
+	    catch(e){ JS9.error(`invalid color: ${a[0]}`); }
+	    // process min:max variations
+	    if( JS9.isNull(a[1]) ){
+		a[1] = 1;
+		a[2] = Infinity;
+	    } else if( a[1] === "" ){
+		a[1] = -Infinity;
+	    } else {
+		a[1] = parseFloat(a[1]);
+	    }
+	    if( JS9.isNull(a[2]) ){
+		a[2] = a[1];
+	    } else 	if( a[2] === "" ){
+		a[2] = Infinity;
+	    } else {
+		a[2] = parseFloat(a[2]);
+	    }
+	    // save this color object
+	    sobj = {active: true,
+		    red: t._r, green: t._g, blue: t._b, alpha: t._a * 255,
+		    min: a[1], max: a[2]};
+	    if( typeof a[0] === "string" ){
+		sobj.name = a[0];
+	    }
+	} else if( typeof a === "object" ){
+	    // raw object (e.g. saved static colormap)
+	    sobj = a;
 	}
 	staticColors.push(sobj);
     }
@@ -26922,6 +26928,10 @@ JS9.mkPublic("SaveColormap", function(...args){
 		fname = "js9.cmap";
 		cobj = $.extend(true, {}, im.cmapObj);
 		delete cobj.type;
+		// change private to something public
+		if( cobj.name === "private" ){
+		    cobj.name = `${im.id.split("/").reverse()[0]}_private`;
+		}
 	    } else if( typeof arg1 === "string" ){
 		fname = arg1;
 		if( typeof arg2 === "string" ){
