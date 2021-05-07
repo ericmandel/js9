@@ -1444,9 +1444,6 @@ JS9.Image.prototype.initLCS = function(iheader){
 // unpack IMG data and convert to JS9 image data
 JS9.Image.prototype.mkRawDataFromIMG = function(img){
     let i, h, w, ibuf, x, y, v;
-    const e = 0.00001;
-    const done = [];
-    const privatecmap = [];
     // sanity check
     if( !img ){	return; }
     // convenience variables
@@ -1469,11 +1466,6 @@ JS9.Image.prototype.mkRawDataFromIMG = function(img){
 	    // "Modern"
 	    // v = 0.212 * ibuf[i] + 0.715 * ibuf[i+1] + 0.073 * ibuf[i+2];
 	    this.raw.data[(h-y)*w+x] = v;
-	    // add to the static colormap
-	    if( done[v] !== true ){
-		privatecmap.push([{r:ibuf[i], g:ibuf[i+1], b:ibuf[i+2], a:ibuf[i+3]}, v-e, v+e]);
-		done[v] = true;
-	    }
 	    i += 4;
 	}
     }
@@ -1497,9 +1489,6 @@ JS9.Image.prototype.mkRawDataFromIMG = function(img){
     this.initWCS();
     // init the logical coordinate system, if possible
     this.initLCS();
-    // create a private colormap for this image
-    privatecmap.sort((a, b) => { return a[1] - b[1]; });
-    this.privateColormap = new JS9.Colormap("private", privatecmap);
     // plugin callbacks
     this.xeqPlugins("image", "onrawdata");
     // allow chaining
@@ -2262,11 +2251,6 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	}
     }
     catch(ignore){ /* empty */ }
-
-    // create a private colormap for this image
-    if( hdu.privatecmap ){
-	this.privateColormap = new JS9.Colormap("private", hdu.privatecmap);
-    }
     // can we remove the virtual file?
     if( this.raw.hdu && this.raw.hdu.fits && this.raw.hdu.fits.vfile  ){
 	s = JS9.globalOpts.clearImageMemory;
@@ -6864,11 +6848,7 @@ JS9.Image.prototype.setColormap = function(...args){
 	// remove previous static colormap
 	delete this.staticObj;
 	// add the new colormap
-	if( arg === "private" && this.privateColormap ){
-	    this.cmapObj = this.privateColormap;
-	} else {
-	    this.cmapObj = JS9.lookupColormap(arg);
-	}
+	this.cmapObj = JS9.lookupColormap(arg);
 	this.params.colormap = this.cmapObj.name;
 	// for static colormaps, copy the static object (we might edit it)
 	if( this.cmapObj.type === "static" ){
@@ -6901,9 +6881,6 @@ JS9.Image.prototype.setColormap = function(...args){
     };
     const setStatic = (a) => {
 	let i, j, color, dval;
-	if( this.cmapObj.name === "private" ){
-	    JS9.error("can't set the colors in a private colormap");
-	}
 	for(i=0; i<a.length; i++){
 	    if( !$.isArray(a[i]) || typeof a[i][0] !== "string" ){ continue; }
 	    for(j=0; j<this.staticObj.colors.length; j++){
@@ -9139,10 +9116,6 @@ JS9.Image.prototype.saveSession = function(file, opts){
 	obj.dheight = im.display.height;
 	// image params
 	obj.params = $.extend(true, {}, im.params);
-	// but don't save the private colormap, it's too large!
-	if( obj.params.colormap === "private" ){
-	    obj.params.colormap = "grey";
-	}
 	// temp values: explicitly save some of them
 	obj.tmp = {};
 	if( im.tmp.gridStatus === "active" ){
@@ -9955,18 +9928,16 @@ JS9.Colormap = function(...args){
     } else {
 	this.source = "user";
     }
-    if( this.name !== "private" ){
-	// replace or append
-	for(i=0; i<JS9.colormaps.length; i++){
-	    if( JS9.colormaps[i].name === this.name ){
-		JS9.colormaps[i] = this;
-		got = true;
-		break;
-	    }
+    // replace or append
+    for(i=0; i<JS9.colormaps.length; i++){
+	if( JS9.colormaps[i].name === this.name ){
+	    JS9.colormaps[i] = this;
+	    got = true;
+	    break;
 	}
-	if( !got ){
-	    JS9.colormaps.push(this);
-	}
+    }
+    if( !got ){
+	JS9.colormaps.push(this);
     }
     // debugging
     if( JS9.DEBUG > 1 ){
@@ -22135,9 +22106,6 @@ JS9.cleanupFITSFile = function(raw, mode){
 // taken from fitsy.js
 JS9.handleImageFile = function(file, options, handler){
     const reader = new FileReader();
-    const e = 0.00001;
-    const done = [];
-    const privatecmap = [];
     options = $.extend(true, {}, JS9.fits.options, options);
     handler = handler || JS9.Load;
     reader.onload = (ev) => {
@@ -22160,15 +22128,9 @@ JS9.handleImageFile = function(file, options, handler){
 		    // NTSC
 		    v = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
 		    grey[(h - y) * w + x] = v;
-		    // add to the static colormap
-		    if( done[v] !== true ){
-			privatecmap.push([{r:data[i], g:data[i+1], b:data[i+2], a:data[i+3]}, v-e, v+e]);
-			done[v] = true;
-		    }
 		    i += 4;
 		}
 	    }
-	    privatecmap.sort((a, b) => { return a[1] - b[1]; });
 	    header = {SIMPLE: true,
 		      BITPIX: -32,
 		      NAXIS: 2,
@@ -22176,8 +22138,7 @@ JS9.handleImageFile = function(file, options, handler){
 		      NAXIS2: h};
 	    hdu = {filename: file.name,
 		   naxis: 2, axis: [0, w, h], bitpix: -32, bin: 1,
-		   head: header, data: grey,
-		   privatecmap: privatecmap};
+		   head: header, data: grey};
 	    hdu.dmin = Number.MAX_VALUE;
 	    hdu.dmax = Number.MIN_VALUE;
 	    for(i=0; i< h*w; i++){
@@ -26928,10 +26889,6 @@ JS9.mkPublic("SaveColormap", function(...args){
 		fname = "js9.cmap";
 		cobj = $.extend(true, {}, im.cmapObj);
 		delete cobj.type;
-		// change private to something public
-		if( cobj.name === "private" ){
-		    cobj.name = `${im.id.split("/").reverse()[0]}_private`;
-		}
 	    } else if( typeof arg1 === "string" ){
 		fname = arg1;
 		if( typeof arg2 === "string" ){

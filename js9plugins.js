@@ -8730,20 +8730,6 @@ JS9.Menubar.createMenus = function(){
 		    items[s1].icon = JS9.globalOpts.menuSelected;
 		}
 	    }
-	    if( tdisp.image && tdisp.image.privateColormap ){
-		s1 = "private";
-		s2 = s1;
-		if( JS9.globalOpts.menuImages ){
-		    img = JS9.Menubar.menuImage(`images/empty.svg`);
-		    hstr = `<div class='JS9MenubarImage' name='${s2}'><img src='${img}' name='color_${s2}' class='JS9MenubarImage JS9MenubarImageOption' onerror='JS9.Menubar.missing["color_${s2}.png"]=true; this.src="${JS9.Menubar.EMPTYIMG}"' >` + `&nbsp;&nbsp;${s2}</div>`;
-		    items[s1] = {name: hstr, isHtmlName: true};
-		} else {
-		    items[s1] = xname(s2);
-		}
-		if( tdisp.image && (tdisp.image.cmapObj.name === s1) ){
-		    items[s1].icon = JS9.globalOpts.menuSelected;
-		}
-	    }
 	    items.morecmaps = {
 		name: "more colormaps ...",
 		items: {
