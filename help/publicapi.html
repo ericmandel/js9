@@ -1366,6 +1366,7 @@ arguments. It also takes the following single arguments:
 <ul>
 <li><b>rgb</b>: toggle RGB mode
 <li><b>invert</b>: toggle inversion of the colormap
+<li><b>overlay</b>: toggle image overlay mode (PNG and JPEG files only)
 <li><b>reset</b>: reset contrast, bias, and invert values
 <li><b>staticOpts</b>: opts for a static colormap
 </ul>
@@ -2032,6 +2033,7 @@ values are listed below:
 <li><b>disable</b>: which core services to disable for this image
 <li><b>listonchange</b>: false, list regions after a region change?
 <li><b>opacity</b>: 1.0, image display opacity, between 0 and 1
+<li><b>overlay</b>: whether PNG/JPEG display the image instead of using cmaps
 <li><b>nancolor</b>: "#000000", 6-digit #hex color for NaN values
 <li><b>valpos</b>: true, display value/position?
 <li><b>wcsalign</b>: true, align image using WCS after reproj?
@@ -2039,7 +2041,6 @@ values are listed below:
 <li><b>zscalecontrast</b>: 0.25, default zscale value from ds9
 <li><b>zscalesamples</b>: 600,	default zscale value from ds9
 <li><b>zscaleline</b>: 120, default zscale value from ds9
-<li><b>disable</b>: array of core functionality to disable
 </ul>
 <p>
 In addition, you can set the internal values associated with core functionality
