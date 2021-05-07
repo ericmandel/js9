@@ -114,7 +114,7 @@ JS9.Colorbar.display = function(im){
     }
     // clear tick display
     this.textctx.clear();
-    if( im.staticObj ){
+    if( im.staticObj && im.staticObj.colors.length <  this.ticks ){
 	prec = JS9.floatPrecision(dmin, dmax);
 	lastix = -99999;
 	for(i=0; i<im.staticObj.colors.length; i++){

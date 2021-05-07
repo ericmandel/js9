@@ -3,8 +3,8 @@
  * JS9: astronomical image display everywhere (December 10, 2012)
  *
  * Principals: Eric Mandel, Alexey Vikhlinin
- * Organization: Harvard Smithsonian Center for Astrophysics, Cambridge MA
- * Contact: saord@cfa.harvard.edu
+ * Organization: Center for Astrophysics | Harvard & Smithsonian, Cambridge MA
+ * Contact: emandel@cfa.harvard.edu
  *
  * Copyright (c) 2012 - 2021 Smithsonian Astrophysical Observatory
  *
@@ -1444,6 +1444,9 @@ JS9.Image.prototype.initLCS = function(iheader){
 // unpack IMG data and convert to JS9 image data
 JS9.Image.prototype.mkRawDataFromIMG = function(img){
     let i, h, w, ibuf, x, y, v;
+    const e = 0.00001;
+    const done = [];
+    const privatecmap = [];
     // sanity check
     if( !img ){	return; }
     // convenience variables
@@ -1466,6 +1469,11 @@ JS9.Image.prototype.mkRawDataFromIMG = function(img){
 	    // "Modern"
 	    // v = 0.212 * ibuf[i] + 0.715 * ibuf[i+1] + 0.073 * ibuf[i+2];
 	    this.raw.data[(h-y)*w+x] = v;
+	    // add to the static colormap
+	    if( done[v] !== true ){
+		privatecmap.push([{r:ibuf[i], g:ibuf[i+1], b:ibuf[i+2], a:ibuf[i+3]}, v-e, v+e]);
+		done[v] = true;
+	    }
 	    i += 4;
 	}
     }
@@ -1489,6 +1497,9 @@ JS9.Image.prototype.mkRawDataFromIMG = function(img){
     this.initWCS();
     // init the logical coordinate system, if possible
     this.initLCS();
+    // create a private colormap for this image
+    privatecmap.sort((a, b) => { return a[1] - b[1]; });
+    this.privateColormap = new JS9.Colormap("private", privatecmap);
     // plugin callbacks
     this.xeqPlugins("image", "onrawdata");
     // allow chaining
@@ -2251,6 +2262,11 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	}
     }
     catch(ignore){ /* empty */ }
+
+    // create a private colormap for this image
+    if( hdu.privatecmap ){
+	this.privateColormap = new JS9.Colormap("private", hdu.privatecmap);
+    }
     // can we remove the virtual file?
     if( this.raw.hdu && this.raw.hdu.fits && this.raw.hdu.fits.vfile  ){
 	s = JS9.globalOpts.clearImageMemory;
@@ -6848,7 +6864,11 @@ JS9.Image.prototype.setColormap = function(...args){
 	// remove previous static colormap
 	delete this.staticObj;
 	// add the new colormap
-	this.cmapObj = JS9.lookupColormap(arg);
+	if( arg === "private" && this.privateColormap ){
+	    this.cmapObj = this.privateColormap;
+	} else {
+	    this.cmapObj = JS9.lookupColormap(arg);
+	}
 	this.params.colormap = this.cmapObj.name;
 	// for static colormaps, copy the static object (we might edit it)
 	if( this.cmapObj.type === "static" ){
@@ -6943,6 +6963,9 @@ JS9.Image.prototype.setColormap = function(...args){
 	    break;
 	default:
 	    if( this.cmapObj && this.cmapObj.type === "static" ){
+		if( this.cmapObj.name === "private" ){
+		    JS9.error("can't set the colors in a private colormap");
+		}
 		if( $.isArray(arg) ){
 		    setStatic(arg);
 		} else if( typeof arg === "string" && arg.charAt(0) === '[' ){
@@ -9116,6 +9139,10 @@ JS9.Image.prototype.saveSession = function(file, opts){
 	obj.dheight = im.display.height;
 	// image params
 	obj.params = $.extend(true, {}, im.params);
+	// but don't save the private colormap, it's too large!
+	if( obj.params.colormap === "private" ){
+	    obj.params.colormap = "grey";
+	}
 	// temp values: explicitly save some of them
 	obj.tmp = {};
 	if( im.tmp.gridStatus === "active" ){
@@ -9928,16 +9955,18 @@ JS9.Colormap = function(...args){
     } else {
 	this.source = "user";
     }
-    // replace or append
-    for(i=0; i<JS9.colormaps.length; i++){
-	if( JS9.colormaps[i].name === this.name ){
-	    JS9.colormaps[i] = this;
-	    got = true;
-	    break;
+    if( this.name !== "private" ){
+	// replace or append
+	for(i=0; i<JS9.colormaps.length; i++){
+	    if( JS9.colormaps[i].name === this.name ){
+		JS9.colormaps[i] = this;
+		got = true;
+		break;
+	    }
 	}
-    }
-    if( !got ){
-	JS9.colormaps.push(this);
+	if( !got ){
+	    JS9.colormaps.push(this);
+	}
     }
     // debugging
     if( JS9.DEBUG > 1 ){
@@ -22106,13 +22135,16 @@ JS9.cleanupFITSFile = function(raw, mode){
 // taken from fitsy.js
 JS9.handleImageFile = function(file, options, handler){
     const reader = new FileReader();
+    const e = 0.00001;
+    const done = [];
+    const privatecmap = [];
     options = $.extend(true, {}, JS9.fits.options, options);
     handler = handler || JS9.Load;
     reader.onload = (ev) => {
 	let data, grey, hdu;
 	const img = new Image();
 	img.onload = () => {
-	    let x, y, brightness, header;
+	    let x, y, v, header;
 	    let i = 0;
 	    const canvas = document.createElement("canvas");
 	    const ctx    = canvas.getContext("2d");
@@ -22126,21 +22158,26 @@ JS9.handleImageFile = function(file, options, handler){
 	    for ( y = 0; y < h; y++ ) {
 		for ( x = 0; x < w; x++ ) {
 		    // NTSC
-		    brightness = 0.299 * data[i] +
-			         0.587 * data[i + 1] +
-			         0.114 * data[i + 2];
-		    grey[(h - y) * w + x] = brightness;
+		    v = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+		    grey[(h - y) * w + x] = v;
+		    // add to the static colormap
+		    if( done[v] !== true ){
+			privatecmap.push([{r:data[i], g:data[i+1], b:data[i+2], a:data[i+3]}, v-e, v+e]);
+			done[v] = true;
+		    }
 		    i += 4;
 		}
 	    }
+	    privatecmap.sort((a, b) => { return a[1] - b[1]; });
 	    header = {SIMPLE: true,
 		      BITPIX: -32,
 		      NAXIS: 2,
 		      NAXIS1: w,
 		      NAXIS2: h};
-	    hdu = {head: header, filename: file.name, filedata: grey,
+	    hdu = {filename: file.name,
 		   naxis: 2, axis: [0, w, h], bitpix: -32, bin: 1,
-		   data: grey};
+		   head: header, data: grey,
+		   privatecmap: privatecmap};
 	    hdu.dmin = Number.MAX_VALUE;
 	    hdu.dmax = Number.MIN_VALUE;
 	    for(i=0; i< h*w; i++){
@@ -22504,8 +22541,7 @@ JS9.eventToCharStr = function(evt){
 	"38": "upArrow",
 	"39": "rightArrow",
 	"40": "downArrow",
-	 "8": "delete",
-	"46": "delete"
+	 "8": "delete"
     };
     const _to_ascii = {
         "188": "44",
@@ -23437,29 +23473,42 @@ JS9.varByName = function(funcName, context){
 // merge preferences into global JS9 object
 JS9.mergePrefs = function(obj){
     let otype, jtype, name;
+    let domerge = false;
     // merge preferences with js9 objects and data
     for( name in obj ){
-	if( Object.prototype.hasOwnProperty.call(obj, name) &&
-	    Object.prototype.hasOwnProperty.call(JS9, name) ){
-	    jtype = typeof JS9[name];
-	    otype = typeof obj[name];
-	    if( (jtype === otype) || (otype === "string") ){
-		switch(jtype){
-		case "object":
-		    if( $.isArray(obj[name]) ){
-			// arrays get replaced completely
-			JS9[name] = obj[name];
-		    } else {
-			// objects get recursively extended
-			$.extend(JS9[name], obj[name]);
+	if( Object.prototype.hasOwnProperty.call(obj, name) ){
+	    // handle config specially
+	    if( name === "config" ){
+		if( obj[name].objects === "merge" ){
+		    domerge = true;
+		}
+	    } else {
+		if( Object.prototype.hasOwnProperty.call(JS9, name) ){
+		    jtype = typeof JS9[name];
+		    otype = typeof obj[name];
+		    if( (jtype === otype) || (otype === "string") ){
+			switch(jtype){
+			case "object":
+			    if( $.isArray(obj[name]) ){
+				// arrays get replaced completely
+				JS9[name] = obj[name];
+			    } else {
+				// objects get replaced or recursively extended
+				if( domerge ){
+				    $.extend(true, JS9[name], obj[name]);
+				} else {
+				    $.extend(JS9[name], obj[name]);
+				}
+			    }
+			    break;
+			case "number":
+			case "string":
+			    JS9[name] = obj[name];
+			    break;
+			default:
+			    break;
+			}
 		    }
-		    break;
-		case "number":
-		case "string":
-		    JS9[name] = obj[name];
-		    break;
-		default:
-		    break;
 		}
 	    }
 	}
@@ -23643,7 +23692,7 @@ JS9.parseStaticColors = function(arr){
 	    // format: "color:min:max"
 	    a = arr[i].split(":");
 	} else {
-	    // format: ["color", min, max]
+	    // format: ["color" or [r:,g:,b:,a:], min, max]
 	    a = arr[i];
 	}
 	// sanity check for color name
@@ -23668,9 +23717,12 @@ JS9.parseStaticColors = function(arr){
 	    a[2] = parseFloat(a[2]);
 	}
 	// save this color object
-	sobj = {name: a[0], active: true,
+	sobj = {active: true,
 		red: t._r, green: t._g, blue: t._b, alpha: t._a * 255,
 		min: a[1], max: a[2]};
+	if( typeof a[0] === "string" ){
+	    sobj.name = a[0];
+	}
 	staticColors.push(sobj);
     }
     // optimize lookup: sort so that first min is global min
@@ -23684,27 +23736,49 @@ JS9.lookupStaticColor = (im, val, cache) => {
     let i, color;
     let nocolor = {red:0,green:0,blue:0,alpha:0};
     const maxcache = 10000000;
+    const search = (array, val) => {
+	let middle, obj;
+	let start = 0;
+	let end = array.length - 1;
+	while( start <= end ){
+            middle = Math.floor((start + end) / 2);
+	    obj = array[middle];
+            if( val >= obj.min && val <= obj.max ) {
+		// found the interval
+		return middle;
+            } else if( obj.max < val ){
+		// continue searching to the right
+		start = middle + 1;
+            } else {
+		// continue searching to the left
+		end = middle - 1;
+            }
+	}
+	// interval wasn't found
+	return -1;
+    };
     if( im && im.staticObj ){
 	nocolor = im.params.nocolor || nocolor;
 	// colors are sorted, so we can skip values less than the first min
 	if( val < im.staticObj.colors[0].min ){ return nocolor; }
 	// return cached color, if possible
 	if( cache && cache[val] ){ return cache[val]; }
-	for(i=0; i<im.staticObj.colors.length; i++){
+	// look for the value within the static color intervals
+	i = search(im.staticObj.colors, val);
+	if( i < 0 ){
+	    color = nocolor;
+	} else {
 	    color = im.staticObj.colors[i];
-	    if( val >= color.min && val <= color.max ){
-		// in range but not active?
-		if( !color.active ){
-		    color = nocolor;
-		}
-		// save in cache, if possible
-		if( cache && val <= maxcache ){
-		    cache[val] = color;
-		}
-		// this is the color
-		return color;
+	    if( !color.active ){
+		color = nocolor;
 	    }
 	}
+	// save in cache, if possible
+	if( cache && val <= maxcache ){
+	    cache[val] = color;
+	}
+	// this is the color
+	return color;
     }
     // nothing found
     return nocolor;

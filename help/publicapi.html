@@ -1389,6 +1389,14 @@ range will be transparent. For example:
 </pre>
 sets the opacity of red pixels to 0.5, turns on the green pixels, and turns
 off the blue pixels in the currently active static colormap.
+<p>
+Note that PNG and JPEG images have a "private" colormap associated with them,
+which is an approximation of the original colors used in these images.
+You can set this colormap by specifying "private":
+<pre>
+  SetColormap("private");
+</pre>
+This private colormap is static: you cannot change contrast and bias.
 
 <h5 id="JS9.SaveColormap">Save colormap(s)</h5>
 <p>
@@ -6263,7 +6271,7 @@ See js9onchange.html for an example of using this callback function.
 
 <p><hr><p>
 
-<h5>Last updated: April 14, 2021</h5>
+<h5>Last updated: May 7, 2021</h5>
 </div>
 
 </body>

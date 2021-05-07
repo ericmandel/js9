@@ -67,7 +67,8 @@ JS9.Menubar.missing = {};
 
 // return image unless its known to be missing ... then return empty image
 JS9.Menubar.menuImage = function(s){
-    if( JS9.Menubar.missing[s] ){
+    let t = s.split("/").reverse()[0];
+    if( JS9.Menubar.missing[s] || JS9.Menubar.missing[t] ){
 	return JS9.Menubar.EMPTYIMG;
     } else {
 	if( JS9.inline && JS9.inline[s] ){
@@ -1960,6 +1961,20 @@ JS9.Menubar.createMenus = function(){
 		s2 = s1;
 		if( JS9.globalOpts.menuImages ){
 		    img = JS9.Menubar.menuImage(`images/voyager/color_${s2}.png`);
+		    hstr = `<div class='JS9MenubarImage' name='${s2}'><img src='${img}' name='color_${s2}' class='JS9MenubarImage JS9MenubarImageOption' onerror='JS9.Menubar.missing["color_${s2}.png"]=true; this.src="${JS9.Menubar.EMPTYIMG}"' >` + `&nbsp;&nbsp;${s2}</div>`;
+		    items[s1] = {name: hstr, isHtmlName: true};
+		} else {
+		    items[s1] = xname(s2);
+		}
+		if( tdisp.image && (tdisp.image.cmapObj.name === s1) ){
+		    items[s1].icon = JS9.globalOpts.menuSelected;
+		}
+	    }
+	    if( tdisp.image && tdisp.image.privateColormap ){
+		s1 = "private";
+		s2 = s1;
+		if( JS9.globalOpts.menuImages ){
+		    img = JS9.Menubar.menuImage(`images/empty.svg`);
 		    hstr = `<div class='JS9MenubarImage' name='${s2}'><img src='${img}' name='color_${s2}' class='JS9MenubarImage JS9MenubarImageOption' onerror='JS9.Menubar.missing["color_${s2}.png"]=true; this.src="${JS9.Menubar.EMPTYIMG}"' >` + `&nbsp;&nbsp;${s2}</div>`;
 		    items[s1] = {name: hstr, isHtmlName: true};
 		} else {

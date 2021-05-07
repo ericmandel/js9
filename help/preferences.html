@@ -43,6 +43,30 @@ file. Please ensure that the properties defined in these two files are
 consistent.
 
 <p>
+The following example shows the current js9prefs.js file:
+<pre>
+var JS9Prefs = {
+    "globalOpts": {
+        "helperType":       "nodejs",
+        "helperPort":       2718,
+        "helperCGI":        "./cgi-bin/js9/js9Helper.cgi",
+        "fits2png":         false,
+        "debug":            0,
+        "loadProxy":        true,
+        "workDir":          "./tmp",
+        "workDirQuota":     100,
+        "dataPath":         "$HOME/Desktop:$HOME/data",
+        "analysisPlugins":  "./analysis-plugins",
+        "analysisWrappers": "./analysis-wrappers"
+    },
+    "imageOpts": {
+	"colormap":         "grey",
+	"scale":            "linear"
+    }
+}
+</pre>
+
+<p>
 This preference file can be used to override the default parameter
 settings for JS9.  A look through the beginning of JS9 code will show
 a number of Javascript objects containing these default
@@ -110,7 +134,45 @@ used to set some internal variables. The <b>JS9.DEBUG</b> parameter is an
 example, as shown in the default preference file. Ordinarily, users
 need not be concerned with these variables.
 
-<h5>Last updated: November 18, 2020</h5>
+<p>
+When a property (e.g. scale) is added to one of the top-level objects
+in the JS9Prefs object (e.g. imageOpts), it generally replaces the
+existing value on the specified JS9 option. In the previous example,
+both the default colormap and default scale will be replaced by the
+values specified in the prefs file. Arrays and objects are also
+completely replaced. This, in this example, after specifying a new
+keyboardActions object, the entire keyboardActions object in JS9.globalOpts
+will be replaced by a new object containing two actions only:
+<pre>
+var JS9Prefs = {
+    "globalOpts": {
+        "keyboardActions": {
+            z: "zoom in",
+            x: "zoom out",
+      },
+    }
+}
+</pre>
+In this case, however, you probably wanted to merge the new keyboard
+actions into the existing actions object. To perform object merging
+instead of replacing, add the special config object:
+<pre>
+var JS9Prefs = {
+    "config": {
+        "objects": "merge"
+    },
+    "globalOpts": {
+        "keyboardActions": {
+            z: "zoom in",
+            x: "zoom out",
+        },
+    }
+}
+</pre>
+This will result in a deep (recursive) copy being performed to merge
+the two new keyboardActions properties with the existing properties.
+
+<h5>Last updated: May 6, 2021</h5>
 </div>
 
 </body>

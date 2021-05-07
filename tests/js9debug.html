@@ -49,7 +49,7 @@
     <li> <a href='javascript:JS9.Load("data/png/m13.png", "{\"scale\":\"linear\", \"colormap\": \"sls\"}");'>M13 (via SkyView)</a>
     <li> <a href='javascript:JS9.Load("data/png/snr.png");'>CTB 109 (Einstein)</a>
     <li> <a href='javascript:JS9.Load("data/png/ngc1316.png", {scale:"linear"});'>ngc1316 (AIPS)</a>
-    <li> <a href='javascript:JS9.Load("data/png/dmitri.png");'>Dmitri (classic PNG)</a>
+    <li> <a href='javascript:JS9.Load("data/png/dmitri.png", {onload: (im) => {im.setColormap("private")}});'>Dmitri (classic PNG)</a>
     </ul>
     </td>
     <td>
