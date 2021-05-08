@@ -69,6 +69,11 @@ JS9.Filters.undoHTML=`
 <input type="button" id="undo" name="undo" value="undo" class="JS9FiltersUndoButton JS9Button2" onclick="JS9.Filters.xundo(this, '%s', '%s')"></span>
 `;
 
+JS9.Filters.resetHTML=`
+<span class="JS9FiltersReset JS9FiltersCol3">
+<input type="button" id="reset" name="reset" value="reset" class="JS9FiltersResetButton JS9Button2" onclick="JS9.Filters.xreset(this, '%s', '%s')"></span>
+`;
+
 // update gui filter param value
 JS9.Filters.updateval = function(target, filter, val){
     if( target && $(target).length > 0 ){
@@ -158,6 +163,13 @@ JS9.Filters.xundo = function(target, did, id){
 	} else {
 	    JS9.Filters.updateval(target, null, null);
 	}
+    }
+};
+
+JS9.Filters.xreset = function(target, did, id){
+    const im = JS9.lookupImage(id, did);
+    if( im ){
+	im.filterRGBImage("reset")
     }
 };
 
@@ -300,9 +312,11 @@ JS9.Filters.init = function(opts){
 	// add space before the undo
 	html += `<div class='JS9FiltersLinegroup'>&nbsp;</div>`;
 	// add undo to the main html spec
-	html += `<div class='JS9FiltersLinegroup'>$undo</div>`;
+	html += `<div class='JS9FiltersLinegroup'>$undo $reset</div>`;
 	t = sprintf(JS9.Filters.undoHTML, dispid, imid);
 	mopts.push({name: "undo", value: t});
+	t = sprintf(JS9.Filters.resetHTML, dispid, imid);
+	mopts.push({name: "reset", value: t});
 	// expand macros to generate html
 	s = im.expandMacro(html, mopts);
 	this.lastimage = im;
