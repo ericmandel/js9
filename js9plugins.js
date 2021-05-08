@@ -11211,6 +11211,10 @@ JS9.Prefs.imagesSchema = {
 	    "type": "string",
 	    "helper": "6-digit #hex color for NaN values"
 	},
+	"overlay": {
+	    "type": "boolean",
+	    "helper": "display png/jpeg overlay?"
+	},
 	"listonchange": {
 	    "type": "boolean",
 	    "helper": "list after a region change?"

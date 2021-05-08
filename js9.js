@@ -115,7 +115,6 @@ JS9.globalOpts = {
     requireHelper: false,       // throw error if helper is not available?
     allinoneHelper: false,      // allow allinone to use helper?
     processQueryParams: true,   // process query parameters from url?
-    requireFits2Fits: false,    // throw error if fits2fits can't be run?
     quietReturn: false,         // should API return empty string or "OK"?
     useWasm: true,		// use WebAssembly if available?
     allowFileWasm: true,	// allow file:// to use wasm?
@@ -126,6 +125,7 @@ JS9.globalOpts = {
     sortPreloads: true,         // sort preloads into original order after load?
     defcolor: "#00FF00",	// graphics color when all else fails
     fits2fits: "never",		// convert to repfile? always|never|size>x Mb
+    requireFits2Fits: false,    // throw error if fits2fits can't be run?
     localAccess: true,		// access files locally, when available?
     prependJS9Dir: true,        // prepend $JS9_DIR to relative fitsFile paths?
     dataDir: null,              // path to FITS data (def: use incoming path)
@@ -353,6 +353,7 @@ JS9.imageOpts = {
     invert: false,			// default colormap invert
     exp: 1000,				// default exp value for scaling
     colormap: "grey",			// default color map
+    overlay: true,			// display png/jpeg overlay?
     scale: "linear",			// default scale algorithm
     scaleclipping: "dataminmax",	// "dataminmax", "zscale", or "user" (when scalemin, scalemax is supplied)
     scalemin: Number.NaN,               // default scale min is undefined
@@ -659,7 +660,7 @@ if( window.electron ){
 // ---------------------------------------------------------------------
 
 JS9.Image = function(file, params, func){
-    let i, card, pars, nzoom, display, txeq;
+    let i, card, pars, nzoom, display, txeq, tval;
     let localOpts = null;
     let nhist = 0;
     let ncomm = 0;
@@ -909,8 +910,11 @@ JS9.Image = function(file, params, func){
     }
     // (turn off plugin call, since we are not fully loaded)
     txeq = JS9.globalOpts.xeqPlugins;
+    // save overlay (setting colormap turns it off)
+    tval = this.params.overlay;
     JS9.globalOpts.xeqPlugins = false;
     this.setColormap(this.params.colormap);
+    this.params.overlay = tval;
     JS9.globalOpts.xeqPlugins = txeq;
     // do we display?
     this.displayMode = true;
@@ -1265,6 +1269,10 @@ JS9.Image.prototype.mkOffScreenCanvas = function(){
     }
     // allow chaining
     return this;
+};
+
+JS9.Image.prototype.useOffScreenCanvas = function(){
+    return this.offscreen && (this.rgbFile || this.params.overlay);
 };
 
 // initialize keywords for various logical coordinate systems
@@ -1777,8 +1785,8 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	this.initWCS();
     }
     // save offscreen data if necessary
-    if( JS9.notNull(hdu.img) ){
-	this.png = {image: hdu.img};
+    if( JS9.notNull(hdu.offscreen) ){
+	this.png = {image: hdu.offscreen};
 	this.mkOffScreenCanvas();
     }
     // re-init wcs
@@ -2432,7 +2440,7 @@ JS9.Image.prototype.mkRGBImage = function(){
 	}
     }
     // if we have an RGB file or image overlay, use offsreen RGB colors
-    if( this.rgbFile || this.params.overlay ){
+    if( this.useOffScreenCanvas() ){
 	wrgb = sect.width / sect.zoom;
 	hrgb = sect.height / sect.zoom;
 	xrgb = sect.x0;
@@ -2951,7 +2959,7 @@ JS9.Image.prototype.displayImage = function(imode, opts){
     // and always call plugins
     mode.plugins = true;
     // if we have an RGB file or image overlay, skip some steps
-    if( this.rgbFile || this.params.overlay ){
+    if( this.useOffScreenCanvas() ){
 	mode.colors = false;
 	mode.scaled = false;
     }
@@ -6839,7 +6847,7 @@ JS9.Image.prototype.setParam = function(param, value){
 	this.setColormap(obj.colormap, obj.contrast, value);
 	break;
     case "overlay":
-	this.displayImage();
+	this.displayImage("colors");
 	break;
     case "flip":
 	this.setFlip("reset");
@@ -16262,7 +16270,7 @@ JS9.MouseTouch.Actions["change contrast/bias"] = function(im, ipos, evt){
 	return;
     }
     // if we have an RGB file or image overlay, no contrast/bias
-    if( im.rgbFile || im.params.overlay ){
+    if( im.useOffScreenCanvas() ){
 	return;
     }
     // get canvas position
@@ -21720,7 +21728,7 @@ JS9.handleImageFile = function(file, options, handler){
 		      NAXIS2: h};
 	    hdu = {filename: file.name,
 		   naxis: 2, axis: [0, w, h], bitpix: -32, bin: 1,
-		   head: header, data: grey, img: img};
+		   head: header, data: grey, offscreen: img};
 	    hdu.dmin = Number.MAX_VALUE;
 	    hdu.dmax = Number.MIN_VALUE;
 	    for(i=0; i< h*w; i++){
@@ -21746,23 +21754,27 @@ JS9.getFITSImage = function(fits, hdu, options, handler){
     }
 };
 
-// JS9.fits2repFile(display, file, opts, "fits", "imsection")
-JS9.fits2RepFile = function(display, file, opts, xtype, func){
-    let i, s, xdim, ydim, bin, binMode, obj, xcond;
+// run fits2fits converter, if necessary
+JS9.fits2fits = function(display, file, opts, func){
+    let i, s, xdim, ydim, bin, bmode, obj, xcond;
     const xopts = {};
-    const xmsg = `fits2${xtype}`;
-    xcond = opts[xmsg] || ((opts[xmsg] === undefined) && JS9.globalOpts[xmsg]);
+    opts = opts || {};
+    if( JS9.notNull(opts.fits2fits) ){
+	xcond = opts.fits2fits;
+    } else {
+	xcond = JS9.globalOpts.fits2fits;
+    }
     if( xcond === true ){
 	xcond = "always";
     } else if(  xcond === false ){
 	xcond = "never";
     }
-    // check for repfile condition
+    // if never, we are done
     if( xcond.match(/never/i) ){
 	return false;
     }
-    // repfiles require a connected helper, a js9helper program, and a
-    // socket.io connection
+    // make sure we are set up to run the converter
+    // requires a connected helper via a socket.io connection
     if( !JS9.helper.connected ||
 	(JS9.helper.type !== "nodejs" && JS9.helper.type !== "socket.io") ){
 	if(  xcond === "always" && JS9.globalOpts.requireFits2Fits ){
@@ -21778,67 +21790,59 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 	    return false;
 	}
     }
-    // sanity check and pre-processing
-    switch(xmsg){
-    case "fits2fits":
-	// requires a tmp workdir
-	if( !JS9.globalOpts.workDir ){
-	    if( JS9.globalOpts.requireFits2Fits ){
-		JS9.error("can't run fits2fits without a workdir");
-	    }
-	    return false;
+    // requires a tmp workdir
+    if( !JS9.globalOpts.workDir ){
+	if( JS9.globalOpts.requireFits2Fits ){
+	    JS9.error("can't run fits2fits without a workdir");
 	}
-	xdim =
-	    opts.xdim ||
-	    JS9.fits.options.image.xdim ||
-	    JS9.fits.options.table.xdim;
-	ydim =
-	    opts.ydim ||
-	    JS9.fits.options.image.ydim ||
-	    JS9.fits.options.table.ydim;
-	bin =
-	    opts.bin ||
-	    JS9.fits.options.image.bin ||
-	    JS9.fits.options.table.bin;
-	binMode = opts.binMode || JS9.globalOpts.binMode;
-	binMode = binMode === "a" ? "a" : "";
-	// handle string bin, possibly containing explicit binMode
-	if( typeof bin === "string" ){
-	    if( bin.match(/[as]$/) ){
-		binMode = bin.slice(-1);
-	    }
-	    bin = parseInt(bin, 10);
+	return false;
+    }
+    xdim =
+	opts.xdim ||
+	JS9.fits.options.image.xdim ||
+	JS9.fits.options.table.xdim;
+    ydim =
+	opts.ydim ||
+	JS9.fits.options.image.ydim ||
+	JS9.fits.options.table.ydim;
+    bin =
+	opts.bin ||
+	JS9.fits.options.image.bin ||
+	JS9.fits.options.table.bin;
+    bmode = opts.binMode || JS9.globalOpts.binMode;
+    bmode = bmode === "a" ? "a" : "";
+    // handle string bin, possibly containing explicit binMode
+    if( typeof bin === "string" ){
+	if( bin.match(/[as]$/) ){
+	    bmode = bin.slice(-1);
 	}
-	bin = Math.max(1, bin || 1);
-	if( opts.xcen !== undefined && opts.ycen !== undefined ){
-	    xopts.sect = `${xdim}@${opts.xcen},${ydim}@${opts.ycen},${bin}${binMode}`;
-	} else {
-	    xopts.sect = `${xdim},${ydim},${bin}${binMode}`;
-	}
-	s = xcond.toLowerCase().split(/[>,]/);
-	for(i=0; i<s.length; i++){
-	    switch(s[i]){
-	    case "size":
-		if( s[i+1] ){
-		    if( JS9.isNumber(s[i+1]) ){
-			xopts.maxsize = parseFloat(s[i+1])*1000000;
-		    }
-		    i++;
+	bin = parseInt(bin, 10);
+    }
+    bin = Math.max(1, bin || 1);
+    if( JS9.notNull(opts.xcen) && JS9.notNull(opts.ycen) ){
+	xopts.sect = `${xdim}@${opts.xcen},${ydim}@${opts.ycen},${bin}${bmode}`;
+    } else {
+	xopts.sect = `${xdim},${ydim},${bin}${bmode}`;
+    }
+    s = xcond.toLowerCase().split(/[>,]/);
+    for(i=0; i<s.length; i++){
+	switch(s[i]){
+	case "size":
+	    if( s[i+1] ){
+		if( JS9.isNumber(s[i+1]) ){
+		    xopts.maxsize = parseFloat(s[i+1])*1000000;
 		}
-		break;
+		i++;
 	    }
+	    break;
 	}
-	break;
-    default:
-	JS9.error(`unknown FITS representation type: ${xtype}`);
-	break;
     }
     xopts.fits = JS9.cleanPath(file);
     xopts.parent = true;
     // start the waiting!
     JS9.waiting(true, display);
     // send message to helper to do conversion
-    JS9.helper.send(xmsg, xopts, (r) => {
+    JS9.helper.send("fits2fits", xopts, (r) => {
 	let robj, rarr, f, pf, nopts;
 	// return type can be string or object
 	if( typeof r === "object" ){
@@ -21856,82 +21860,74 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 	    JS9.error(robj.stderr, JS9.analOpts.epattern);
 	}
 	if( robj.stdout ){
-	    // is it the correct file type
-	    switch(xmsg){
-	    case "fits2fits":
-		// look for error condition, which we might throw or swallow
-		if( robj.stdout.match(/^ERROR:/) ){
-		    if( JS9.globalOpts.requireFits2Fits ){
-			JS9.error(robj.stdout);
-		    } else {
-			robj.stdout = xopts.fits;
-		    }
-		}
-		// output is file and possibly parentFile
-		rarr = robj.stdout.split(/\n/);
-		// file
-		f = JS9.cleanPath(rarr[0]);
-		if( f === xopts.fits ){
-		    // same file (imsection not run)
-		    nopts = $.extend(true, {}, opts);
+	    // look for error condition, which we might throw or swallow
+	    if( robj.stdout.match(/^ERROR:/) ){
+		if( JS9.globalOpts.requireFits2Fits ){
+		    JS9.error(robj.stdout);
 		} else {
-		    // new file using imsection
-		    // relative path: add install dir prefix
-		    if( f.charAt(0) !== "/" ){
-			f = JS9.InstallDir(f);
-		    }
-		    nopts = $.extend(true, {}, opts);
-		    // but remove already-used section properties from opts
-		    delete nopts.xcen;
-		    delete nopts.ycen;
-		    delete nopts.bin;
-		    // but load entire image section
-		    if( nopts.xdim !== undefined ){ nopts.xdim = 0; }
-		    if( nopts.ydim !== undefined ){ nopts.ydim = 0; }
-		    // save source
-		    nopts.source = "fits2fits";
-		    // it's a proxy file (i.e., delete it on close)
-		    nopts.proxyFile = f;
-		    // json fits info
-		    if( rarr[1] ){
-			try{ obj = JSON.parse(rarr[1]); }
-			catch(ignore){ /* empty */ }
-			if( obj ){
-			    nopts.extname = obj.extname;
-			    nopts.extnum = obj.extnum;
-			    nopts.hdus = obj.hdus;
-			    nopts.parent = obj;
-			}
-		    }
-		    // look for parentFile (relative to helper, not install)
-		    if( rarr[2] ){
-			pf = JS9.cleanPath(rarr[2]);
-			nopts.parentFile = pf;
-			// now add extension info, if possible
-			if( nopts.extname ){
-			    nopts.parentFile = nopts.parentFile
-				.replace(/\[.*\]/, "");
-			    nopts.parentFile += `[${nopts.extname}]`;
-			} else if( nopts.extnum && (nopts.extnum > 0) ){
-			    nopts.parentFile = nopts.parentFile
-				.replace(/\[.*\]/, "");
-			    nopts.parentFile.file += `[${nopts.extnum}]`;
-			}
-
-		    }
-		    // add onload, if necessary
-		    if( func ){
-			nopts.onload = func;
+		    robj.stdout = xopts.fits;
+		}
+	    }
+	    // output is file and possibly parentFile
+	    rarr = robj.stdout.split(/\n/);
+	    // file
+	    f = JS9.cleanPath(rarr[0]);
+	    if( f === xopts.fits ){
+		// same file (imsection not run)
+		nopts = $.extend(true, {}, opts);
+	    } else {
+		// new file using imsection
+		// relative path: add install dir prefix
+		if( f.charAt(0) !== "/" ){
+		    f = JS9.InstallDir(f);
+		}
+		nopts = $.extend(true, {}, opts);
+		// but remove already-used section properties from opts
+		delete nopts.xcen;
+		delete nopts.ycen;
+		delete nopts.bin;
+		// but load entire image section
+		if( nopts.xdim !== undefined ){ nopts.xdim = 0; }
+		if( nopts.ydim !== undefined ){ nopts.ydim = 0; }
+		// save source
+		nopts.source = "fits2fits";
+		// it's a proxy file (i.e., delete it on close)
+		nopts.proxyFile = f;
+		// json fits info
+		if( rarr[1] ){
+		    try{ obj = JSON.parse(rarr[1]); }
+		    catch(ignore){ /* empty */ }
+		    if( obj ){
+			nopts.extname = obj.extname;
+			nopts.extnum = obj.extnum;
+			nopts.hdus = obj.hdus;
+			nopts.parent = obj;
 		    }
 		}
-		// no recursion!
-		nopts.fits2fits = false;
-		// load new file
-		JS9.Load(f, nopts, {display});
-		break;
-	    default:
-		break;
+		// look for parentFile (relative to helper, not install)
+		if( rarr[2] ){
+		    pf = JS9.cleanPath(rarr[2]);
+		    nopts.parentFile = pf;
+		    // now add extension info, if possible
+		    if( nopts.extname ){
+			nopts.parentFile = nopts.parentFile
+			    .replace(/\[.*\]/, "");
+			nopts.parentFile += `[${nopts.extname}]`;
+		    } else if( nopts.extnum && (nopts.extnum > 0) ){
+			nopts.parentFile = nopts.parentFile
+			    .replace(/\[.*\]/, "");
+			nopts.parentFile.file += `[${nopts.extnum}]`;
+		    }
+		}
+		// add onload, if necessary
+		if( func ){
+		    nopts.onload = func;
+		}
 	    }
+	    // no recursion!
+	    nopts.fits2fits = false;
+	    // load new file
+	    JS9.Load(f, nopts, {display});
 	}
     });
     return true;
@@ -25613,10 +25609,13 @@ JS9.mkPublic("Load", function(...args){
 	JS9.waiting(false);
 	return;
     }
+    // security checks
     file = JS9.cleanPath(file);
-    if( JS9.fits2RepFile(opts.display, file, opts, "fits") ){
+    // run js9 fits2fits converter?
+    if( JS9.fits2fits(opts.display, file, opts) ){
 	return;
     }
+    // at this point, we either access a local file or fetch the URL
     if( opts.display ){
 	disp = JS9.lookupDisplay(opts.display);
     }
