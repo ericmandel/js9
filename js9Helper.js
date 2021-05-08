@@ -668,7 +668,9 @@ const getFilePath = function(file, dataPath, myenv, dohide){
 const getFileSize = function(file){
     let stats;
     let size = 0;
-    const froot = file.replace(/\[.*]$/,"");
+    const froot = file
+	  .replace(/\[.*]$/,"")
+	  .replace(/\$\{?JS9_DIR\}?/, installDir);
     if( fs.existsSync(froot) ){
 	stats = fs.statSync(froot);
 	if( stats ){
