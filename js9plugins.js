@@ -11710,10 +11710,6 @@ JS9.Prefs.globalsSchema = {
 	"svgBorder": {
 	    "type": "boolean",
 	    "helper": "add border when exporting SVG?"
-	},
-	"fits2png": {
-	    "type": "boolean",
-	    "helper": "convert FITS to PNG rep files?"
 	}
     }
 };

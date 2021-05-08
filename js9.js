@@ -10,7 +10,7 @@
  *
  */
 
-/*global JS9Prefs, JS9Inline, $, jQuery, fabric, io, sprintf, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters, Plotly, tinycolor, regSelect */
+/*global JS9Prefs, JS9Inline, $, jQuery, fabric, io, sprintf, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters, Plotly, tinycolor, regSelect */
 
 "use strict";
 
@@ -125,9 +125,7 @@ JS9.globalOpts = {
     winType: "light",		// plugin window: "light" or "new"
     sortPreloads: true,         // sort preloads into original order after load?
     defcolor: "#00FF00",	// graphics color when all else fails
-    pngisfits: true,		// are PNGs really PNG representation files?
     fits2fits: "never",		// convert to repfile? always|never|size>x Mb
-    fits2png: false,		// convert FITS to PNG rep files? true|false
     localAccess: true,		// access files locally, when available?
     prependJS9Dir: true,        // prepend $JS9_DIR to relative fitsFile paths?
     dataDir: null,              // path to FITS data (def: use incoming path)
@@ -1000,7 +998,6 @@ JS9.Image = function(file, params, func){
     // change the cursor to show the waiting status
     JS9.waiting(true, this.display);
     // file arg can be an object containing raw data or
-    // a string containing a URL of a PNG image
     switch( typeof file ){
     case "object":
 	// save source
@@ -1052,55 +1049,6 @@ JS9.Image = function(file, params, func){
 	    // finish up
 	    finishUp(func);
 	}
-	break;
-    case "string":
-	// save source
-	if( localOpts && localOpts.source ){
-	    this.source = localOpts.source;
-	} else {
-	    this.source = "fits2png";
-	}
-	// image or table
-	this.imtab = "image";
-	// downloaded image file, path relative to displayed Web page
-	this.file = JS9.cleanPath(file);
-	// take file but discard path (or scheme) up to slashes
-	this.id0 = this.file.split("/").reverse()[0];
-	// save id in case we have to change it for uniqueness
-	this.id = JS9.getImageID(this.id0, this.display.id);
-	// load status
-	this.setStatus("load","loading");
-	// callback to fire when image is loaded (do this before setting src)
-	$(this.png.image).on("load", () => {
-	    // populate the image data array from RGB values
-	    this.mkOffScreenCanvas();
-	    // populate the raw image data array from RGB values
-	    this.mkRawDataFromPNG();
-	    // set up initial zoom
-	    if( this.params.zoom ){
-		nzoom = this.parseZoom(this.params.zoom);
-		this.rgb.sect.zoom = nzoom;
-		this.rgb.sect.ozoom = nzoom;
-	    }
-	    // set scaling params from opts
-	    mkscale(localOpts);
-	    // set up initial section
-	    this.mkSection();
-	    // finish up
-	    finishUp(func);
-	    // debugging
-	    if( JS9.DEBUG ){
-		JS9.log("JS9 image: %s dims(%d,%d) min/max(%d,%d)",
-			this.file, this.raw.width, this.raw.height,
-			this.raw.dmin, this.raw.dmax);
-	    }
-	}).on("error", () => {
-	    // done loading, reset wait cursor
-	    JS9.waiting(false);
-	    JS9.error(`could not load image: ${this.id}`);
-	});
-	// set src to download the png and eventually display the image data
-	this.png.image.src = file;
 	break;
     default:
 	JS9.error(`unknown specification type for Load: ${typeof file}`);
@@ -1436,390 +1384,6 @@ JS9.Image.prototype.initLCS = function(iheader){
     if( this.lcs.physical && !this.lcs.ophysical ){
 	this.lcs.ophysical = $.extend(true, {}, this.lcs.physical);
     }
-    // allow chaining
-    return this;
-};
-
-// unpack IMG data and convert to JS9 image data
-JS9.Image.prototype.mkRawDataFromIMG = function(img){
-    let i, h, w, ibuf, x, y, v;
-    // sanity check
-    if( !img ){	return; }
-    // convenience variables
-    h = img.height;
-    w = img.width;
-    ibuf = img.data;
-    // create the object to hold raw data and add to raws array
-    this.raws.push({from: "img"});
-    // assign this object to the high-level raw data object
-    this.raw = this.raws[this.raws.length-1];
-    // this is the default raw data
-    this.raw.id = JS9.RAWID0;
-    // create a raw array to hold the reconstituted data
-    this.raw.data = new Float32Array(h*w);
-    // get data value from RGB
-    for(i=0, y=0; y<h; y++){
-	for(x=0; x<w; x++){
-	    // NTSC
-	    v =  0.299 * ibuf[i] + 0.587 * ibuf[i+1] + 0.114 * ibuf[i+2];
-	    // "Modern"
-	    // v = 0.212 * ibuf[i] + 0.715 * ibuf[i+1] + 0.073 * ibuf[i+2];
-	    this.raw.data[(h-y)*w+x] = v;
-	    i += 4;
-	}
-    }
-    // fill in the raw info
-    this.raw.width = w;
-    this.raw.height = h;
-    this.raw.bitpix = -32;
-    // set data min and max
-    this.dataminmax();
-    // change data source
-    this.source = "png";
-    // fake header
-    this.raw.header = {
-	SIMPLE: true,
-	NAXIS: 2,
-	NAXIS1: this.raw.width,
-	NAXIS2: this.raw.height,
-	BITPIX: this.raw.bitpix
-    };
-    // init WCS, if possible
-    this.initWCS();
-    // init the logical coordinate system, if possible
-    this.initLCS();
-    // plugin callbacks
-    this.xeqPlugins("image", "onrawdata");
-    // allow chaining
-    return this;
-};
-
-// unpack PNG data and convert to image data
-JS9.Image.prototype.mkRawDataFromPNG = function(){
-    let i, s, idx, offscreen, dlen, mode, tval, getfunc, littleEndian;
-    let card, pars, clen, realpng, hstr;
-    let nhist = 0;
-    let ncomm = 0;
-    const hstrs = [];
-    // memory array of 8 bytes
-    const abuf = new ArrayBuffer(8);
-    // we will transfer unsigned bytes from the png file into the mem array
-    const u = new Uint8Array(abuf);
-    // we will use the DataView api to access these bytes as typed data
-    // (including possible endian conversion)
-    const dv = new DataView(abuf);
-    // sanity check (we will null out the png image when we are done with it)
-    if( !this.offscreen.img  ){	return this; }
-    // create the object to hold raw data and add to raws array
-    this.raws.push({from: "png"});
-    // assign this object to the high-level raw data object
-    this.raw = this.raws[this.raws.length-1];
-    // this is the default raw data
-    this.raw.id = JS9.RAWID0;
-    // offscreen image data
-    offscreen = this.offscreen.img.data;
-    // gather up the json header (until we hit a null, skipping bogus values)
-    for(idx=0, i=0; idx<offscreen.length; idx++){
-	// null is the end of the string
-	if( offscreen[idx] === 0 ){
-	    break;
-	}
-	if( offscreen[idx] !== 255 ){
-	    hstrs[i] = String.fromCharCode(offscreen[idx]);
-	    i++;
-	}
-	// check for a JS9 header on a representation file
-	if( (i === 15) && (hstrs.join("") !== '{"js9Protocol":') ){
-	    realpng = true;
-	    break;
-	}
-    }
-    // see if we have a real PNG file instead of a representation file
-    if( (i < 15) || realpng ){
-	// holy moly, its a real png file!
-	this.mkRawDataFromIMG(this.offscreen.img);
-	// save the off-screen image and return;
-	return;
-    }
-    // its a representation file
-    // create and try to parse the json header
-    hstr = hstrs.join("");
-    if( JS9.DEBUG > 2 ){
-	JS9.log("jsonHeader: %s", hstr);
-    }
-    try{ s = JSON.parse(hstr); }
-    catch(e){ JS9.error(`can't read FITS header from PNG file: ${hstr}`, e); }
-    if( s.js9Protocol === 1.0 ){
-	this.raw.header = s;
-	this.raw.endian = this.raw.header.js9Endian;
-	this.raw.protocol = this.raw.header.js9Protocol;
-    } else {
-	this.raw.endian = s.js9Endian;
-	this.raw.protocol = s.js9Protocol;
-	this.raw.cardstr = s.cardstr;
-	this.raw.ncard = s.ncard;
-	this.raw.header = {};
-	// make up header from string containing 80-char raw cards
-	clen = this.raw.ncard;
-	for(i=0; i<clen; i++){
-	    card = this.raw.cardstr.slice(i*80, (i+1)*80);
-	    pars = JS9.cardpars(card);
-	    if( pars !== undefined ){
-		if( pars[0] === "HISTORY" ){
-		    this.raw.header[`${pars[0]}__${nhist++}`] = pars[1];
-		} else if( pars[0] === "COMMENT" ){
-		    this.raw.header[`${pars[0]}__${ncomm++}`] = pars[1];
-		} else {
-		    this.raw.header[pars[0]] = pars[1];
-		}
-	    }
-	}
-    }
-    // set the pointer to start of "real" image data
-    idx = idx + 1;
-    // make sure we have a valid FITS header
-    if( this.raw.header.NAXIS1 ){
-	this.raw.width = this.raw.header.NAXIS1;
-    } else {
-	JS9.error("NAXIS1 missing from PNG-based FITS header");
-    }
-    if( this.raw.header.NAXIS2 ){
-	this.raw.height = this.raw.header.NAXIS2;
-    } else {
-	JS9.error("NAXIS2 missing from PNG-based FITS header");
-    }
-    if( this.raw.header.BITPIX ){
-	this.raw.bitpix = this.raw.header.BITPIX;
-    } else {
-	JS9.error("BITPIX missing from PNG-based FITS header");
-    }
-    if( this.raw.endian === "little" ){
-	littleEndian = true;
-    } else if( this.raw.endian === "big" ){
-	littleEndian = false;
-    } else {
-	JS9.error("js9Endian missing from PNG-based FITS header");
-    }
-    // object, telescope, instrument names
-    this.object = this.raw.header.OBJECT;
-    this.telescope = this.raw.header.TELESCOP;
-    this.instrument = this.raw.header.INSTRUME;
-    // number of data pixels
-    dlen = this.raw.width * this.raw.height;
-    // mode: process next image pixel based on starting index into RGBA pixel
-    mode = idx % 4;
-    // image pixels are packed into RGBA array, in little-endian format.
-    // The A value is supplied by the browser and has to be skipped.
-    switch(this.raw.bitpix){
-    case 8:
-	// 8-bit unsigned char data
-	this.raw.data = new Uint8Array(dlen);
-	for(i=0; i<dlen; i++){
-	    switch(mode){
-	    case 0:
-		tval = offscreen[idx];
-		idx += 1;
-		mode = 1;
-		break;
-	    case 1:
-		tval = offscreen[idx];
-		idx += 1;
-		mode = 2;
-		break;
-	    case 2:
-		tval = offscreen[idx];
-		idx += 2;
-		mode = 0;
-		break;
-	    case 3:
-		tval = offscreen[idx+1];
-		idx += 2;
-		mode = 1;
-		break;
-	    }
-	    // save current pixel value
-	    this.raw.data[i] = tval;
-	}
-	break;
-    case 16:
-    case -16:
-	if( this.raw.bitpix === 16 ){
-	    this.raw.data = new Int16Array(dlen);
-	    getfunc = DataView.prototype.getInt16;
-	} else {
-	    this.raw.data = new Uint16Array(dlen);
-	    getfunc = DataView.prototype.getUint16;
-	}
-	// 16-bit signed short int data
-	for(i=0; i<dlen; i++){
-	    switch(mode){
-	    case 0:
-		u[0] = offscreen[idx];
-		u[1] = offscreen[idx+1];
-		tval = getfunc.call(dv, 0, littleEndian);
-		idx += 2;
-		mode = 2;
-		break;
-	    case 1:
-		u[0] = offscreen[idx];
-		u[1] = offscreen[idx+1];
-		tval = getfunc.call(dv, 0, littleEndian);
-		idx += 3;
-		mode = 0;
-		break;
-	    case 2:
-		u[0] = offscreen[idx];
-		u[1] = offscreen[idx+2];
-		tval = getfunc.call(dv, 0, littleEndian);
-		idx += 3;
-		mode = 1;
-		break;
-	    case 3:
-		u[0] = offscreen[idx+1];
-		u[1] = offscreen[idx+2];
-		tval = getfunc.call(dv, 0, littleEndian);
-		idx += 3;
-		mode = 2;
-		break;
-	    }
-	    // save current pixel value
-	    this.raw.data[i] = tval;
-	}
-	break;
-    case 32:
-    case -32:
-	// 32-bit signed int data
-	// 32-bit float data
-	if( this.raw.bitpix === 32 ){
-	    this.raw.data = new Int32Array(dlen);
-	    getfunc = DataView.prototype.getInt32;
-	} else {
-	    this.raw.data = new Float32Array(dlen);
-	    getfunc = DataView.prototype.getFloat32;
-	}
-	for(i=0; i<dlen; i++){
-	    switch(mode){
-	    case 0:
-		u[0] = offscreen[idx];
-		u[1] = offscreen[idx+1];
-		u[2] = offscreen[idx+2];
-		u[3] = offscreen[idx+4];
-		tval = getfunc.call(dv, 0, littleEndian);
-		idx += 5;
-		mode = 1;
-		break;
-	    case 1:
-		u[0] = offscreen[idx];
-		u[1] = offscreen[idx+1];
-		u[2] = offscreen[idx+3];
-		u[3] = offscreen[idx+4];
-		tval = getfunc.call(dv, 0, littleEndian);
-		idx += 5;
-		mode = 2;
-		break;
-	    case 2:
-		u[0] = offscreen[idx];
-		u[1] = offscreen[idx+2];
-		u[2] = offscreen[idx+3];
-		u[3] = offscreen[idx+4];
-		tval = getfunc.call(dv, 0, littleEndian);
-		idx += 6;
-		mode = 0;
-		break;
-	    case 3:
-		u[0] = offscreen[idx+1];
-		u[1] = offscreen[idx+2];
-		u[2] = offscreen[idx+3];
-		u[3] = offscreen[idx+5];
-		tval = getfunc.call(dv, 0, littleEndian);
-		idx += 6;
-		mode = 1;
-		break;
-	    }
-	    // save current pixel value
-	    this.raw.data[i] = tval;
-	}
-	break;
-    case -64:
-	// 64-bit float data
-	this.raw.data = new Float64Array(dlen);
-	for(i=0; i<dlen; i++){
-	    switch(mode){
-	    case 0:
-	    case 4:
-		u[0] = offscreen[idx];
-		u[1] = offscreen[idx+1];
-		u[2] = offscreen[idx+2];
-		u[3] = offscreen[idx+4];
-		u[4] = offscreen[idx+5];
-		u[5] = offscreen[idx+6];
-		u[6] = offscreen[idx+8];
-		u[7] = offscreen[idx+9];
-		tval = dv.getFloat64(0, littleEndian);
-		idx += 10;
-		mode = 2;
-		break;
-	    case 1:
-	    case 5:
-		u[0] = offscreen[idx];
-		u[1] = offscreen[idx+1];
-		u[2] = offscreen[idx+3];
-		u[3] = offscreen[idx+4];
-		u[4] = offscreen[idx+5];
-		u[5] = offscreen[idx+7];
-		u[6] = offscreen[idx+8];
-		u[7] = offscreen[idx+9];
-		tval = dv.getFloat64(0, littleEndian);
-		idx += 11;
-		mode = 0;
-		break;
-	    case 2:
-	    case 6:
-		u[0] = offscreen[idx];
-		u[1] = offscreen[idx+2];
-		u[2] = offscreen[idx+3];
-		u[3] = offscreen[idx+4];
-		u[4] = offscreen[idx+6];
-		u[5] = offscreen[idx+7];
-		u[6] = offscreen[idx+8];
-		u[7] = offscreen[idx+10];
-		tval = dv.getFloat64(0, littleEndian);
-		idx += 11;
-		mode = 1;
-		break;
-	    case 3:
-	    case 7:
-		u[0] = offscreen[idx+1];
-		u[1] = offscreen[idx+2];
-		u[2] = offscreen[idx+3];
-		u[3] = offscreen[idx+5];
-		u[4] = offscreen[idx+6];
-		u[5] = offscreen[idx+7];
-		u[6] = offscreen[idx+9];
-		u[7] = offscreen[idx+10];
-		tval = dv.getFloat64(0, littleEndian);
-		idx += 11;
-		mode = 2;
-		break;
-	    }
-	    // save current pixel value
-	    this.raw.data[i] = tval;
-	}
-	break;
-    default:
-	JS9.error(`unsupported bitpix in PNG file: ${this.raw.bitpix}`);
-	break;
-    }
-    // set data min and max
-    this.dataminmax();
-    // having the real image, we can ask to release the offscreen image
-    this.offscreen.img = null;
-    // init WCS, if possible
-    this.initWCS();
-    // init the logical coordinate system, if possible
-    this.initLCS();
-    // plugin callbacks
-    this.xeqPlugins("image", "onrawdata");
     // allow chaining
     return this;
 };
@@ -3639,7 +3203,7 @@ JS9.Image.prototype.fileDimensions = function(){
    In such a case, we want to convert physical position to the image position
    of the physical file.
    This situation is signalled by the presence of a parent lcs object.
-   This routine is used to display sections and the fitsy binning.js plugin.
+   This routine is used to display sections and the binning.js plugin.
 */
 JS9.Image.prototype.maybePhysicalToImage = function(pos){
     let lpos, ipos, npos;
@@ -5761,7 +5325,6 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	    r = this.id.replace(/\[EVENTS\]/i, "");
 	    break;
 	case "image":
-	case "png":
 	    r = this.id;
 	    break;
 	case "filename":
@@ -5961,10 +5524,6 @@ JS9.Image.prototype.validateAnalysis = function(atask){
     if( atask.files ){
 	if( atask.files.match(/^fits$/) &&
 	    !this.fitsFile ){
-	    return false;
-	}
-	if( atask.files.match(/^png$/) &&
-	    (this.source !== "fits2png") ){
 	    return false;
 	}
 	if( atask.files.match(/^table$/) ){
@@ -6170,7 +5729,6 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		}
 		break;
 	    case "fits":
-	    case "png":
 		// output is file and possibly parentFile
 		files = robj.stdout.split(/\s+/);
 		if( files && files[0] ){
@@ -22037,11 +21595,6 @@ JS9.fitsLibrary = function(s){
     }
     t = s.toLowerCase();
     switch(t){
-    case "fitsy":
-	JS9.fits = Fitsy;
-	JS9.fits.datahandler(JS9.NewFitsImage);
-	JS9.fits.options = JS9.userOpts.fits || JS9.fits.options || {};
-	break;
     case "astroem":
     case "cfitsio":
 	JS9.fits = Astroem;
@@ -22133,7 +21686,6 @@ JS9.cleanupFITSFile = function(raw, mode){
 };
 
 // load an image (jpeg, png, etc)
-// taken from fitsy.js
 JS9.handleImageFile = function(file, options, handler){
     const reader = new FileReader();
     options = $.extend(true, {}, JS9.fits.options, options);
@@ -22194,8 +21746,6 @@ JS9.getFITSImage = function(fits, hdu, options, handler){
     }
 };
 
-// common code for processing fits2fits and fits2png
-// JS9.fits2repFile(display, file, opts, "png", "fits2png", func)
 // JS9.fits2repFile(display, file, opts, "fits", "imsection")
 JS9.fits2RepFile = function(display, file, opts, xtype, func){
     let i, s, xdim, ydim, bin, binMode, obj, xcond;
@@ -22230,8 +21780,6 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
     }
     // sanity check and pre-processing
     switch(xmsg){
-    case "fits2png":
-	break;
     case "fits2fits":
 	// requires a tmp workdir
 	if( !JS9.globalOpts.workDir ){
@@ -22291,7 +21839,7 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
     JS9.waiting(true, display);
     // send message to helper to do conversion
     JS9.helper.send(xmsg, xopts, (r) => {
-	let nfile, next, robj, rarr, f, pf, nopts;
+	let robj, rarr, f, pf, nopts;
 	// return type can be string or object
 	if( typeof r === "object" ){
 	    // object from node.js
@@ -22310,23 +21858,6 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 	if( robj.stdout ){
 	    // is it the correct file type
 	    switch(xmsg){
-	    case "fits2png":
-		// last line is the file name (ignore what comes before)
-		nfile = robj.stdout.replace(/\n*$/, "").split("\n").pop();
-		if( nfile.charAt(0) !== "/" ){
-		    nfile = JS9.InstallDir(nfile);
-		}
-		next = nfile.split(".").pop().toLowerCase();
-		// is it a png file?
-		if( next === "png" ){
-		    // new png file: call constructor, save the result
-		    opts.source = "fits2png";
-		    JS9.checkNew(new JS9.Image(nfile, opts, func));
-		} else {
-		    // not a png file ... give up
-		    JS9.error(`fits2png conversion failed: ${nfile}`);
-		}
-		break;
 	    case "fits2fits":
 		// look for error condition, which we might throw or swallow
 		if( robj.stdout.match(/^ERROR:/) ){
@@ -24704,8 +24235,6 @@ JS9.initFITS = function(){
 	JS9.imsection = Astroem.imsection;
 	JS9.regcnts = Astroem.regcnts;
 	JS9.fitsLibrary("cfitsio");
-    } else if( Object.prototype.hasOwnProperty.call(window, "Fitsy") ){
-	JS9.fitsLibrary("fitsy");
     }
 };
 
@@ -25898,9 +25427,9 @@ JS9.mkPublic("GetImageInherit", function(...args){
     return got;
 });
 
-// display in-page FITS images and png files
+// display in-page FITS images
 JS9.mkPublic("Load", function(...args){
-    let i, s, im, ext, disp, display, func, blob, bytes, topts, tfile, vfile;
+    let i, s, im, disp, display, func, blob, bytes, topts, tfile, vfile;
     let file, opts;
     let ptype = "fits";
     const obj = JS9.parsePublicArgs(args);
@@ -26085,54 +25614,40 @@ JS9.mkPublic("Load", function(...args){
 	return;
     }
     file = JS9.cleanPath(file);
-    // check file extension
-    ext = file.split(".").pop().toLowerCase();
-    if( ext === "png" ){
-	if( JS9.globalOpts.pngisfits ){
-	    // png file: call the constructor and save the result
-	    JS9.checkNew(new JS9.Image(file, opts, func));
-	} else {
-	    file = JS9.fixPath(file, opts);
-	    JS9.fetchURL(null, file, opts, JS9.NewFitsImage);
-	}
+    if( JS9.fits2RepFile(opts.display, file, opts, "fits") ){
+	return;
+    }
+    if( opts.display ){
+	disp = JS9.lookupDisplay(opts.display);
+    }
+    JS9.waiting(true, disp);
+    // cleanup previous FITS file support, if necessary
+    // do this before we handle the new FITS file, or else
+    // we end up with a memory leak in the emscripten heap!
+    if( im && opts.refresh ){
+	JS9.cleanupFITSFile(im.raw, true);
+    }
+    // file with possible Electron path fixes
+    file = JS9.fixPath(file, opts);
+    // remove extension so we can find the file itself
+    tfile = file.replace(/\[.*\]/, "");
+    // are we able to access a local file directly, without fetching?
+    // note to myself: cfitsio uncompresses .gz files into memory, so
+    // there is no benefit to having ".gz" in the localTemplates list.
+    vfile = JS9.localAccess(file);
+    if( vfile ){
+	// access local file directly
+	topts = $.extend(true, {}, JS9.fits.options, opts);
+	topts.file = file;
+	topts.vfile = vfile;
+	// give spinner a chance to start up
+	window.setTimeout(() => {
+	    try{ JS9.handleFITSFile(file, topts, JS9.NewFitsImage); }
+	    catch(e){ JS9.error("can't process FITS file", e); }
+	}, 0);
     } else {
-	if( JS9.fits2RepFile(opts.display, file, opts, "fits") ){
-	    return;
-	} else if( JS9.fits2RepFile(opts.display, file, opts, "png", func) ){
-	    return;
-	}
-	if( opts.display ){
-	    disp = JS9.lookupDisplay(opts.display);
-	}
-	JS9.waiting(true, disp);
-	// cleanup previous FITS file support, if necessary
-	// do this before we handle the new FITS file, or else
-	// we end up with a memory leak in the emscripten heap!
-	if( im && opts.refresh ){
-	    JS9.cleanupFITSFile(im.raw, true);
-	}
-	// file with possible Electron path fixes
-	file = JS9.fixPath(file, opts);
-	// remove extension so we can find the file itself
-	tfile = file.replace(/\[.*\]/, "");
-	// are we able to access a local file directly, without fetching?
-	// note to myself: cfitsio uncompresses .gz files into memory, so
-	// there is no benefit to having ".gz" in the localTemplates list.
-	vfile = JS9.localAccess(file);
-	if( vfile ){
-	    // access local file directly
-	    topts = $.extend(true, {}, JS9.fits.options, opts);
-	    topts.file = file;
-	    topts.vfile = vfile;
-	    // give spinner a chance to start up
-	    window.setTimeout(() => {
-		try{ JS9.handleFITSFile(file, topts, JS9.NewFitsImage); }
-		catch(e){ JS9.error("can't process FITS file", e); }
-	    }, 0);
-	} else {
-	    // fetch file
-	    JS9.fetchURL(file, tfile, opts);
-	}
+	// fetch file
+	JS9.fetchURL(file, tfile, opts);
     }
 });
 
@@ -26492,9 +26007,6 @@ JS9.mkPublic("LoadProxy", function(...args){
 	if( robj.stderr ){
 	    JS9.error(robj.stderr);
 	} else if( robj.stdout ){
-	    if( opts.fits2png === undefined ){
-		opts.fits2png = false;
-	    }
 	    f = JS9.cleanPath(robj.stdout);
 	    // proxy file
 	    opts.proxyFile = f;

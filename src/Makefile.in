@@ -37,30 +37,30 @@ exec_prefix =		@exec_prefix@
 # when installing files.
 INSTALL_ROOT =
 
-# Directory in which to install the .a or .so binary for the TPOS library:
+# Directory in which to install the .a or .so binaries
 LIB_INSTALL_DIR =	$(INSTALL_ROOT)$(exec_prefix)/lib
 
 # Directory in which to install the program wish:
 BIN_INSTALL_DIR =	$(INSTALL_ROOT)$(exec_prefix)/bin
 
-# Directory in which to install the include file tpos.h:
+# Directory in which to install the include files
 INCLUDE_INSTALL_DIR =	$(INSTALL_ROOT)$(prefix)/include
 
 # Top-level directory for manual entries:
 MAN_INSTALL_DIR =	$(INSTALL_ROOT)$(prefix)/man
 
-# Directory in which to install manual entry for TPOS programs:
+# Directory in which to install manual entries
 MAN1_INSTALL_DIR =	$(MAN_INSTALL_DIR)/man1
 
-# Directory in which to install manual entries for TPOS's C library
+# Directory in which to install manual entries
 # procedures:
 MAN3_INSTALL_DIR =	$(MAN_INSTALL_DIR)/man3
 
 # extra Libs required to link (e.g. socket libraries)
-LIBS =            	@CFITSIOLIB@ @FUNLIB@ @PNGLIB@ @EXTRA_LIBS@ -lm
+LIBS =            	@CFITSIOLIB@ @FUNLIB@ @EXTRA_LIBS@ -lm
 
 # includes
-INCS =			-I. @CFITSIOINC@ @FUNINC@ @PNGINC@ \
+INCS =			-I. @CFITSIOINC@ @FUNINC@ \
 			-I./util -I./$(JSFITSIO)
 
 # To change the compiler switches, for example to change from -O
@@ -101,7 +101,7 @@ CP =		cp -p
 
 CC =		@CC@
 
-CC_SW =		 -DFITS2PNG=$(FITS2PNG) ${CFLAGS} ${AC_FLAGS} ${INCS}
+CC_SW =		 ${CFLAGS} ${AC_FLAGS} ${INCS}
 
 DEPEND_SW = 	${CFLAGS} -I. ${AC_FLAGS}
 
@@ -109,25 +109,18 @@ DEPEND_SW = 	${CFLAGS} -I. ${AC_FLAGS}
 HELPER =	@HELPER@
 USEHELPER =	@USEHELPER@
 
-# do we use tpos?
-USEFITS2PNG =	@USEFITS2PNG@
-
 # which library
 FITSLIB =	@FITSLIB@
 
-SRCS =		js9helper.c tpos.c
+SRCS =		js9helper.c
 
 PROGS =		js9helper
 
-ALLPROGS =	$(PROGS) tpos
-
-TESTPROGS =	pngdisp cimtest
+TESTPROGS =	cimtest
 
 INCLUDES =	js9helper.h
 
 UTILLIB	=	libutil.a
-
-TPOSOBJS =	tpos.o @CFITSIOOBJS@
 
 CIMTESTOBJS =	cimtest.o @CFITSIOOBJS@
 
@@ -142,28 +135,15 @@ UTILOBJS = 	$(wildcard util/*.o)
 all:		progs
 
 ifeq ($(USEHELPER), yes)
-ifeq ($(USEFITS2PNG), yes)
-FITS2PNG=1
-progs:		$(ALLPROGS)
-else
-FITS2PNG=0
 progs:		$(PROGS)
-endif
 else
-FITS2PNG=0
 progs:	
 endif
 
 testall:	$(TESTPROGS)
 
-tpos:		$(UTILLIB) $(TPOSOBJS)
-		$(CC) $(LDFLAGS) $(TPOSOBJS) $(UTILLIB) -o $@ $(LIBS)
-
 js9helper:	$(UTILLIB) $(HELPEROBJS)
 		$(CC) $(LDFLAGS) $(HELPEROBJS) -o $@ $(UTILLIB) $(LIBS)
-
-pngdisp:	pngdisp.o
-		$(CC) $(LDFLAGS) pngdisp.o -o $@ $(LIBS)
 
 cimtest:	$(CIMTESTOBJS)
 		$(CC) $(LDFLAGS) $(CIMTESTOBJS) -o $@ $(LIBS)
@@ -172,9 +152,6 @@ $(UTILLIB):	$(UTILOBJS)
 		@(cd util; \
 		env CC="$(CC)" CFLAGS="$(CC_SW)" make; \
 		mv libutil.a ..)
-
-tpos.o:		tpos.c
-		$(CC) -c $(CC_SW) -o $@ $+
 
 jsfitsio.o:	$(JSFITSIO)/jsfitsio.c
 		$(CC) -c $(CC_SW) -o $@ $+
@@ -186,9 +163,6 @@ healpix.o:	$(JSFITSIO)/healpix.c
 		$(CC) -c $(CC_SW) -o $@ $+
 
 js9helper.o:	js9helper.c
-		$(CC) -c $(CC_SW) -o $@ $+
-
-pngdisp.o:	pngdisp.c
 		$(CC) -c $(CC_SW) -o $@ $+
 
 cimtest.o:	cimtest.c
@@ -208,7 +182,7 @@ install-binaries: FORCE
 		else true; \
 		fi; \
 	    done; \
-	  for i in $(ALLPROGS) ; \
+	  for i in $(PROGS) ; \
 	    do \
 		if [ -f $$i.exe ] ; then \
 		    echo "installing $$i.exe" ; \
@@ -225,7 +199,7 @@ install-binaries: FORCE
 clean:		FORCE
 		@($(RM) *.a *.so *.dylib *.o *.exe core core.* errs *pure* \
 			foo* *~ \#* TAGS *.E a.out errors \
-			$(UTILLIB) $(ALLPROGS) $(TESTPROGS) \
+			$(UTILLIB) $(PROGS) $(TESTPROGS) \
 			util/*.a util/*.o \
 			gmon.out *.pg *.bak \
 			config.info config.log ltest \

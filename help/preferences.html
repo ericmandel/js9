@@ -18,16 +18,6 @@ and executed. This file allow you to tailor JS9 to meet the needs of
 your site without having to modify the js9.js file directly.
 
 <p>
-<del>
-To support site configuration, JS9 tries to load a json file called 
-<b>js9Prefs.json</b> from the same server on which the main
-js9-[version].js file resides. The file will be looked for first in
-the same directory as the web page and then in the js9 install directory.</del> 
-&nbsp;
-<ins>(Firefox has deprecated synchronous XHR requests in the main
-window. As a result, we have been forced to deprecate automatic loading of
-the <b>js9Prefs.json</b> file. Please use <b>js9prefs.js</b> instead.)</ins>
-<p>
 To support site configuration, load the <b>JS9 json preference file</b>
 file (referred to here as js9prefs.json, but it can be named
 anything, of course) into your web page before loading other JS9 javascript:
@@ -50,7 +40,6 @@ var JS9Prefs = {
         "helperType":       "nodejs",
         "helperPort":       2718,
         "helperCGI":        "./cgi-bin/js9/js9Helper.cgi",
-        "fits2png":         false,
         "debug":            0,
         "loadProxy":        true,
         "workDir":          "./tmp",
@@ -89,12 +78,6 @@ as: <b>contrast</b>, <b>bias</b>, whether to <b>invert</b> the
 colormap, <b>colormap</b>, <b>scale</b>, <b>WCS system</b> , <b>WCS
 units</b>, whether to display <b>value/position</b>, and whether to
 list regions when they change (<b>listonchange</b>).
-
-<li><p><b>JS9.analOpts</b> This JavaScript object contains
-the <b>dataDir</b> option, which specifies the pathname prefix to add
-to each FITS filename instead of the pathname stored in the PNG
-file. You can set this variable if you have moved the location of the
-raw FITS files after generating the PNG files.
 
 <li><p><b>JS9.Regions.opts:</b> This JavaScript object contains
 default values for individual regions, including the initial size of
@@ -172,7 +155,7 @@ var JS9Prefs = {
 This will result in a deep (recursive) copy being performed to merge
 the two new keyboardActions properties with the existing properties.
 
-<h5>Last updated: May 6, 2021</h5>
+<h5>Last updated: May 8, 2021</h5>
 </div>
 
 </body>

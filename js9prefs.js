@@ -3,7 +3,6 @@ var JS9Prefs = {
         "helperType":       "nodejs",
         "helperPort":       2718,
         "helperCGI":        "./cgi-bin/js9/js9Helper.cgi",
-        "fits2png":         false,
         "debug":            0,
         "loadProxy":        true,
         "workDir":          "./tmp",

@@ -230,64 +230,6 @@ if test x"${CFITSIOINC}${FUNINC}" = x; then
   USEHELPER="no"
 fi
 
-# check for external png libraries and build of tpos
-AC_MSG_CHECKING(for png library (for building deprecated fits2png))
-AC_ARG_WITH(png,
-    [ --with-png=<path> directory containing lib/libpng e.g. /usr/local], havelib=1, havelib=0)
-if test x"$havelib" = x1 ; then
-  PNGBASE=$withval
-  # make sure essential libraries are present
-  if test -r $PNGBASE/lib$LSUFFIX/libpng.a -o \
-          -r $PNGBASE/lib$LSUFFIX/libpng.so -o \
-	  -r $PNGBASE/lib$LSUFFIX/libpng.dylib; then
-      PNGLIB="-L $PNGBASE/lib$LSUFFIX -lpng"
-      if test x"$RFLAG" != x; then
-          PNGLIB="$RFLAG $PNGBASE/lib$LSUFFIX $PNGLIB"
-      fi
-      PNGINC="-I$PNGBASE/include"
-      USEFITS2PNG="yes"
-      AC_MSG_RESULT(yes ($PNGBASE))
-  elif test -r $PNGBASE/lib/$OSSUFFIX/libpng.a -o \
-            -r $PNGBASE/lib/$OSSUFFIX/libpng.so -o \
-	    -r $PNGBASE/lib/$OSSUFFIX/libpng.dylib; then
-      PNGLIB="-L $PNGBASE/lib/$OSSUFFIX -lpng"
-      if test x"$RFLAG" != x; then
-          PNGLIB="$RFLAG $PNGBASE/lib/$OSSUFFIX $PNGLIB"
-      fi
-      PNGINC="-I$PNGBASE/include"
-      USEFITS2PNG="yes"
-      AC_MSG_RESULT(yes ($PNGBASE))
-  elif test -r $PNGBASE/lib/libpng.a -o \
-	    -r $PNGBASE/lib/libpng.so -o \
-	    -r $PNGBASE/lib/libpng.dylib; then
-      PNGLIB="-L $PNGBASE/lib -lpng"
-      if test x"$RFLAG" != x; then
-          PNGLIB="$RFLAG $PNGBASE/lib $PNGLIB"
-      fi
-      PNGINC="-I$PNGBASE/include"
-      USEFITS2PNG="yes"
-      AC_MSG_RESULT(yes ($PNGBASE))
-  else
-      AC_CHECK_LIB(png, png_create_write_struct, have_png=yes, have_png=no)
-      if test "$have_png" = yes; then
-        PNGLIB="-lpng"
-        PNGINC=""
-        USEFITS2PNG="yes"
-        AC_MSG_RESULT(yes (default libs))
-      else
-        USEFITS2PNG="no"
-        AC_MSG_RESULT(no)
-      fi
-  fi
-else
-  USEFITS2PNG="no"
-  AC_MSG_RESULT(fits2png will not be built)
-fi
-# results from png search
-AC_SUBST(PNGLIB)
-AC_SUBST(PNGINC)
-AC_SUBST(USEFITS2PNG)
-
 AC_CHECK_FUNC(connect)
 if test $ac_cv_func_connect = no; then
   AC_CHECK_LIB(socket, connect,  EXTRA_LIBS="$EXTRA_LIBS -lsocket")

@@ -29,7 +29,6 @@ const http = require('http'),
 
 // internal variables
 let i, app, io, secure;
-let fits2png = {};
 let fits2fits = {};
 let quotacheck = {};
 let analysis = {str:[], pkgs:[]};
@@ -386,10 +385,6 @@ const loadAnalysisTasks = function(dir, todir){
 		    if( analysis.temp ){
 			jstr = analysis.temp.toString().trim();
 			switch(files[i]){
-			case "fits2png.json":
-			    try{ fits2png = JSON.parse(jstr); }
-			    catch(e1){cerr("can't parse: ", pathname, e1);}
-			    break;
 			case "fits2fits.json":
 			    try{ fits2fits = JSON.parse(jstr); }
 			    catch(e1){cerr("can't parse: ", pathname, e1);}
@@ -942,7 +937,6 @@ const sendMsg = function(socket, obj, cbfunc) {
     case "image":
     case "runAnalysis":
     case "fits2fits":
-    case "fits2png":
     case "quotacheck":
 	myfunc(`ERROR: ${obj.cmd} not available via js9 messaging script`);
 	return;
@@ -1220,21 +1214,6 @@ const socketioHandler = function(socket) {
 	obj.cmd = `${obj.cmd} ${obj.fits} ${obj.sect}`;
 	// exec the conversion task (via a wrapper func)
 	execCmd(socket, obj, cbfunc);
-    });
-    // on fits2png: convert raw fits to png
-    // returns: object w/ errcode, stderr (error string), stdout (results)
-    // for other implementations, this is needed if you want to:
-    //   support conversion of fits to png representation
-    socket.on("fits2png", (obj, cbfunc) => {
-	if( !obj ){return;}
-	if( fits2png[0] && fits2png[0].action ){
-	    // make up fits2png command string from defined fits2png action
-	    obj.cmd = `${fits2png[0].action} ${obj.fits}`;
-	    // don't use a workdir
-	    obj.useWorkDir = false;
-	    // exec the conversion task (via a wrapper func)
-	    execCmd(socket, obj, cbfunc);
-	}
     });
     // on quotacheck: check whether temp directory is set up and under quota
     // returns: object w/ errcode, stderr (error string), stdout (results)
