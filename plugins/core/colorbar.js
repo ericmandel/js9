@@ -88,8 +88,8 @@ JS9.Colorbar.display = function(im){
 	    colorBuf = im.colorCells;
 	}
 	// sanity check
-	if( !colorBuf ){
-	    JS9.Colorbar.imageclear(im);
+	if( !colorBuf || im.useOffScreenCanvas() ){
+	    JS9.Colorbar.imageclear.call(this, im);
 	    return;
 	}
 	// first line gets colors from main display's rgb array
