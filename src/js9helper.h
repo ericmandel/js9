@@ -52,7 +52,7 @@ extern int optind;
 #define NOIMAGE "ERROR: no image found with name '%s'\n"
 
 /* supported file types */
-#define FTYPE_PNG	1
+#define FTYPE_IMG	1
 #define FTYPE_FITS	2
 
 /* these must match the parameters written in tpos.c */

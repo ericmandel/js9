@@ -98,12 +98,6 @@ static int _FinfoFree(Finfo finfo)
   /* free up strings */
   xfree(finfo->fname);
   xfree(finfo->fitsfile);
-#if FITS2PNG
-  /* free up png structs */
-  if( finfo->png_ptr || finfo->info_ptr ){
-    png_destroy_read_struct(&finfo->png_ptr, &finfo->info_ptr, NULL);
-  }
-#endif
   /* close file */
   if( finfo->fp ){
     fclose(finfo->fp);
@@ -121,15 +115,7 @@ static Finfo FinfoNew(char *fname)
   char *e=NULL;
   char *f=NULL;
   char *s=NULL;
-#if FITS2PNG
-  int i;
-  unsigned char header[8];
-  /* use volatile to make gcc [-Wclobbered] happy (because of setjmp below) */
-  volatile Finfo finfo;	  
-#else
   Finfo finfo;	  
-#endif
-
 
   /* sanity check */
   if( !fname ) return NULL;
@@ -143,80 +129,20 @@ static Finfo FinfoNew(char *fname)
   /* save file name */
   finfo->fname = xstrdup(fname);
   /* check for file type */
-  if( (s = strrchr(fname, '.')) && !strcasecmp(s, ".png") ){
-    /* its a PNG */
-    finfo->ftype = FTYPE_PNG;
+  if( (s = strrchr(fname, '.')) &&
+      (!strcasecmp(s, ".png")   ||
+       !strcasecmp(s, ".jpg")   ||
+       !strcasecmp(s, ".jpeg")) ){
+    finfo->ftype = FTYPE_IMG;
   } else {
-    /* assume FITS type */
+    /* FITS type */
     finfo->ftype = FTYPE_FITS;
   }
   /* open file */
   switch(finfo->ftype){
-  case FTYPE_PNG:
-#if FITS2PNG
-    /* code taken from "PNG: The Definitive Guide" by Greg Roelofs,
-       Chapter 13 "Reading PNG Images" */
-    /* set data path */
-    datapath = getenv("JS9_DATAPATH");
-    /* look for path of the PNG file */
-    s = Find(fname, "r", NULL, datapath);
-    if( s && *s ){
-      if( !(finfo->fp = fopen(s, "rb")) ){
-	fprintf(stderr, "ERROR: can't open PNG file '%s'\n", fname);
-	goto error;
-      }
-      fread(header, 1, 8, finfo->fp);
-      if( png_sig_cmp(header, 0, 8) ){
-	fprintf(stderr, "ERROR: not recognized as a PNG file '%s'\n", fname);
-	goto error;
-      }
-      /* initialize stuff */
-      finfo->png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING,
-					      NULL, NULL, NULL);
-      if( !finfo->png_ptr ){
-	fprintf(stderr, "ERROR: png_create_read_struct failed '%s'\n", fname);
-	goto error;
-      }
-      finfo->info_ptr = png_create_info_struct(finfo->png_ptr);
-      if( !finfo->info_ptr ){
-	fprintf(stderr, "ERROR: png_create_info_struct failed '%s'\n", fname);
-	goto error;
-      }
-      if( setjmp(png_jmpbuf(finfo->png_ptr)) ){
-	fprintf(stderr, "ERROR: during png init_io '%s'\n", fname);
-	goto error;
-      }
-      png_init_io(finfo->png_ptr, finfo->fp);
-      png_set_sig_bytes(finfo->png_ptr, 8);
-      png_read_info(finfo->png_ptr, finfo->info_ptr);
-      /* get the text chunks that come before the image */
-      if( png_get_text(finfo->png_ptr, finfo->info_ptr,
-		       &(finfo->text_ptr), &(finfo->num_text)) > 0 ){
-	/* process all known PNG keywords */
-	for(i=0; i<finfo->num_text; i++){
-	  if( !strcmp(finfo->text_ptr[i].key, FITSFILE) ){
-	    finfo->fitsfile = xstrdup(finfo->text_ptr[i].text);
-	    /* remove the extension that was used to generate png */
-	    s = strchr(finfo->fitsfile, '[');
-	    if( s ){
-	      *s = '\0';
-	    }
-	  }
-	}
-      }
-    } else {
-      fprintf(stderr, "ERROR: can't find PNG file '%s' [data path: %s]\n",
-	      fname, datapath?datapath:"none");
-      goto error;
-    }
-#else
-    fprintf(stderr,
-	    "ERROR: for fits2png support, build JS9 using --with-png\n");
-    goto error;
-#endif
+  case FTYPE_IMG:
     break;
-    /* look for an error */
-  case FTYPE_FITS:
+ case FTYPE_FITS:
     /* fits file can have an extension */
     f = FileRoot(fname);
     /* get data path */
