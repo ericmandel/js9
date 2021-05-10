@@ -5451,6 +5451,13 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 			break;
                     }
                     break;
+		case "colormap":
+		    if( this.useOffScreenCanvas() ){
+			r = "overlay";
+		    } else {
+			r = this.params[t];
+		    }
+		    break;
 		default:
                     if( typeof this.params[t] === "number"            &&
 			this.params[t] !== Math.floor(this.params[t]) ){
