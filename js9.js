@@ -10950,6 +10950,11 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 	nim.setStatus("createMosaic", "complete");
 	// done waiting
 	JS9.waiting(false);
+	// everything else is done so call onmosaic func, if necessary
+	if( opts.onmosaic ){
+	    try{ JS9.xeqByName(opts.onmosaic, window, nim); }
+	    catch(e){ JS9.error("in create mosaic callback", e, false); }
+	}
     };
     // write comforting messages to the console while we wait and wait
     const log = (...args) => {
