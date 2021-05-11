@@ -34,7 +34,7 @@ error() {
 # local variables
 DONE=false
 VERBOSE=false
-TRIES=10
+MAXTRIES=10
 ETRIES=3
 SLEEP=1
 
@@ -53,7 +53,7 @@ while [ x"$1" != x ]; do
         shift;;
 
     -t) shift
-        TRIES=$1
+        MAXTRIES=$1
         shift;;
 
     -v) VERBOSE=true
@@ -79,15 +79,18 @@ if [ x"$GOT" != x ]; then
 fi
 
 # wait for completion
+TRIES=$MAXTRIES
 while [ $DONE = false ]; do
   # get status of current image
   GOT=`${JS9} $XARGS GetLoadStatus "$PATHNAME"`
   case $GOT in
     error)
       error "could not load: $PATHNAME";;
-    none)
-      error "could not find: $PATHNAME";;
-    loading|please|other)
+    loading|please|other|none)
+      # allow none once before error (might not have loaded enough image yet)
+      if [ $GOT = none -a $TRIES != $MAXTRIES ]; then
+          error "could not find: $PATHNAME"
+      fi
       TRIES=`echo "$TRIES - 1" | bc`
       if [ $TRIES -le 0 ]; then
           error "timeout while loading: $PATHNAME"
