@@ -32,12 +32,14 @@ EMFS =		-lnodefs.js
 # production
 EMFLAGS		= -O3 --memory-init-file 0
 
-# support zscale up to 2048 * 2048 * 4-byte images
-# EMOPTS =	-s TOTAL_MEMORY=33554432
-# support zscale up to 4096 * 4096 * 4-byte images
+# initial memory: support zscale up to 4096 * 4096 * 4-byte images
 # EMOPTS =	-s TOTAL_MEMORY=67108864
 # cfitsio requires memory growth
 EMOPTS =	-s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1 $(EMPORTS) $(EMFS)
+# note to myself: in the event of a catastrophic drop in performance, see:
+# https://github.com/emscripten-core/emscripten/issues/13899
+# and try:
+# -s BINARYEN_EXTRA_PASSES=--one-caller-inline-max-function-size=1
 # javascript instead of wasm:
 NOWASMOPTS =	-s WASM=0
 # wasm support:
