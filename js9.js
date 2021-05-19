@@ -8961,7 +8961,7 @@ JS9.Image.prototype.xeqStashDiscard = function(xid){
     // sanity check
     if( !this.xeqstash ){ return; }
     if( $.isArray(this.xeqstash) ){
-	for(i=0; i<this.xeqstash.length; i++){
+	for(i=this.xeqstash.length-1; i>=0; i--){
 	    if( xid === this.xeqstash[i].func || xid === this.xeqstash[i].id ){
 		this.xeqstash.splice(i,1);
 	    }
