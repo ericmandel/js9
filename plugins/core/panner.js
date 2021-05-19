@@ -148,8 +148,8 @@ JS9.Panner.create = function(im){
     let pos, ix, iy, temp;
     let dlayer;
     // sanity checks
-    if( !im || !im.raw                        ||
-	(!im.rgbFile && !im.colorData)        ||
+    if( !im || !im.raw                              ||
+	(!im.useOffScreenCanvas() && !im.colorData) ||
 	!im.display.pluginInstances.JS9Panner ){
 	return null;
     }
@@ -201,7 +201,7 @@ JS9.Panner.create = function(im){
     panner.img = img;
     panner.ix = 0;
     panner.iy = 0;
-    if( im.rgbFile ){
+    if( im.useOffScreenCanvas() ){
 	// for a static RGB file, access the RGB data directly
 	for(j=0; j<height; j++){
 	    jj = Math.floor(y0 + (j * yblock)) * im.offscreen.img.width;
