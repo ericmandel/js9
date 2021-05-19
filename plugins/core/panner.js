@@ -216,21 +216,21 @@ JS9.Panner.create = function(im){
 		img.data[ooff+3] = 255;
 	    }
 	}
-	return im;
-    }
-    // index into scaled data using previously calc'ed data value to get RGB
-    for(j=0; j<height; j++){
-	jj = Math.floor(y0 + ((height-j-1) * yblock)) * im.raw.width;
-	kk = j * width;
-	for(i=0; i<width; i++){
-	    ii = Math.floor(x0 + (i * xblock));
-	    ioff = im.colorData[ii + jj];
-	    ooff = (kk + i) * 4;
-	    if( im.psColors[ioff] ){
-		img.data[ooff]   = im.psColors[ioff][0];
-		img.data[ooff+1] = im.psColors[ioff][1];
-		img.data[ooff+2] = im.psColors[ioff][2];
-		img.data[ooff+3] = 255;
+    } else {
+	// index into scaled data using previously calc'ed data value to get RGB
+	for(j=0; j<height; j++){
+	    jj = Math.floor(y0 + ((height-j-1) * yblock)) * im.raw.width;
+	    kk = j * width;
+	    for(i=0; i<width; i++){
+		ii = Math.floor(x0 + (i * xblock));
+		ioff = im.colorData[ii + jj];
+		ooff = (kk + i) * 4;
+		if( im.psColors[ioff] ){
+		    img.data[ooff]   = im.psColors[ioff][0];
+		    img.data[ooff+1] = im.psColors[ioff][1];
+		    img.data[ooff+2] = im.psColors[ioff][2];
+		    img.data[ooff+3] = 255;
+		}
 	    }
 	}
     }
