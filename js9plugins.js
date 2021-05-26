@@ -6411,7 +6411,7 @@ JS9.Magnifier.init = function(width, height){
 };
 
 // display the magnified image on the magnifier canvas
-JS9.Magnifier.display = function(im, ipos, render){
+JS9.Magnifier.display = function(im, ipos){
     let pos, tval, magDisp, zoom;
     let canvas, sx, sy, sw, sh, dx, dy, dw, dh;
     // sanity check
@@ -6478,10 +6478,6 @@ JS9.Magnifier.display = function(im, ipos, render){
     // overlay regions by drawing the fabric.js canvas into the magnifier
     if( JS9.globalOpts.magnifierRegions &&
 	im.display.layers && im.display.layers.regions ){
-	// make sure fabric canvas is up to date, if necessary
-	if( render ){
-	    im.display.layers.regions.canvas.renderAll();
-	}
 	// get underlying html canvas
 	canvas = im.display.layers.regions.canvas.getElement();
 	sx *= fabric.devicePixelRatio;
@@ -6509,10 +6505,17 @@ JS9.Magnifier.display = function(im, ipos, render){
 };
 
 // display the magnified image on the magnifier canvas
-// sets flag to update the fabric.js canvas so that changed regions
-// are visible in the magnifier
+// this routine is called when regions change ... it delays the mag display
+// until the main display can be redrawn with the changed regions. Initially,
+// this routine explicitly called the fabric.js renderAll() routine so that
+// the changed regions would be drawn on the canvas. This did not work when
+// removing groups (artifacts were left on the screen). For related problems
+// and warnings associated with working with groups, see:
+//  http://fabricjs.com/v2-breaking-changes-2
 JS9.Magnifier.display2 = function(im, ipos){
-    JS9.Magnifier.display(im, ipos, true);
+    window.setTimeout(() => {
+	JS9.Magnifier.display(im, ipos);
+    }, 0);
 };
 
 // zoom the rectangle inside the magnifier (RGB) image
