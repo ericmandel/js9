@@ -12135,15 +12135,19 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	if( dlayer.opts.onmousedown ){
 	    dlayer.canvas.on("mouse:down", (opts) => {
 		if( dlayer.display.image && opts.target ){
-		    // on main window, set region click
-		    if( dlayer.dtype === "main" ){
-			dlayer.display.image.clickInRegion = true;
-			dlayer.display.image.clickInLayer = layerName;
+		    // set click state but ignore unchangeable regions
+		    if( opts.target.params                      &&
+			opts.target.params.changeable !== false ){
+			// on main window, set region click
+			if( dlayer.dtype === "main" ){
+			    dlayer.display.image.clickInRegion = true;
+			    dlayer.display.image.clickInLayer = layerName;
+			}
+			dlayer.opts.onmousedown.call(dlayer.canvas,
+						     dlayer.display.image,
+						     opts.target.pub,
+						     opts.e, opts.target);
 		    }
-		    dlayer.opts.onmousedown.call(dlayer.canvas,
-						 dlayer.display.image,
-						 opts.target.pub,
-						 opts.e, opts.target);
 		} else {
 		    // only allow fabric selection if we have special key down
 		    dlayer.canvas._selection = dlayer.canvas.selection;
@@ -15954,7 +15958,7 @@ JS9.Fabric.saveSelection = function(layerName){
     ao = canvas.getActiveObjects();
     for(i=0; i<ao.length; i++){
 	obj = ao[i];
-	if( obj.params ){
+	if( obj.params && obj.params.changeable !== false ){
 	    savesel.push(obj.params.id);
 	}
     }
