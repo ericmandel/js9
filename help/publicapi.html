@@ -129,7 +129,7 @@ where:
 <li><b>opts</b>: optional object or JSON string containing image parameters
 </ul>
 <p>
-Load a FITS file (or even a PNG/JPEG file) into JS9. You also can pass
+Load a FITS file (or a PNG/JPEG file) into JS9. You also can pass
 an in-memory buffer containing a FITS file, a blob containing a FITS
 file, or a string containing a base64-encoded FITS file. Finally, you
 can pass a generic <b>data object</b> containing the following properties:
@@ -517,8 +517,8 @@ The image data object contains the following information:
 <li><b>id</b>: the id of the file that was loaded into JS9
 <li><b>file</b>: the file or URL that was loaded into JS9
 <li><b>fits</b>: the FITS file associated with this image
-<li><b>source</b>: "fits" if a FITS file was downloaded, "fits2png" if a representation file was retrieved
-<li><b>imtab</b>: "image" for FITS images and png files, "table" for FITS binary tables
+<li><b>source</b>: "fits" if a FITS file was loaded, "img" if PNG or JPEG
+<li><b>imtab</b>: "image" for FITS images and PNG/JPEG files, "table" for FITS binary tables
 <li><b>width</b>: x dimension of image
 <li><b>height</b>: y dimension of image
 <li><b>fwidth</b>: x dimension of image or fully binned table in original file
@@ -550,11 +550,8 @@ Python. Currently, the "array" method should generally be used (this
 is now the default for the pyjs9 interface to Python.)
 
 <p>
-The <b>file</b> value can be a FITS file or a representation PNG file. The
-<b>fits</b> value will be the path of the FITS file associated with
-this image. For a presentation PNG file, the path generally will be
-relative to the JS9 install directory. For a normal FITS file, the path
-usually is an absolute path to the FITS file.
+The <b>file</b> the path of the FITS file associated with
+this image.
 
 <p>
 The <b>header</b> object contains FITS header keywords. Note that all
@@ -6060,8 +6057,7 @@ socket.io protocol (in the Node.js implementation) or CGI. For
 example, when a remote analysis call is made, JS9 sends a message to the
 back-end server detailing the task to call, parameters to pass, etc. Results
 are then returned to JS9 for display. JS9 also sends messages to the
-back-end server when a new image is displayed, when a FITS file is to 
-be converted into a PNG representation file, etc.
+back-end server when a new image is displayed.
 <p>
 Communication with the back-end is usually done behind the scenes and
 need not concern users or application programmers. However, if you
@@ -6275,7 +6271,7 @@ See js9onchange.html for an example of using this callback function.
 
 <p><hr><p>
 
-<h5>Last updated: May 7, 2021</h5>
+<h5>Last updated: June 1, 2021</h5>
 </div>
 
 </body>

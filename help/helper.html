@@ -55,7 +55,6 @@ Other less-used switches are:
 --with-cgidir=[path]     cgi install directory e.g., /var/www/public_html/cgi-bin
 --with-cgiurl=[url]      cgi url relative to the web root, e.g.. ./cgi-bin/js9
 --with-cgixpath=[dirs]   directories to add to cgi path
---with-png=[path]        directory containing lib/png to build tpos, e.g., /usr/local
 </pre>
 
 <p>
@@ -302,27 +301,7 @@ your web server's configuration file and review the web access and
 error logs. If you continue to have problems, please let us know and
 we will try to help.
 
-<h3>Miscellaneous Notes</h3>
-
-<p>
-<b>DEPRECATED:</b> For <b>fits2png</b> processing, the build of the
-JS9 server-side tpos program (which converts FITS files to the PNG
-representation file) requires the libpng library. If libpng is not
-already installed on your system, it is available at:
-<pre>
-    http://www.libpng.org/pub/png/libpng.html
-</pre>
-Of course, Linux users can install libpng in the "usual way", e.g., for CentOS:
-<pre>
-    sudo yum install libpng-devel
-</pre>
-Any relatively modern version of the png library should suffice
-(subject to security fixes, etc.) 
-<p>
-In any case, to build tpos, you must tell configure where to look for
-the png libraries and include files using the <b>--with-png=[dir]</b> switch.]
-
-<h5>Last updated: November 18, 2020</h5>
+<h5>Last updated: June 1, 2021</h5>
 </div>
 
 </body>
