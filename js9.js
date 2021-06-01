@@ -969,10 +969,6 @@ JS9.Image = function(file, params, func){
     // offsets into canvas to display
     this.ix = 0;
     this.iy = 0;
-    // create the png object
-    this.png = {};
-    // image element to hold png file, from which array data is generated
-    this.png.image = new Image();
     // init status object
     this.status = {};
     // RGB image
@@ -1026,6 +1022,8 @@ JS9.Image = function(file, params, func){
 	// was a static RGB file specified?
 	if( localOpts && localOpts.rgbFile ){
 	    this.rgbFile = localOpts.rgbFile;
+	    // create the png object with image to hold png file
+	    this.png = {image: new Image()};
 	    // callback to fire when static RGB image is loaded
 	    $(this.png.image).on("load", () => {
 		let ss;
@@ -21754,6 +21752,7 @@ JS9.handleImageFile = function(file, options, handler){
 		    hdu.dmax = Math.max(hdu.dmax, hdu.data[i]);
 		}
 	    }
+	    options.source = "img";
 	    handler(hdu, options);
 	};
 	img.src = ev.target.result;
