@@ -29,6 +29,7 @@
       files) are not available in this mode, leading to the following
       limitations:
       <ul>
+	<li> no webassembly (so FITS processing is noticeably slower)
 	<li> no js9Prefs.json for site-wide configuration
 	<li> no back-end helper will be run
 	<li> no help files will be available (and no Help menu option)
@@ -38,7 +39,6 @@
     <table cellspacing="15">
     <tr valign="top">
     <td>
-    FITS representation files:
     <ul>
     <li> <a href='javascript:JS9.Load("data/fits/casa.fits.gz", {scale:"log", parentFile:"data/fits/casa.fits"});'>CAS-A (Chandra)</a>
     <li> <a href='javascript:JS9.Load("data/fits/3c273.fits.gz", {scale:"log", colormap:"heat", parentFile:"data/fits/3c273.fits"});'>3c273 (Chandra)</a>
@@ -46,7 +46,6 @@
     </ul>
     </td>
     <td>
-    FITS images and binary tables:
     <ul>
     <li> <a href='javascript:JS9.Load("data/fits/snr.fits", {scale:"log", colormap:"heat"});'>CTB 109 (Einstein, small)</a>
     <li> <a href='javascript:JS9.Load("data/fits/ngc1316.fits", {scale:"linear", colormap:"cool"});'>ngc1316 (AIPS, small)</a>
