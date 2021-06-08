@@ -16850,9 +16850,9 @@ JS9.Regions.opts = {
     tags: "source,include",
     strokeWidth: 2,
     // annuli: inner and outer radius, number of annuli
-    iradius: 0,
+    iradius: 15,
     oradius: 30,
-    nannuli: 2,
+    nannuli: 1,
     // box
     width: 60,
     height: 60,
