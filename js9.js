@@ -3381,6 +3381,8 @@ JS9.Image.prototype.displaySection = function(opts, func){
 	    // save current regions (before displaying new image)
 	    oreg = this.listRegions("all", {mode: 1,
 					    includedcoords: true,
+					    ignoreignore: true,
+					    saveediting: true,
 					    savewcsconfig: true,
 					    saveid: true});
 	    // func to perform when image is loaded
@@ -3434,6 +3436,8 @@ JS9.Image.prototype.displaySection = function(opts, func){
 		// save current regions (before displaying new image)
 		oreg = this.listRegions("all", {mode: 1,
 						includedcoords: true,
+						ignoreignore: true,
+						saveediting: true,
 						savewcsconfig: true,
 						saveid: true});
 		// func to perform when image is loaded
@@ -13309,8 +13313,12 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	nparams.changeable = !nparams.locked;
     }
     // changeable: short-hand for allowing objects to move and resize
-    if( nparams.changeable !== undefined ){
-	tf = !nparams.changeable;
+    if( nparams.changeable !== undefined || nparams.editing !== undefined ){
+	if( nparams.editing !== undefined ){
+	    tf = nparams.editing;
+	} else {
+	    tf = !nparams.changeable;
+	}
 	nopts.lockMovementX = tf;
 	nopts.lockMovementY = tf;
 	nopts.lockRotation = tf;
@@ -13339,6 +13347,10 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    nopts.lockRotation = tf;
 	    nopts.hasRotatingPoint = !tf;
 	}
+    }
+    // editing affects visibility of shape
+    if( nparams.editing !== undefined ){
+	nopts.visible = !nparams.editing;
     }
     // return shape, opts and params
     return {shape: shape, opts: nopts, params: nparams};
@@ -13407,6 +13419,8 @@ JS9.Fabric._exportShapeOptions = function(opts){
 		return false;
 	    }
 	    return true;
+	case "editing":
+	    return opts.editing;
 	default:
 	    return true;
 	}
@@ -14418,6 +14432,9 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     pub.tags = obj.params.tags;
     pub.sticky = obj.params.sticky;
     pub.preservedcoords = obj.params.preservedcoords;
+    if( obj.params.ignore ){
+	pub.ignore = true;
+    }
     if( obj.params.parent ){
 	pub.parent = obj.params.parent.obj.params.id;
     } else {
@@ -15148,7 +15165,6 @@ JS9.Fabric.getShapes = function(layerName, shape, opts){
 	if( opts.includeObj ){
 	    myshape.obj = obj;
 	}
-	// add this region to the output array
 	shapes.push(myshape);
     });
     // sort shapes by id to maintain original order of creation
@@ -15424,7 +15440,14 @@ JS9.Fabric.refreshShapes = function(layerName){
     // sanity check
     if( !layerName ){ return; }
     // convenience variables
-    opts = {mode: 1, sticky: false, savewcsconfig: true, saveid: true};
+    opts = {
+	mode:1,
+	sticky:false,
+	ignoreignore:true,
+	saveediting:true,
+	savewcsconfig:true,
+	saveid:true
+    };
     // temporarily turn off plugin execution to avoid firing regions callbacks
     txeq = JS9.globalOpts.xeqPlugins;
     JS9.globalOpts.xeqPlugins = false;
@@ -15801,6 +15824,113 @@ JS9.Fabric.removePolygonAnchors = function(dlayer, shape){
     }
 };
 
+// ungroup annulus so that individual circles can be adjusted
+// call using image context
+JS9.Fabric._ungroupAnnulus = function(layerName, shape){
+    let i, id, layer, objs, opts;
+    const epsilon = 0.000001;
+    layer = this.getShapeLayer(layerName);
+    // sanity check
+    if( !layer ){ return; }
+    // construct edit parameter object
+    this.editAnnulus = { annulus: shape.params.id, ids: [] };
+    // properties of circles in the edit object
+    opts = {
+	top: shape.top,
+	left: shape.left,
+	lockMovementX: true,
+	lockMovementY: true,
+	stroke: shape.stroke,
+	strokeDashArray: [3,1]
+    };
+    // add circles so that smallest is on top
+    objs = shape.getObjects();
+    // largest to smallest so smallest ends up on top of the shape stack
+    objs.sort((a, b) => {return b.radius - a.radius;});
+    // add circle for edit
+    for(i=0; i<objs.length; i++){
+	opts.radius = objs[i].radius * shape.scaleX;
+	// can't edit radius of 0, because fabric tracks scaleX * radius
+	// so make it tiny, and undo as needed on the other end
+	if( opts.radius === 0 ){
+	    opts.radius = epsilon;
+	}
+	opts.ignore = true;
+	id = this.addShapes(layerName, "circle", opts);
+	this.editAnnulus.ids.push(id);
+    }
+    // make the original annulus not visible
+    opts = {editing: true};
+    this.changeShapes(layerName, shape, opts);
+    // deactivate selection and send to the back of the shape stack
+    if( layer.canvas.getActiveObject() === shape ){
+	layer.canvas.discardActiveObject();
+    }
+    layer.canvas.sendToBack(shape);
+    layer.canvas.renderAll();
+};
+
+// regroup annulus after adjusting individual circles
+// call using image context
+JS9.Fabric._regroupAnnulus = function(layerName, e){
+    let i, j, id, ids, cid, layer, opts, discard;
+    const epsilon = 0.000001;
+    const circles = [];
+    // sanity check
+    if( !this.editAnnulus ){ return; }
+    layer = this.getShapeLayer(layerName);
+    // sanity check
+    if( !layer ){ return; }
+    // if shift key is pressed, we discard the edits
+    if( typeof e === "boolean" ){
+	discard = e;
+    } else if( typeof e === "object" ){
+	discard = e.shiftKey;
+    }
+    // make the annulus visible and changeable again
+    opts = {editing: false};
+    // also change the radii unless we are discarding
+    if( !discard ){
+	// get list of circles
+	layer.canvas.getObjects().forEach( (o) => {
+	    if( o.params && o.params.shape === "circle" ){
+		circles.push(o);
+	    }
+	});
+	// will hold new radii
+	opts.radii = [];
+	// ids of circles
+	ids = [...this.editAnnulus.ids];
+	// for each id, find the circle object and get its radius
+	// (what we're looking for is likely at the end of the stack)
+	for(j=circles.length-1; j>=0; j--){
+	    cid = circles[j].params.id;
+	    for(i=ids.length-1; i>=0; i--){
+		id = ids[i];
+		if( cid === id ){
+		    // if pub.radius is epsilon, change back to 0
+		    if( circles[j].pub.radius === epsilon ){
+			circles[j].pub.radius = 0;
+		    }
+		    opts.radii.push(circles[j].pub.radius);
+		    ids.splice(i, 1);
+		    break;
+		}
+	    }
+	    if( !ids.length ){
+		break;
+	    }
+	}
+	opts.radii.sort((a, b) => {return a - b;});
+    }
+    // change the annulus
+    this.changeShapes(layerName, this.editAnnulus.annulus, opts);
+    // remove the edit circles
+    this.removeShapes(layerName, this.editAnnulus.ids);
+    // remove current edit parameters
+    delete this.editAnnulus;
+};
+
 // update child regions
 // don't need to call using image context
 JS9.Fabric.updateChildren = function(dlayer, shape, type){
@@ -15987,6 +16117,10 @@ JS9.Fabric.restoreSelection = function(layerName){
 	    canvas: canvas
 	});
 	canvas.setActiveObject(nsel);
+	if( layerName === "regions" ){
+	    this.clickInRegion = true;
+	    this.clickInLayer = "regions";
+	}
 	this.updateShapes(layerName, nselarr, "restore");
     }
     delete layer.savesel;
@@ -16086,6 +16220,8 @@ JS9.Fabric.initGraphics = function(){
     JS9.Image.prototype._handleChildText = JS9.Fabric._handleChildText;
     JS9.Image.prototype._addPolygonPoint = JS9.Fabric._addPolygonPoint;
     JS9.Image.prototype._removePolygonPoint = JS9.Fabric._removePolygonPoint;
+    JS9.Image.prototype._ungroupAnnulus = JS9.Fabric._ungroupAnnulus;
+    JS9.Image.prototype._regroupAnnulus = JS9.Fabric._regroupAnnulus;
     JS9.Image.prototype._updateMultiDialogs = JS9.Fabric._updateMultiDialogs;
     JS9.Image.prototype.addShapes = JS9.Fabric.addShapes;
     JS9.Image.prototype.updateShapes = JS9.Fabric.updateShapes;
@@ -16770,8 +16906,7 @@ JS9.Regions.opts = {
     // mouse double-click processing
     onmousedblclick(im, xreg, evt, target){
 	let params = target.params;
-//	if( (params && !params.winid && params.changeable !== false) ||
-	if( (params && !params.winid )                               ||
+	if( (params && !params.winid && !params.ignore )             ||
 	    (!params && target.type === "activeSelection")           ||
 	    (!params && target.type === "group")                     ){
 	    im.displayRegionsForm(target);
@@ -16782,15 +16917,19 @@ JS9.Regions.opts = {
     onmousedown(im, xreg, evt, target){
 	let poly;
 	let params = target.params;
-	// add polygon points
-	if( JS9.specialKey(evt) ){
+	if( JS9.specialKey(evt) && params ){
+	    im._regroupAnnulus(params.layerName, evt);
 	    if( target.type === "polygon" || target.type === "polyline" ){
+		// add polygon point
 		im._addPolygonPoint(params.layerName, target, evt);
 		im._updateShape(params.layerName, target, null, "update");
 	    } else if( target.polyparams && target.polyparams.polygon  ){
+		// remove polygon point
 		poly = target.polyparams.polygon;
 		im._removePolygonPoint(poly.params.layerName, target);
 		im._updateShape(poly.params.layerName, poly, null, "update");
+	    } else if( params.shape === "annulus" ){
+		im._ungroupAnnulus(params.layerName, target);
 	    }
 	}
     },
@@ -18705,6 +18844,10 @@ JS9.Regions.listRegions = function(which, opts, layerName){
 	if( region.preservedcoords && !opts.includedcoords ){
 	    continue;
 	}
+	// don't list regions to a display if ignore is set
+	if( region.ignore && !opts.ignoreignore ){
+	    continue;
+	}
 	// preserving dcoords get handled specially
 	if( $.isArray(obj.params.preservedcoords) ){
 	    // make array of raw values to output
@@ -18805,10 +18948,15 @@ JS9.Regions.listRegions = function(which, opts, layerName){
 	// add id, if necessary
 	if( opts.saveid ){
 	    exports.id = region.id;
+	} else {
+	    delete exports.id;
 	}
+	// save wcsconfig, if necessary
 	if( opts.savewcsconfig && region.wcsconfig   &&
 	    Object.keys(region.wcsconfig).length > 0 ){
 	    exports.wcsconfig = $.extend(true, {}, region.wcsconfig);
+	} else {
+	    delete exports.wcsconfig;
 	}
 	// add color, if necessary
 	if( region.color && !tagcolors.includes(region.color) ){
@@ -18817,6 +18965,10 @@ JS9.Regions.listRegions = function(which, opts, layerName){
 	// display tags?
 	if( dotags ){
 	    tagstr = ` # ${tagjoin}`;
+	}
+	// save editing?
+	if( !opts.saveediting ){
+	    delete exports.editing;
 	}
 	// use wcs string, if available
 	if( region.wcsstr && JS9.isWCSSys(this.params.wcssys) ){
@@ -23546,7 +23698,11 @@ JS9.mouseUpCB = function(evt){
     } else {
 	// shift-click: pan to mouse position, if necessary
 	if( isclick && !im.clickInRegion && JS9.globalOpts.metaClickPan ){
-	    im.setPan(im.ipos.x,im.ipos.y);
+	    if( im.editAnnulus ){
+		im._regroupAnnulus("regions", evt);
+	    } else {
+		im.setPan(im.ipos.x,im.ipos.y);
+	    }
 	}
     }
     // safe to unset clickInRegion now
