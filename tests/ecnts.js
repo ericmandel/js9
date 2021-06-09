@@ -17,8 +17,11 @@ JS9.Load("data/kes75/kes75_evt2.fits.gz", {scale: "log", onload: function(im){
     // get counts in regions as each image is displayed
     const getcnts = function(i){
   	return function(xim){
+	    process.stdout.write(`processing filter: ${f[i]}\n`);;
 	    xim.setScale("log")
+	    process.stdout.write(`set colormap: ${cmaps[got]}\n`);;
 	    xim.setColormap(cmaps[got]);
+	    process.stdout.write(`running counts in regions\n\n`);;
   	    s += xim.countsInRegions();
   	    got++;
   	    if( got === 3 ){
