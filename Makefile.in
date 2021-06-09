@@ -359,9 +359,10 @@ install-webdirs:	FORCE
 	    fi; \
          done; \
 	 if [ x$(USEHELPER) = xyes ]; then \
-	   if [ -d $(WEBDIR)/node_modules/socket.io-3 ]; then \
-	     echo "removing backend dir: node_modules"; \
-	     rm -rf $(WEBDIR)/node_modules; \
+	   if [ -d $(WEBDIR)/node_modules ]; then \
+	     echo "moving web dir: node_modules (to avoid conflicts)"; \
+	     rm -rf $(WEBDIR)/onode_modules; \
+	     mv $(WEBDIR)/{,o}node_modules; \
 	   fi; \
 	   echo "Installing backend helper dirs ..."; \
 	   for i in $(BEDIRS); do \
