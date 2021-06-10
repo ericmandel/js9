@@ -15090,6 +15090,11 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
 	    arr.push(obj);
 	}
     });
+    // discard active object if we are deleting one of its shapes
+    // do before delete, as per: http://fabricjs.com/v2-breaking-changes-2
+    if( undoao ){
+	canvas.discardActiveObject();
+    }
     // remove groups
     for(i=0; i<grp.length; i++){
 	this.ungroupShapes(layerName, grp[i]);
@@ -15097,10 +15102,6 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
     // remove marked objects
     for(i=0; i<arr.length; i++){
 	canvas.remove(arr[i]);
-    }
-    // discard active object if we just deleted one of its shapes
-    if( undoao ){
-	canvas.discardActiveObject();
     }
     canvas.renderAll();
     // reset the counter if all shapes were removed?
