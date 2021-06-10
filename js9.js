@@ -14383,18 +14383,29 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     // callbacks for regions (but not child regions or some modes)
     const xplugins = () => {
 	let xname;
+	const xeq = (onchange) => {
+	    try{
+		this.params.xeqonchange = false;
+		JS9.xeqByName(onchange, window, this, pub);
+	    }
+	    catch(e){
+		JS9.log("error in onchange: %s [%s]\n%s",
+			this.id, e.message, JS9.strace(e));
+	    }
+	    finally{
+		this.params.xeqonchange = true;
+	    }
+	};
 	if( !obj.params.parent && !mode.match(moderexp) ){
-	    // when xeqonchange is set
-	    if( this.params.xeqonchange && layer.show && layer.opts.onchange ){
-		try{
-		    this.params.xeqonchange = false;
-		    JS9.xeqByName(layer.opts.onchange, window, this, pub);
+	    // when xeqonchange is set on a layer
+	    if( this.params.xeqonchange && layer.show ){
+		if( layer.opts.onchange ){
+		    xeq(layer.opts.onchange);
+		} else if( layerName === "regions" &&
+			   JS9.Regions.opts.onchange ){
+		    // if onchange was set after region layer was set up
+		    xeq(JS9.Regions.opts.onchange);
 		}
-		catch(e){
-		    JS9.log("error in onchange: %s [%s]\n%s",
-			    this.id, e.message, JS9.strace(e));
-		}
-		finally{this.params.xeqonchange = true;}
 	    }
 	    // plugin callbacks: these have the form on[layer]change,
 	    // e.g. onregionschange
