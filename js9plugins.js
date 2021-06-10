@@ -5236,7 +5236,7 @@ JS9.Keyboard.arrowKey = function(im, evt, inc, active){
 	im.valpos = null;
 	JS9.MouseTouch.Actions["display value/position"](im, im.ipos, evt);
     }
-    if( Object.prototype.hasOwnProperty.call(JS9, "Magnifier") ){
+    if( Object.prototype.hasOwnProperty.call(JS9, "Magnifier") && !active ){
 	JS9.Magnifier.display(im, im.ipos);
     }
     if( JS9.globalOpts.regArrowCrosshair                       &&
