@@ -185,6 +185,7 @@ JS9.globalOpts = {
     panWithinDisplay: false,	// keep panned image within the display?
     pannerDirections: true,	// display direction vectors in panner?
     magnifierRegions: true,	// display regions in magnifier?
+    editRegions: true,		// double-click to edit regions?
     svgBorder: true,		// border around the display when saving to svg?
     unremoveReg: 100,           // how many removed regions to save
     resetEmptyShapeId: false,	// reset nshape counter if all shapes removed?
@@ -16902,7 +16903,9 @@ JS9.Regions.opts = {
 	if( (params && !params.winid && !params.ignore )             ||
 	    (!params && target.type === "activeSelection")           ||
 	    (!params && target.type === "group")                     ){
-	    im.displayRegionsForm(target);
+	    if( JS9.globalOpts.editRegions ){
+		im.displayRegionsForm(target);
+	    }
 	}
 	return;
     },
