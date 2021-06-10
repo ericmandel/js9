@@ -15299,33 +15299,35 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	// mainly: change of size => remove size-based scaling factor
 	switch(obj.params.shape){
 	case "annulus":
-	    // remove existing annuli
-	    // can't remove inside the forEachObject loop
-	    obj.forEachObject( (tobj) => { orad.push(tobj); });
-	    // so do it outside the loop
-	    rlen = orad.length;
-	    for(i=0; i<rlen; i++){
-		obj.remove(orad[i]);
-		canvas.remove(orad[i]);
-	    }
-	    // generate new annuli, applying changes
-	    rlen = obj.params.radii.length;
-	    maxr = 0;
-	    topts = $.extend(true, {}, opts);
-	    topts.stroke = topts.stroke || obj.get("stroke");
-	    for(i=0; i<rlen; i++){
-		topts.radius = obj.params.radii[i];
-		s = new fabric.Circle(topts);
-		maxr = Math.max(maxr, obj.params.radii[i]);
-		obj.add(s);
-	    }
-	    obj.scaleX = zoom;
-	    obj.scaleY = zoom;
-	    // reset size of group
-	    obj.width = maxr * 2;
-	    obj.height = maxr * 2;
-	    if( ao === obj ){
-		canvas.setActiveObject(obj);
+	    if( opts.radii && opts.radii.length ){
+		// remove existing annuli
+		// can't remove inside the forEachObject loop
+		obj.forEachObject( (tobj) => { orad.push(tobj); });
+		// so do it outside the loop
+		rlen = orad.length;
+		for(i=0; i<rlen; i++){
+		    obj.remove(orad[i]);
+		    canvas.remove(orad[i]);
+		}
+		// generate new annuli, applying changes
+		rlen = obj.params.radii.length;
+		maxr = 0;
+		topts = $.extend(true, {}, opts);
+		topts.stroke = topts.stroke || obj.get("stroke");
+		for(i=0; i<rlen; i++){
+		    topts.radius = obj.params.radii[i];
+		    s = new fabric.Circle(topts);
+		    maxr = Math.max(maxr, obj.params.radii[i]);
+		    obj.add(s);
+		}
+		obj.scaleX = zoom;
+		obj.scaleY = zoom;
+		// reset size of group
+		obj.width = maxr * 2;
+		obj.height = maxr * 2;
+		if( ao === obj ){
+		    canvas.setActiveObject(obj);
+		}
 	    }
 	    break;
 	case "box":
