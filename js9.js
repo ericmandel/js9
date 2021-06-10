@@ -14403,15 +14403,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     };
     // sanity check
     if( !obj || !obj.params ){ return; }
-    // some updates just need to have the plugin callbacks called
-    switch(mode){
-    case "remove":
-	pub.mode = mode;
-	xplugins();
-	return;
-    default:
-	break;
-    }
+    // convenience variables
     ginfo = ginfo || {};
     opts = opts || {};
     mode = mode || "update";
