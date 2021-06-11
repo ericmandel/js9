@@ -110,18 +110,17 @@ case $name in
 		$*
   ;;
 
-  smartx*|js9*)
-  BASE=/smartx
+  js9*)
+  BASE=/js9
   ./configure 	$CF							\
 		--with-helper="nodejs"					\
 		--prefix=$BASE						\
-		--with-webdir=$BASE/js9/www/js9				\
-		--with-cfitsio=$BASE/cfitsio				\
-		--with-saodir=$BASE/js9/www				\
+		--with-cfitsio=$BASE					\
+		--with-webdir=$BASE/www/js9				\
+		--with-saodir=$BASE/www					\
 		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS"			\
 		$*
   ;;
-
 
   tmp)
   ./configure 	$CF						\
