@@ -499,7 +499,7 @@ int copyImageSection(fitsfile *ifptr, fitsfile *ofptr,
 /* process this command */
 static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
 {
-  char *tfilter;
+  char *tfilter=NULL;
   char *s=NULL;
   char *t=NULL;
   char *jdir=NULL;
