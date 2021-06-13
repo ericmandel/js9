@@ -110,7 +110,7 @@ case $name in
 		$*
   ;;
 
-  js9*)
+  smartx*|js9*)
   BASE=/js9
   ./configure 	$CF							\
 		--with-helper="nodejs"					\
@@ -121,6 +121,7 @@ case $name in
 		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS"			\
 		$*
   ;;
+
 
   tmp)
   ./configure 	$CF						\
