@@ -5,10 +5,10 @@
 # node is not required, which makes the js9 app self-contained
 
 # default variables
-HELPER=localhost
+HELPER=${JS9_HELPER:-localhost}
 ID=JS9
 JS9WEBSITE="https://js9.si.edu:2718"
-PORT=2718
+PORT=${JS9_HELPER_PORT:-2718}
 TIMEOUT=600
 
 usage(){
