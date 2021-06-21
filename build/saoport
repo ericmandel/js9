@@ -7,7 +7,7 @@ if [ ! -r $FILE ]; then
   exit 1
 fi
 case `uname -n` in
-  js9c7*)
+  js9-ssl*)
     sed -e 's#\("helperPort" *: *\)[^,]*#\1443#' < $FILE > $FILE.new && mv $FILE.new $FILE
   ;;
   baba*)
