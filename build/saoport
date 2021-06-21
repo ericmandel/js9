@@ -1,0 +1,19 @@
+#!/bin/bash
+# set -x
+
+FILE="sao/js9prefs.js"
+if [ ! -r $FILE ]; then
+  echo "$FILE not found"
+  exit 1
+fi
+case `uname -n` in
+  js9c7*)
+    sed -i ".bak" -e 's#\("helperPort" *: *\)[^,]*#\1443#' $FILE
+  ;;
+  baba*)
+    sed -i ".bak" -e 's#\("helperPort" *: *\)[^,]*#\180#' $FILE
+  ;;
+esac
+if [ $? = 0 ]; then
+  rm -f $FILE.bak
+fi
