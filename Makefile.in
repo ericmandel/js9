@@ -271,16 +271,11 @@ prefs:		FORCE
 		  cp -p build/js9prefs-default.js js9prefs.js;)
 
 saoprefs:	FORCE
-		@(VER=`node --version | tr -d v | awk -F. '{print $$1 * 100 + $$2}'`; \
-		if [ $$VER -lt 1016 ]; then \
-		    echo "editing js9Prefs for SAO installations (v2) ..."; \
-		    sed -f $(BSCR)/saoprefs.sed < js9Prefs.json > sao/js9Prefs.json;\
-		    sed -f  $(BSCR)/saoprefs.sed < js9prefs.js  > sao/js9prefs.js;\
-		else \
-		    echo "editing js9Prefs for SAO installations (v3) ..."; \
-		    sed -f $(BSCR)/saoprefs-v3.sed < js9Prefs.json > sao/js9Prefs.json;\
-		    sed -f  $(BSCR)/saoprefs-v3.sed < js9prefs.js  > sao/js9prefs.js;\
-		fi; \
+		@(echo "editing js9Prefs for SAO installations ..."; \
+	        sed -f $(BSCR)/saoprefs.sed < js9Prefs.json > sao/js9Prefs.json; \
+	        sed -f $(BSCR)/saoprefs.sed < js9prefs.js > sao/js9prefs.js; \
+		echo "editing helper port for SAO installations ..."; \
+		$(BSCR)/saoport; \
 		echo "editing helper file for SAO installations ..."; \
 		$(BSCR)/mkhelper "$(HELPER)" \
 		"$(CGIDIR)" "$(CGIURL)" "$(CGIXPATH)" sao/js9Prefs.json;)
