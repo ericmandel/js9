@@ -8,12 +8,9 @@ if [ ! -r $FILE ]; then
 fi
 case `uname -n` in
   js9c7*)
-    sed -i ".bak" -e 's#\("helperPort" *: *\)[^,]*#\1443#' $FILE
+    sed -e 's#\("helperPort" *: *\)[^,]*#\1443#' < $FILE > $FILE.new && mv $FILE.new $FILE
   ;;
   baba*)
-    sed -i ".bak" -e 's#\("helperPort" *: *\)[^,]*#\180#' $FILE
+    sed -e 's#\("helperPort" *: *\)[^,]*#\180#' < $FILE > $FILE.new && mv $FILE.new $FILE
   ;;
 esac
-if [ $? = 0 ]; then
-  rm -f $FILE.bak
-fi

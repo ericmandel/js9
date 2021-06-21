@@ -482,6 +482,7 @@ install-sao:	install-gzip saoprefs install-webcgi install-demos install-tests
 		    echo "installing file: $$i" ; \
 		    j=`basename $$i`; \
 	            $(CP) $$i $(WEBDIR)/$$j; \
+		    rm -r $$i; \
 		fi; \
 	    done; \
 	  fi; \
