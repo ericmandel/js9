@@ -222,42 +222,46 @@ and in this
 <a href="https://stackoverflow.com/questions/36472920/apache-proxy-configuration-for-socket-io-project-not-in-root" target="_blank">stackoverflow discussion</a>.
 
 <p>
-tl;dnr: a variation of the following httpd.conf configuration should
-work for most Apache web servers:
+A variation of the following httpd.conf (or ssl.conf for https)
+configuration should work for most Apache web servers. See
+the above discussions and <a href="https://socket.io/docs/v4/reverse-proxy/">
+socket.io discussion of reverse proxy</a> for more information.
+
 <pre>
-RewriteEngine On
+  # js9 client connects to main server => rewrites to js9 helper on 2718
+  # NB: helper does not use ssl (ssl-based proxy doesn't work, afaik)
+  RewriteEngine    on
 
-RewriteCond %{REQUEST_URI}  ^/socket.io-3          [NC]
-RewriteCond %{QUERY_STRING} transport=websocket    [NC]
-RewriteRule /(.*)           ws://localhost:2718/$1 [P,L]
-ProxyPass        /socket.io-3 http://localhost:2718/socket.io-3
-ProxyPassReverse /socket.io-3 http://localhost:2718/socket.io-3
+  # new style:
+  # https://socket.io/docs/v4/reverse-proxy/
+  RewriteCond      %{HTTP:Upgrade}    websocket                 [NC]
+  RewriteCond      %{HTTP:Connection} upgrade                   [NC]
+  RewriteRule      ^/?(.*)            ws://localhost:2718/$1    [P]
 
-RewriteCond %{REQUEST_URI}  ^/socket.io            [NC]
-RewriteCond %{QUERY_STRING} transport=websocket    [NC]
-RewriteRule /(.*)           ws://localhost:2718/$1 [P,L]
-ProxyPass        /socket.io http://localhost:2718/socket.io
-ProxyPassReverse /socket.io http://localhost:2718/socket.io
+  # old style:
+  # https://stackoverflow.com/questions/36472920/apache-proxy-configuration-for-socket-io-project-not-in-root
+  # RewriteCond    %{REQUEST_URI}     ^/socket.io               [NC]
+  # RewriteCond    %{QUERY_STRING}    transport=websocket       [NC]
+  # RewriteRule    ^/?(.*)            ws://localhost:2718/$1    [P]
 
-RewriteCond %{REQUEST_URI}  ^/msg                    [NC]
-RewriteRule /(.*)           http://localhost:2718/$1 [P,L]
+  ProxyPass        /socket.io         http://localhost:2718/socket.io
+  ProxyPassReverse /socket.io         http://localhost:2718/socket.io
 
-ProxyPass        /msg       http://localhost:2718/msg
-ProxyPassReverse /msg       http://localhost:2718/msg
+  # required to handle js9msg requests to the helper's httpd support:
+  RewriteCond      %{REQUEST_URI}     ^/msg                     [NC]
+  RewriteRule      ^/?(.*)            http://localhost:2718/$1  [P]
 </pre>
-Note that there are two groups of ProxyPass commands dealing with
-socket.io, since we support both version 2 and version 3 of the
-socket.io protocol. The optional ProxyPass of msg allows you to send
-commands using wget or curl to the helper.
+The optional ProxyPass of msg allows you to send commands using wget
+or curl to the helper.
 
 <p>
 NB: when configuring a proxy, you should set the "helperPort" in
-js9prefs.js to 80 (or whatever port your web server listens on) so
-that the browser connects to the helper via the public-facing web
-server. Set the "helperPort" in js9Prefs.json to 2718 (or whatever
-port you choose), so that the helper listens on its own port. This is
-a special situation where the ports will be different for the client
-and the helper.
+js9prefs.js to 80 or 443 (or whatever port your web server listens on)
+so that the browser connects to the helper via the public-facing web
+server. Continue to set the "helperPort" in js9Prefs.json to 2718 (or
+whatever port you choose), so that the helper listens on its own
+port. This is a special situation where the ports will be different
+for the client and the helper.
 
 <h3>Notes on the CGI-based Server-side helper</h3>
 
