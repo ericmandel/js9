@@ -90,7 +90,12 @@ const globalRelatives = ["analysisPlugins",
 const getHost = function(req){
     // socket.io
     if( req.handshake ){
-	return req.client.conn.remoteAddress;
+	if( req.handshake.headers                    &&
+	    req.handshake.headers['x-forwarded-for'] ){
+	    return req.handshake.headers['x-forwarded-for'].split(',')[0];
+	} else {
+	    return req.client.conn.remoteAddress;
+	}
     }
     // http server
     // http://stackoverflow.com/questions/19266329/node-js-get-clients-ip
