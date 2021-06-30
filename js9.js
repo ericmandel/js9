@@ -1919,6 +1919,26 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 JS9.Image.prototype.mkSection = function(...args){
     let s, xtra;
     const sect = this.rgb.sect;
+    const getWidth = (zoom) => {
+	let len;
+	let canvas = this.display.canvas;
+	if( this.params.transformAngle ){
+	    len = Math.max(canvas.width, canvas.height);
+	    return Math.min(this.raw.width * zoom, len);
+	} else {
+	    return Math.min(this.raw.width * zoom, canvas.width);
+	}
+    };
+    const getHeight = (zoom) => {
+	let len;
+	let canvas = this.display.canvas;
+	if( this.params.transformAngle ){
+	    len = Math.max(canvas.width, canvas.height);
+	    return Math.min(this.raw.height * zoom, len);
+	} else {
+	    return Math.min(this.raw.height * zoom, canvas.height);
+	}
+    };
     // save zoom in case we are about to change it (regions have to be scaled)
     sect.ozoom  = sect.zoom;
     // process args
@@ -1927,18 +1947,16 @@ JS9.Image.prototype.mkSection = function(...args){
 	// no args: init to display central part of image
 	sect.xcen   = Math.floor(this.raw.width/2);
 	sect.ycen   = Math.floor(this.raw.height/2);
-	sect.width  = Math.min(this.raw.width, this.display.canvas.width);
-	sect.height = Math.min(this.raw.height,this.display.canvas.height);
+	sect.width  = getWidth(1);
+	sect.height = getHeight(1);
 	break;
     case 1:
 	if( !JS9.isNumber(args[0]) ){
 	    JS9.error(`invalid input for generating section: ${args[0]}`);
 	}
 	sect.zoom   = parseFloat(args[0]);
-	sect.width  = Math.min(this.raw.width*sect.zoom,
-			       this.display.canvas.width);
-	sect.height = Math.min(this.raw.height*sect.zoom,
-			       this.display.canvas.height);
+	sect.width  = getWidth(sect.zoom);
+	sect.height = getHeight(sect.zoom);
 	break;
     case 2:
 	// two args: x, y
@@ -1949,12 +1967,10 @@ JS9.Image.prototype.mkSection = function(...args){
 	sect.ycen   = parseFloat(args[1]);
 	// reset width and height if there was a section offset
 	if( JS9.notNull(sect.ix) ){
-	    sect.width  = Math.min(this.raw.width*sect.zoom,
-				   this.display.canvas.width);
+	    sect.width  = getWidth(sect.zoom);
 	}
 	if( JS9.notNull(sect.iy) ){
-	    sect.height = Math.min(this.raw.height*sect.zoom,
-				   this.display.canvas.height);
+	    sect.height = getHeight(sect.zoom);
 	}
 	break;
     case 3:
@@ -1967,10 +1983,8 @@ JS9.Image.prototype.mkSection = function(...args){
 	sect.xcen   = parseFloat(args[0]);
 	sect.ycen   = parseFloat(args[1]);
 	sect.zoom   = parseFloat(args[2]);
-	sect.width  = Math.min(this.raw.width*sect.zoom,
-			       this.display.canvas.width);
-	sect.height = Math.min(this.raw.height*sect.zoom,
-			       this.display.canvas.height);
+	sect.width  = getWidth(sect.zoom);
+	sect.height = getHeight(sect.zoom);
 	break;
     default:
 	break;
@@ -4568,6 +4582,11 @@ JS9.Image.prototype.setRotate = function(...args){
     this.params.rotate = normRot(rot);
     // update the transform
     this.setTransform();
+    // non-rectangular canvas: redo section to ensure coverage of display
+    if( this.params.transformAngle                               &&
+	this.display.canvas.width !== this.display.canvas.height ){
+	this.mkSection(this.getZoom());
+    }
     // redisplay using these data
     this.displayImage("all", opts);
     // refresh shape layers
@@ -4642,6 +4661,11 @@ JS9.Image.prototype.setRot90 = function(...args){
     this.params.rot90 = normRot(rot);
     // update the transform
     this.setTransform();
+    // non-rectangular canvas: redo section to ensure coverage of display
+    if( this.params.transformAngle                               &&
+	this.display.canvas.width !== this.display.canvas.height ){
+	this.mkSection(this.getZoom());
+    }
     // redisplay using these data
     this.displayImage("all", opts);
     // refresh shape layers

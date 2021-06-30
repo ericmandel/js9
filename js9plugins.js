@@ -10379,8 +10379,8 @@ JS9.Panner.disp = function(im){
 	// this is the transform matrix
 	m = im.params.transform;
 	// translate origin to center of display
-	w2 = panner.img.width / 2;
-	h2 = panner.img.height / 2;
+	w2 = panDisp.canvas.width / 2;
+	h2 = panDisp.canvas.height / 2;
 	ctx.translate(w2, h2);
 	// set new transform
 	ctx.transform(m[0][0], m[0][1], m[1][0], m[1][1], m[2][0], m[2][1]);
