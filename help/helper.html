@@ -124,15 +124,18 @@ by adding wrapper files to the <b>analysis-wrappers</b> directory.)
 See <a href="serverside.html">Server-based Tasks</a> for a description of
 how to configure server-side analysis tasks for your site.
 
-<h3>Notes on Installing the Node.js-based Server-side helper</h3>
+<h3>Notes on Installing the Node.js-based Server-side Helper</h3>
 <p>
 The Node.js server-side helper is noticeably faster than CGI. It also
 offers more power and flexibility, e.g., the node server supports
 external control of the browser from the command line via the
 <b>js9 script</b> and it's underlying <b>js9Msg</b> facility
-(see <a href="./extmsg.html">External Messaging with JS9</a> for
-more information). However, Node.js requires that you open another
-internet port to the outside world.
+(see <a href="./extmsg.html">External Messaging with JS9</a> for more
+information). However, use of the Node.js helper requires that you
+open another internet port to the outside world or configure your web
+server to proxy all server-side helper communication to a
+non-public-facing Node.js server.
+
 
 Node is available at:
 <pre>
@@ -159,14 +162,31 @@ include the directories housing standard Unix tools such as awk, sed,
 grep, and echo.
 
 <p>
-For security reasons, the log file should be created outside the web
-server directory structure.
-
-<p>
 Communication between the JS9 helper and the browser (or desktop)
 utilizes the <b>socket.io</b> protocol and library
 (see <a href="https://socket.io/" target="_blank">socket.io</a> for
 more information).
+
+<p>
+For security reasons, the log file should be created outside the web
+server directory structure.
+
+<p>
+Clients will automatically connect to the Node.js-based JS9 helper
+when an image is loaded into JS9. The server-side helper listens on a
+port specified in the js9Prefs.json file by
+the <b>globalOpts.helperPort</b> value. The default is 2718, but you
+can change this to any open port.
+
+<p>
+For example, some institutions do not allow non-standard ports to be
+open on public-facing hosts.  In such a case, the Node.js-based helper
+can change its port to a standard port allowed by that institution
+(e.g., 8080 or 8000). This can be done by simply changing
+the <b>helperPort</b> property in js9prefs.js (for the client) and
+js9Prefs.json (for the helper).
+
+<h3>Installing in a Secure Environment</h3>
 
 <p>
 If you are running in a secure environment (i.e. your web pages use
@@ -193,38 +213,25 @@ that only the Node.js user can read it:
 </pre>
 and keep that user's password safe!
 
-<h3>Setting up a proxy for the Node.js-based  helper</h3>
+<h3>Setting up a Web Proxy for the Node.js-based Helper</h3>
 
-<p>
-Clients will automatically connect to the Node.js-based JS9 helper
-when an image is loaded into JS9. The server-side helper listens on a
-port specified in the js9Prefs.json file by
-the <b>globalOpts.helperPort</b> value. The default is 2718, but you
-can change this to any open port.
-
-<p>
-For example, some institutions do not allow non-standard ports to be
-open on public-facing hosts.  In such a case, the Node.js-based helper
-can change its port to a standard port allowed by that institution
-(e.g., 8080 or 8000). This can be done by simply changing
-the <b>helperPort</b> property in js9prefs.js (for the client) and
-js9Prefs.json (for the helper).
-
-<p>
-But sometimes even this is not permitted: instead, the Node.js helper is
-required to run as a non-public server.  For this situation, you can
-set up a proxy to pass TCP packets from a public-facing host to the
-helper running on a non-public host. The issues surrounding
-proxying the helper's underlying <a href="https://socket.io/" target="_blank">socket.io</a>
-library are discussed in detail in this
-<a href="https://github.com/socketio/socket.io/issues/1696" target="_blank">issue</a>
-and in this
-<a href="https://stackoverflow.com/questions/36472920/apache-proxy-configuration-for-socket-io-project-not-in-root" target="_blank">stackoverflow discussion</a>.
+Instead of opening the helper port on a public-facing server, you can
+set up your web server as a proxy to pass requests to a helper
+running on a non-public host. Documentation concerning setting up a
+proxy for the helper's underlying <a href="https://socket.io/"
+target="_blank">socket.io</a> library can be found in the
+<a href="https://socket.io/docs/v4/reverse-proxy/" target="_blank">
+behind a reverse proxy</a> page. Additional information can be found in these
+(slightly out of date)
+<a href="https://github.com/socketio/socket.io/issues/1696" target="_blank">
+socket.io issue</a> and
+<a href="https://stackoverflow.com/questions/36472920/apache-proxy-configuration-for-socket-io-project-not-in-root" target="_blank">stackoverflow</a> pages.
 
 <p>
 A variation of the following httpd.conf (or ssl.conf for https)
-configuration should work for most Apache web servers. See
-the above discussions and <a href="https://socket.io/docs/v4/reverse-proxy/">
+configuration should work on Apache web servers. See
+the above discussions and
+<a href="https://socket.io/docs/v4/reverse-proxy/" target="_blank">
 socket.io discussion of reverse proxy</a> for more information.
 
 <pre>
@@ -255,13 +262,12 @@ The optional ProxyPass of msg allows you to send commands using wget
 or curl to the helper.
 
 <p>
-NB: when configuring a proxy, you should set the "helperPort" in
-js9prefs.js to 80 or 443 (or whatever port your web server listens on)
-so that the browser connects to the helper via the public-facing web
-server. Continue to set the "helperPort" in js9Prefs.json to 2718 (or
-whatever port you choose), so that the helper listens on its own
-port. This is a special situation where the ports will be different
-for the client and the helper.
+When configuring a proxy, set the "helperPort" in js9prefs.js to 80 or
+443 (or whatever port your web server listens on) so that the browser
+connects to the helper via the public-facing web server. Continue to
+set the "helperPort" in js9Prefs.json to 2718 (or whatever port you
+choose), so that the helper listens on its own port. This is a special
+situation where the ports will be different for the client and the helper.
 
 <h3>Notes on the CGI-based Server-side helper</h3>
 
@@ -305,7 +311,7 @@ your web server's configuration file and review the web access and
 error logs. If you continue to have problems, please let us know and
 we will try to help.
 
-<h5>Last updated: June 1, 2021</h5>
+<h5>Last updated: July 6, 2021</h5>
 </div>
 
 </body>
