@@ -24371,22 +24371,22 @@ JS9.initEmscripten = function(){
 	    // eslint-disable-next-line no-unused-vars
 	    Module.wasmBinary = data;
 	    JS9.globalOpts.astroemURL = JS9.InstallDir("astroemw.js");
-	    // load astroem wasm js file
+	    // load astroem js (with wasm) file
 	    try{
 		JS9.loadScript(JS9.globalOpts.astroemURL);
 	    }
 	    catch(e){
-		JS9.error(`can't find ${JS9.globalOpts.astroemURL}`);
+		JS9.error(`can't load ${JS9.globalOpts.astroemURL}`);
 	    }
 	});
     } else {
 	JS9.globalOpts.astroemURL = JS9.InstallDir("astroem.js");
-	// load astroem ams.js file
+	// load astroem js (only) file
 	try{
 	    JS9.loadScript(JS9.globalOpts.astroemURL);
 	}
 	catch(e){
-	    JS9.error(`can't find ${JS9.globalOpts.astroemURL}`);
+	    JS9.error(`can't load ${JS9.globalOpts.astroemURL}`);
 	}
     }
 };
