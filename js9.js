@@ -117,7 +117,6 @@ JS9.globalOpts = {
     processQueryParams: true,   // process query parameters from url?
     quietReturn: false,         // should API return empty string or "OK"?
     useWasm: true,		// use WebAssembly if available?
-    allowFileWasm: true,	// allow file:// to use wasm?
     transforms: ["flip", "rot90", "rotate"], // order for processing transforms
     rotateRelative: false,	// is setRotate() relative or absolute?
     clickToFocus: false,	// how to change focus on the display
@@ -630,10 +629,6 @@ if( Object.prototype.hasOwnProperty.call(window, "Jupyter") ){
 }
 // JS9 desktop app using Electron.js
 if( window.electron ){
-    // turn on wasm if Electron.js supports a recent version of Chromium
-    if( JS9.BROWSER[0] === "Chrome" && parseFloat(JS9.BROWSER[1]) >= 66 ){
-	JS9.globalOpts.allowFileWasm = true;
-    }
     // Emscripten mount point for local file system, based on hostname
     if( window.electron.hostFS ){
 	JS9.hostFS = window.electron.hostFS;
@@ -24366,9 +24361,7 @@ JS9.initEmscripten = function(){
     if( Object.prototype.hasOwnProperty.call(window, "Astroem") ){ return; }
     // load astroem, based on whether we have native WebAssembly or not
     opts = {responseType: "arraybuffer", allowCache: true};
-    if( JS9.globalOpts.useWasm          &&
-	typeof WebAssembly === "object" &&
-	(location.protocol !== "file:"  || JS9.globalOpts.allowFileWasm) ){
+    if( typeof WebAssembly === "object" && JS9.globalOpts.useWasm ){
 	// use site-specified file if available, else default file
 	JS9.globalOpts.astroemWasm =
 	    JS9.InstallDir(Module.wasmBinaryFile || "astroemw.wasm");
