@@ -24356,13 +24356,13 @@ JS9.instantiatePlugins = function(){
 // ---------------------------------------------------------------------
 
 JS9.initEmscripten = function(){
-    let opts;
-    // sanity check
+    const opts = {responseType: "arraybuffer", allowCache: true};
+    // sanity check: do only once
     if( Object.prototype.hasOwnProperty.call(window, "Astroem") ){ return; }
     // load astroem, based on whether we have native WebAssembly or not
-    opts = {responseType: "arraybuffer", allowCache: true};
     if( typeof WebAssembly === "object" && JS9.globalOpts.useWasm ){
 	// use site-specified file if available, else default file
+	// (e.g., if js9 files weren't installed in the default location)
 	JS9.globalOpts.astroemWasm =
 	    JS9.InstallDir(Module.wasmBinaryFile || "astroemw.wasm");
 	// load astroem wasm file
