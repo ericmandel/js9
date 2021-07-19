@@ -125,7 +125,7 @@ Electron, go to the
 Electron GitHub release page</a>, choose the latest available
 stable release, and download the zip file for your platform.  On a
 Mac, Electron.app should be installed in the /Applications or
-~/Applications folder. On Linux, the electron program should be placed
+~/Applications directory. On Linux, the electron program should be placed
 in your PATH. Note that Electron requires a relatively recent version
 of Linux: Ubuntu 12.04, Fedora 21, Debian 8, CentOS 7 (not CentOS 6).
 
@@ -354,7 +354,15 @@ re-install preference files using:
     make install-prefs
 </pre>
 or simply copy them into the install directory.
+<p>
+In addition, the install procedure will rename an existing <b>node_modules</b>
+directory to <b>onode_modules</b> before installing the node_modules directory.
+This action prevents the accumulation of unneeded and possibly conflicting
+modules after multiple installs. If you need one or more modules from the
+original modules directory, please copy them from onode_modules or
+re-install them.
 
+<p>
 Clean up the build directory using the command:
 <pre>
     make clean
@@ -374,7 +382,7 @@ available on GitHub:
 </pre>
 
 
-<h5>Last updated: April 15, 2021</h5>
+<h5>Last updated: July 19, 2021</h5>
 </div>
 
 </body>
