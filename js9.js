@@ -12157,9 +12157,11 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	if( dlayer.opts.onmousedown ){
 	    dlayer.canvas.on("mouse:down", (opts) => {
 		if( dlayer.display.image && opts.target ){
+		    let target = opts.target;
+		    // nb: target might be a polygon anchor => no params
+		    let params = target.params;
 		    // set click state but ignore unchangeable regions
-		    if( opts.target.params                      &&
-			opts.target.params.changeable !== false ){
+		    if( !params || (params && params.changeable !== false) ){
 			// on main window, set region click
 			if( dlayer.dtype === "main" ){
 			    dlayer.display.image.clickInRegion = true;
@@ -12167,8 +12169,8 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 			}
 			dlayer.opts.onmousedown.call(dlayer.canvas,
 						     dlayer.display.image,
-						     opts.target.pub,
-						     opts.e, opts.target);
+						     target.pub,
+						     opts.e, target);
 		    }
 		} else {
 		    // only allow fabric selection if we have special key down
@@ -16944,9 +16946,12 @@ JS9.Regions.opts = {
     // mouse down processing
     onmousedown(im, xreg, evt, target){
 	let poly;
+	// nb: target might be a polygon anchor => no params
 	let params = target.params;
-	if( JS9.specialKey(evt) && params ){
-	    im._regroupAnnulus(params.layerName, evt);
+	if( JS9.specialKey(evt) ){
+	    if( params ){
+		im._regroupAnnulus(params.layerName, evt);
+	    }
 	    if( target.type === "polygon" || target.type === "polyline" ){
 		// add polygon point
 		im._addPolygonPoint(params.layerName, target, evt);
@@ -16956,7 +16961,7 @@ JS9.Regions.opts = {
 		poly = target.polyparams.polygon;
 		im._removePolygonPoint(poly.params.layerName, target);
 		im._updateShape(poly.params.layerName, poly, null, "update");
-	    } else if( params.shape === "annulus" ){
+	    } else if( params && params.shape === "annulus" ){
 		im._ungroupAnnulus(params.layerName, target);
 	    }
 	}
