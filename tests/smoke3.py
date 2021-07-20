@@ -31,9 +31,10 @@ def regSaveTest(j, file, units=""):
         nregions = "foo" + next;
     regions = str(p).replace(extensions, next)
     j.LoadRegions(regions)
+    sleep(1);
     j.SaveRegions(nregions)
-    sleep(2);
-    os.system("ls -l %s" % nregions);
+    sleep(1);
+    os.system("ls -l %s %s" % (regions, nregions));
     print("diff %s %s" % (regions, nregions))
     s = subprocess.call(["/usr/bin/diff",regions,nregions],universal_newlines=True)
     print(s);
