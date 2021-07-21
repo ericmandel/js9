@@ -396,6 +396,8 @@ JS9.crosshairOpts = {};
 JS9.gridOpts = {};
 // allows emscripten opts (in Module) to be overridden via js9prefs.js
 JS9.emscriptenOpts = {};
+// allows fabric opts (in Fabric.opts) to be overridden via js9prefs.js
+JS9.fabricOpts = {};
 
 // defaults for blending
 JS9.blendOpts = {
@@ -16249,7 +16251,6 @@ JS9.Fabric.print = function(opts){
 
 // incorporate these graphics routines into JS9
 JS9.Fabric.initGraphics = function(){
-    let key;
     // display methods
     JS9.Display.prototype.newShapeLayer = JS9.Fabric.newShapeLayer;
     // image shape methods
@@ -16287,12 +16288,6 @@ JS9.Fabric.initGraphics = function(){
     JS9.Image.prototype.toggleShapeLayers = JS9.Fabric.toggleShapeLayers;
     // print method which know about shapes
     JS9.Image.prototype.print = JS9.Fabric.print;
-    // incorporate our defaults into fabric
-    for( key in JS9.Fabric.opts ){
-	if( Object.prototype.hasOwnProperty.call(JS9.Fabric.opts, key) ){
-	    fabric.Object.prototype[key] = JS9.Fabric.opts[key];
-	}
-    }
 };
 
 // initialize graphics to use Fabric
@@ -27822,7 +27817,7 @@ JS9.mkPublic("SaveDir", function(...args){
 // ---------------------------------------------------------------------
 
 JS9.init = function(){
-    let uopts, url, ufile, dopts;
+    let uopts, url, ufile, dopts, key;
     // sanity check: need HTML5 canvas and JSON
     if( !window.HTMLCanvasElement || !JSON ){
 	JS9.error("your browser does not support JS9 (no HTML5 canvas and/or JSON). Please try a modern version of Firefox, Chrome, Safari, Opera, or Edge.");
@@ -27948,6 +27943,17 @@ JS9.init = function(){
 	$.extend(true, Module, JS9.emscriptenOpts);
     }
     delete JS9.emscriptenOpts;
+    // if JS9 prefs have fabricOpts, transfer them to Fabric.opts
+    if( Object.prototype.hasOwnProperty.call(JS9, "Fabric") ){
+	$.extend(true, JS9.Fabric.opts, JS9.fabricOpts);
+	// incorporate our fabric defaults into fabric itself
+	for( key in JS9.Fabric.opts ){
+	    if( Object.prototype.hasOwnProperty.call(JS9.Fabric.opts, key) ){
+		fabric.Object.prototype[key] = JS9.Fabric.opts[key];
+	    }
+	}
+    }
+    delete JS9.fabricOpts;
     // regularize resize params
     if( !JS9.globalOpts.resize ){
 	JS9.globalOpts.resizeHandle = false;
