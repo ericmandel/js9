@@ -388,11 +388,7 @@ JS9.Keyboard.Actions["move region/position up"] = function(im, ipos, evt){
     if( JS9.specialKey(evt) ){ inc *= 5; }
     layerName = im.layer || "regions";
     canvas = im.display.layers[layerName].canvas;
-    if( fabric.major_version === 1 ){
-	active = canvas.getActiveObject() || canvas.getActiveGroup();
-    } else {
-	active = canvas.getActiveObject();
-    }
+    active = canvas.getActiveObject();
     if( active ){
 	im.changeShapes(layerName, "selected", {deltay: inc});
     }
@@ -414,11 +410,7 @@ JS9.Keyboard.Actions["move region/position down"] = function(im, ipos, evt){
     if( JS9.specialKey(evt) ){ inc *= 5; }
     layerName = im.layer || "regions";
     canvas = im.display.layers[layerName].canvas;
-    if( fabric.major_version === 1 ){
-	active = canvas.getActiveObject() || canvas.getActiveGroup();
-    } else {
-	active = canvas.getActiveObject();
-    }
+    active = canvas.getActiveObject();
     if( active ){
 	im.changeShapes(layerName, "selected", {deltay: inc});
     }
@@ -440,11 +432,7 @@ JS9.Keyboard.Actions["move region/position left"] = function(im, ipos, evt){
     if( JS9.specialKey(evt) ){ inc *= 5; }
     layerName = im.layer || "regions";
     canvas = im.display.layers[layerName].canvas;
-    if( fabric.major_version === 1 ){
-	active = canvas.getActiveObject() || canvas.getActiveGroup();
-    } else {
-	active = canvas.getActiveObject();
-    }
+    active = canvas.getActiveObject();
     if( active ){
 	im.changeShapes(layerName, "selected", {deltax: inc});
     }
@@ -466,11 +454,7 @@ JS9.Keyboard.Actions["move region/position right"] = function(im, ipos, evt){
     if( JS9.specialKey(evt) ){ inc *= 5; }
     layerName = im.layer || "regions";
     canvas = im.display.layers[layerName].canvas;
-    if( fabric.major_version === 1 ){
-	active = canvas.getActiveObject() || canvas.getActiveGroup();
-    } else {
-	active = canvas.getActiveObject();
-    }
+    active = canvas.getActiveObject();
     if( active ){
 	im.changeShapes(layerName, "selected", {deltax: inc});
     }
@@ -596,7 +580,7 @@ JS9.Keyboard.Actions["select region"] = function(im, ipos, evt){
 JS9.Keyboard.Actions["select all regions"] = function(im, ipos, evt){
     let layer, canvas, selection;
     // sanity check
-    if( !im || fabric.major_version === 1 ){ return; }
+    if( !im ){ return; }
     layer = im.layer || "regions";
     canvas = im.layers[layer].canvas;
     selection = new fabric.ActiveSelection(canvas.getObjects(), {
@@ -610,7 +594,7 @@ JS9.Keyboard.Actions["select all regions"] = function(im, ipos, evt){
 JS9.Keyboard.Actions["unselect all regions"] = function(im, ipos, evt){
     let layer, canvas;
     // sanity check
-    if( !im || fabric.major_version === 1 ){ return; }
+    if( !im ){ return; }
     layer = im.layer || "regions";
     canvas = im.layers[layer].canvas;
     if( canvas.getActiveObject() ){
