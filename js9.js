@@ -14273,11 +14273,16 @@ JS9.Fabric.selectShapes = function(layerName, shape, opts){
 	if( canvas.getActiveObject() ){
 	    canvas.discardActiveObject();
 	}
-	// create selection
-	selection = new fabric.ActiveSelection(arr, {
-	    canvas: canvas
-	});
-	// make this the active group selection
+	if( arr.length === 1 ){
+	    // select 1 shape
+	    selection = arr[0];
+	} else {
+	    // create a group selection of 2+ shapes
+	    selection = new fabric.ActiveSelection(arr, {
+		canvas: canvas
+	    });
+	}
+	// make this the active selection
 	canvas.setActiveObject(selection);
 	// display the new group
 	canvas.renderAll();
@@ -15455,6 +15460,11 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	    catch(e){ JS9.error("in onchangeshapes callback", e, false); }
 	}
     });
+    // if processing a selected group, recalculate bounding box params
+    // https://stackoverflow.com/questions/63256748/fabric-js-3-6-bounding-box-for-group-doesnt-update-when-grouped-objects-are-c
+    if( shape === "selected" && ao && ao.type === "activeSelection" ){
+	ao.addWithUpdate();
+    }
     // redraw (unless explicitly specified otherwise)
     if( (opts.redraw === undefined) || opts.redraw ){
 	canvas.renderAll();
