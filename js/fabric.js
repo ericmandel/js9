@@ -1,1 +1,1 @@
-fabric-v4.2.0.js
+fabric-v4.5.1.js

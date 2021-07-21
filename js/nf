@@ -24,3 +24,6 @@ rm -f fabric.js     && ln -s $K fabric.js
 rm -f fabric.min.js && ln -s $KM fabric.min.js
 
 ls -l fabric.js fabric.min.js
+
+cd ..
+make js9support

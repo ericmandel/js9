@@ -15726,17 +15726,28 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
     let pos = {};
     const canvas = dlayer.canvas;
     const movePoint = (obj) => {
-	const anchor = obj.target;
-	const poly = anchor.polyparams.polygon;
-	const pt = anchor.polyparams.point;
-	const points = poly.get("points");
-	const im = dlayer.display.image;
-	// if pt was deleted, stop the callback
-	if( pt === undefined ){
+	let anchor, poly, pt, points, im;
+	// anchor changed location to obj.transform.target in v4.5.1
+	if( obj.target && obj.target.polyparams ){
+	    anchor = obj.target;
+	} else if( obj.transform                                           &&
+		   obj.transform.target && obj.transform.target.polyparams ){
+	    anchor = obj.transform.target;
+	}
+	// sanity check
+	if( !anchor ){ return; }
+	// this is the polygon associated with this anchor
+	poly = anchor.polyparams.polygon;
+	// if the polygon is not changeable, just return
+	if( poly.params.changeable === false ){
 	    return;
 	}
-	// if the region is not changeable, just return
-	if( poly.params.changeable === false ){
+	// these are the points in the polygon
+	points = poly.get("points");
+	// this is the point id associated with this anchor
+	pt = anchor.polyparams.point;
+	// if pt is not valid, just return
+	if( pt === undefined  || points[pt] === undefined ){
 	    return;
 	}
 	// new point for this anchor relative to center
@@ -15754,7 +15765,8 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
 	// reset the center point
 	JS9.resetPolygonCenter(poly);
 	// update the shape info
-	if( im ){
+	if( dlayer.display.image ){
+	    im = dlayer.display.image;
 	    im._updateShape(poly.params.layerName, poly, null, "update");
 	    if( im.params.listonchange || poly.params.listonchange ){
 		im.listRegions(poly, {mode: 2});
