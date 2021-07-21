@@ -569,8 +569,9 @@ JS9.Keyboard.Actions["select region"] = function(im, ipos, evt){
     objs = canvas.getObjects();
     for(i=0; i<objs.length; i++){
 	obj = objs[i];
-	if( canvas.containsPoint(null, obj, im.pos) ){
+	if( obj.containsPoint(im.pos) ){
 	    canvas.setActiveObject(obj);
+	    canvas.renderAll();
 	    break;
 	}
     }
