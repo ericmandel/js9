@@ -15853,9 +15853,10 @@ JS9.Fabric.removePolygonAnchors = function(dlayer, shape){
     let i;
     const canvas = dlayer.canvas;
     if( shape && shape.params && shape.params.anchors ){
-	if( shape.params.changeable === false ){
-	    return;
-	}
+	// need to be able to remove anchors when locking a polygon
+	// if( shape.params.changeable === false ){
+	//    return;
+	// }
 	// remove all anchors
 	for(i=0; i<shape.params.anchors.length; i++){
 	    canvas.remove(shape.params.anchors[i]);

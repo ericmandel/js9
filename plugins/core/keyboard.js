@@ -389,7 +389,7 @@ JS9.Keyboard.Actions["move region/position up"] = function(im, ipos, evt){
     layerName = im.layer || "regions";
     canvas = im.display.layers[layerName].canvas;
     active = canvas.getActiveObject();
-    if( active ){
+    if( active && !active.lockMovementY ) {
 	im.changeShapes(layerName, "selected", {deltay: inc});
     }
     JS9.Keyboard.arrowKey(im, evt, {x: 0, y: inc * -1}, active);
@@ -411,7 +411,7 @@ JS9.Keyboard.Actions["move region/position down"] = function(im, ipos, evt){
     layerName = im.layer || "regions";
     canvas = im.display.layers[layerName].canvas;
     active = canvas.getActiveObject();
-    if( active ){
+    if( active && !active.lockMovementY ) {
 	im.changeShapes(layerName, "selected", {deltay: inc});
     }
     JS9.Keyboard.arrowKey(im, evt, {x: 0, y: inc * -1}, active);
@@ -433,7 +433,7 @@ JS9.Keyboard.Actions["move region/position left"] = function(im, ipos, evt){
     layerName = im.layer || "regions";
     canvas = im.display.layers[layerName].canvas;
     active = canvas.getActiveObject();
-    if( active ){
+    if( active && !active.lockMovementX ) {
 	im.changeShapes(layerName, "selected", {deltax: inc});
     }
     JS9.Keyboard.arrowKey(im, evt, {x: inc, y: 0}, active);
@@ -455,7 +455,7 @@ JS9.Keyboard.Actions["move region/position right"] = function(im, ipos, evt){
     layerName = im.layer || "regions";
     canvas = im.display.layers[layerName].canvas;
     active = canvas.getActiveObject();
-    if( active ){
+    if( active && !active.lockMovementX ) {
 	im.changeShapes(layerName, "selected", {deltax: inc});
     }
     JS9.Keyboard.arrowKey(im, evt, {x: inc, y: 0}, active);
