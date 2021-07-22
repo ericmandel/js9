@@ -358,10 +358,12 @@ loadproxy)
     # retrieve the FITS file via URL
     hash wget 1>/dev/null 2>&1
     if [ $? = 0 ]; then
+      XFUNC="wget"
       wget -q --output-document="$OFILE" "$URL"
     else
       hash curl 1>/dev/null 2>&1
       if [ $? = 0 ]; then
+        XFUNC="curl"
         curl -s -o "$OFILE" "$URL"
       else
         error "requires either wget or curl"
@@ -427,8 +429,27 @@ loadproxy)
 	  esac
         fi
       fi
-      # tell JS9 the new file name to load
-      echo "${JS9_WORKDIR}/$OFILE"
+      # special case: in chandra archive, check for parent file request
+      echo $URL | egrep 'https://cxc.cfa.harvard.edu/cdaftp/.*_img2.fits.gz\?parent=true' 1>/dev/null 2>&1
+      if [ $? = 0 ]; then
+        PFILE=`echo $OFILE | sed s#full_img2#evt2# | sed s#cntr_img2#evt2#`
+        # and load the parent file asynchronously
+        PURL=`echo $URL    | sed s#full_img2#evt2# | sed s#cntr_img2#evt2#`
+        # retrieve the parent file
+        if [ x$XFUNC = "xwget" ]; then
+          wget -q --output-document="$PFILE" "$PURL"
+        else
+          curl -s -o "$PFILE" "$PURL"
+        fi
+        if [ $? != 0 ]; then
+          error "could not retrieve parent file: $URL"
+        fi
+        # tell JS9 the new file name to load, along with parent file name
+        echo "${JS9_WORKDIR}/$OFILE ${JS9_WORKDIR}/$PFILE"
+      else
+          # tell JS9 the new file name to load
+          echo "${JS9_WORKDIR}/$OFILE"
+      fi
     fi
     exit 0
     ;;
@@ -437,20 +458,17 @@ removeproxy)
     # required args
     if [ "$#" -lt 1 ]; then
 	error "removeproxy file"
-    else
-      PROXY=`echo $1 | sed 's/__ampersand__/\&/g'`
-      FILE=`basename "$PROXY"`
-      DIR=`dirname "$PROXY"`
     fi
     if [ x"${JS9_WORKDIR}" = x ]; then
-	error "removeproxy requires configuration of a temporary work directory"
+      error "removeproxy requires a temporary work directory"
     fi
-    # remove file from our working directory
-    rm -f "$FILE"
-    if [ $? != 0 ]; then
-      # error "can't remove proxy file: $FILE"
-      exit 0
-    fi
+    # remove file(s) from our working directory, but ignore errors
+    while [ x"$1" != x ]; do
+	PROXY=`echo $1 | sed 's/__ampersand__/\&/g'`
+        FILE=`basename "$PROXY"`
+        rm -f "$FILE"
+	shift
+    done
     echo "OK"
     exit 0
     ;;

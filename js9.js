@@ -928,6 +928,10 @@ JS9.Image = function(file, params, func){
     if( localOpts && localOpts.proxyFile ){
 	this.proxyFile = localOpts.proxyFile;
     }
+    // is there a proxy parent?
+    if( localOpts && localOpts.proxyParent ){
+	this.proxyParent = localOpts.proxyParent;
+    }
     if( localOpts && localOpts.proxyURL ){
 	this.proxyURL = localOpts.proxyURL;
     }
@@ -5784,6 +5788,7 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		    if( files[1] ){
 			pf = JS9.cleanPath(files[1]);
 			xobj.parentFile = pf;
+			xobj.proxyParent = pf;
 		    }
 		    // don't convert this FITS file into another FITS file!
 		    xobj.fits2fits = false;
@@ -9132,6 +9137,7 @@ JS9.Image.prototype.removeProxyFile = function(s){
 	if( reset ){
 	    if( r && r.stdout.trim() === "OK" ){
 		this.proxyFile = null;
+		this.proxyParent = null;
 		this.fitsFile = null;
 		this.analysisPackages = null;
 		this.queryHelper("all");
@@ -9161,6 +9167,10 @@ JS9.Image.prototype.removeProxyFile = function(s){
 	    return;
 	}
 	file = this.proxyFile;
+	// also remove the proxyParent file, if necessary
+	if( this.proxyParent ){
+	    file = `${file} ${this.proxyParent}`;
+	}
     }
     // sanity check
     if( !file ){ return; }
@@ -26210,7 +26220,7 @@ JS9.mkPublic("LoadProxy", function(...args){
     }
     JS9.waiting(true, disp);
     JS9.Send("loadproxy", {"cmd": `js9Xeq loadproxy ${url} ${oname}`}, (r) => {
-        let robj;
+        let robj, files, pf;
 	// return type can be string or object
 	if( typeof r === "object" ){
 	    // object from node.js
@@ -26227,19 +26237,28 @@ JS9.mkPublic("LoadProxy", function(...args){
 	if( robj.stderr ){
 	    JS9.error(robj.stderr);
 	} else if( robj.stdout ){
-	    f = JS9.cleanPath(robj.stdout);
-	    // proxy file
-	    opts.proxyFile = f;
-	    // relative path: add install dir prefix
-	    if( f.charAt(0) !== "/" ){
-		f = JS9.InstallDir(f);
+	    // output is file and possibly parentFile
+	    files = robj.stdout.split(/\s+/);
+	    if( files && files[0] ){
+		f = JS9.cleanPath(files[0]);
+		// proxy file
+		opts.proxyFile = f;
+		// relative path: add install dir prefix
+		if( f.charAt(0) !== "/" ){
+		    f = JS9.InstallDir(f);
+		}
+		if( files[1] ){
+		    pf = JS9.cleanPath(files[1]);
+		    opts.parentFile = pf;
+		    opts.proxyParent = pf;
+		}
+		// desktop app: don't make path relative to current directory
+		opts.fixpath = false;
+		// save original url
+		opts.proxyURL = url;
+		// load new file
+		JS9.Load(f, opts, {display: obj.display});
 	    }
-	    // desktop app: don't make path relative to current directory
-	    opts.fixpath = false;
-	    // save original url
-	    opts.proxyURL = url;
-	    // load new file
-	    JS9.Load(f, opts, {display: obj.display});
 	} else {
 	    JS9.error("internal error: no return from load proxy command");
 	}
