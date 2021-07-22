@@ -385,7 +385,6 @@ JS9.Keyboard.Actions["move region/position up"] = function(im, ipos, evt){
     }
     // sanity check
     if( !im ){ return; }
-    if( JS9.specialKey(evt) ){ inc *= 5; }
     layerName = im.layer || "regions";
     canvas = im.display.layers[layerName].canvas;
     active = canvas.getActiveObject();
@@ -407,7 +406,6 @@ JS9.Keyboard.Actions["move region/position down"] = function(im, ipos, evt){
     }
     // sanity check
     if( !im ){ return; }
-    if( JS9.specialKey(evt) ){ inc *= 5; }
     layerName = im.layer || "regions";
     canvas = im.display.layers[layerName].canvas;
     active = canvas.getActiveObject();
@@ -429,7 +427,6 @@ JS9.Keyboard.Actions["move region/position left"] = function(im, ipos, evt){
     }
     // sanity check
     if( !im ){ return; }
-    if( JS9.specialKey(evt) ){ inc *= 5; }
     layerName = im.layer || "regions";
     canvas = im.display.layers[layerName].canvas;
     active = canvas.getActiveObject();
@@ -451,7 +448,6 @@ JS9.Keyboard.Actions["move region/position right"] = function(im, ipos, evt){
     }
     // sanity check
     if( !im ){ return; }
-    if( JS9.specialKey(evt) ){ inc *= 5; }
     layerName = im.layer || "regions";
     canvas = im.display.layers[layerName].canvas;
     active = canvas.getActiveObject();
