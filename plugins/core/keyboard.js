@@ -379,7 +379,7 @@ JS9.Keyboard.Actions["save regions as a text file"] = function(im, ipos, evt){
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["move region/position up"] = function(im, ipos, evt){
     let canvas, layerName, active;
-    let inc = 1;
+    let inc = JS9.globalOpts.arrowIncrement;
     if( evt ){
 	evt.preventDefault();
     }
@@ -400,7 +400,7 @@ JS9.Keyboard.Actions["move region/position up"] = function(im, ipos, evt){
 
 JS9.Keyboard.Actions["move region/position down"] = function(im, ipos, evt){
     let canvas, layerName, active;
-    let inc = -1;
+    let inc = -JS9.globalOpts.arrowIncrement;
     if( evt ){
 	evt.preventDefault();
     }
@@ -421,7 +421,7 @@ JS9.Keyboard.Actions["move region/position down"] = function(im, ipos, evt){
 
 JS9.Keyboard.Actions["move region/position left"] = function(im, ipos, evt){
     let canvas, layerName, active;
-    let inc = -1;
+    let inc = -JS9.globalOpts.arrowIncrement;
     if( evt ){
 	evt.preventDefault();
     }
@@ -442,7 +442,7 @@ JS9.Keyboard.Actions["move region/position left"] = function(im, ipos, evt){
 
 JS9.Keyboard.Actions["move region/position right"] = function(im, ipos, evt){
     let canvas, layerName, active;
-    let inc = 1;
+    let inc = JS9.globalOpts.arrowIncrement;
     if( evt ){
 	evt.preventDefault();
     }

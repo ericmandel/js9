@@ -135,6 +135,7 @@ JS9.globalOpts = {
     internalValPos: true,	// a fancy info plugin can turns this off
     internalContrastBias: true,	// a fancy colorbar plugin can turns this off
     containContrastBias: false, // contrast/bias only when mouse is in display?
+    arrowIncrement: 1,          // how much to move a region using arrow keys
     wcsCrosshair: false,	// enable wcs crosshair matching?
     localLoadFormat: "image",	// current format when loading local files
     remoteLoadMethod: "proxy",	// proxy or cors when loading remote file
