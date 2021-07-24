@@ -429,6 +429,45 @@ loadproxy)
 	  esac
         fi
       fi
+      # special case: in chandra archive, check for rep file generation request
+      echo $URL | egrep 'https://cxc.cfa.harvard.edu/cdaftp/.*_evt2.fits.gz\?repfile=true' 1>/dev/null 2>&1
+      if [ $? = 0 ]; then
+        hash funhead 1>/dev/null 2>&1
+        if [ $? = 0 ]; then
+          RFILE=`echo $OFILE | sed s#evt2#img#`
+          # which chandra inst?
+	  INST=`funhead $OFILE | getpar INSTRUME`
+          # generate a rep file
+          case $INST in
+          HRC)
+            XCEN=16384
+            YCEN=16384
+            XDIM=4096
+            YDIM=4096
+            BLOCK=4
+            BITPIX=16
+            ;;
+          ACIS)
+            XCEN=4096
+            YCEN=4096
+            XDIM=4096
+            YDIM=4096
+            BLOCK=4
+            BITPIX=16
+            ;;
+          esac
+          if [ x$BITPIX != x ]; then
+            (funimage $OFILE"[$XDIM@$XCEN,$YDIM@$YCEN,$BLOCK]" stdout bitpix=$BITPIX | gzip -c > $RFILE) 2>/dev/null
+            if [ $? = 0 ]; then
+              # tell JS9 the rep name to load, along with downloaded parent
+              echo "${JS9_WORKDIR}/$RFILE ${JS9_WORKDIR}/$OFILE"
+              exit 0
+            else
+              error "couldn't generate FITS representation file for $OFILE"
+            fi
+          fi
+        fi
+      fi
       # special case: in chandra archive, check for parent file request
       echo $URL | egrep 'https://cxc.cfa.harvard.edu/cdaftp/.*_img2.fits.gz\?parent=true' 1>/dev/null 2>&1
       if [ $? = 0 ]; then
@@ -446,11 +485,11 @@ loadproxy)
         fi
         # tell JS9 the new file name to load, along with parent file name
         echo "${JS9_WORKDIR}/$OFILE ${JS9_WORKDIR}/$PFILE"
-      else
-          # tell JS9 the new file name to load
-          echo "${JS9_WORKDIR}/$OFILE"
+        exit 0
       fi
     fi
+    # tell JS9 the new file name to load (no parent file)
+    echo "${JS9_WORKDIR}/$OFILE"
     exit 0
     ;;
 
