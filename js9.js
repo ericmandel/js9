@@ -278,8 +278,7 @@ JS9.globalOpts = {
     intensivePlugins: false,	// enable intensive plugin support?
     dynamicSelect: "click",     // dynamic plugins: "click", "move", or false
     dynamicHighlight: true,     // highlight dynamic selection
-    xcorsProxy:   "https://js9.si.edu/cgi-bin/CORS-proxy.cgi",   // CORS proxy
-    corsProxy:   "http://baba.local/~eric/cgi-bin/CORS-proxy.cgi",   // CORS proxy
+    corsProxy:   "https://js9.si.edu/cgi-bin/CORS-proxy.cgi",   // CORS proxy
     simbadProxy: "https://js9.si.edu/cgi-bin/simbad-proxy.cgi", // simbad proxy
     catalogs:   {ras: ["RA", "_RAJ2000", "RAJ2000"],  // cols to search for ..
 		 decs: ["Dec", "_DEJ2000", "DEJ2000"],// when loading catalogs
