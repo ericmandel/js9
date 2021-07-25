@@ -377,7 +377,7 @@ var CatalogService = require("./catalog-service");
 	    , surveys: [   { value: "tmc",	text: "Two Mass Catalog"	}
 			 , { value: "gsc2",	text: "Guide Star Catalog 2"		}
 			]
-	    , url: "http://www.cfa.harvard.edu/catalog/scat?catalog={s}&ra={r}&dec={d}&width={w}&height={h}&system={e}&compress={c}"
+	    , url: "https://www.cfa.harvard.edu/catalog/scat?catalog={s}&ra={r}&dec={d}&width={w}&height={h}&system={e}&compress={c}"
 	    , calc: function(values) {
 		    if ( values.c ) {
 			values.c = "gzip";
@@ -410,7 +410,7 @@ var CatalogService = require("./catalog-service");
 			 , { value: "USNO-B1",		text: "USNO-B1"				}
 			 , { value: "WISE",		text: "WISE"				}
 			]
-	    , url: "http://vizier.u-strasbg.fr/viz-bin/asu-tsv?-source={s}&-out.add=_RAJ,_DEJ&-c={r}{d}&-c.bm={w}x{h}&-oc.form=s&-out.meta=h"
+	    , url: "https://vizier.u-strasbg.fr/viz-bin/asu-tsv?-source={s}&-out.add=_RAJ,_DEJ&-c={r}{d}&-c.bm={w}x{h}&-oc.form=s&-out.meta=h"
 	    , calc: function(values) {
 		    if ( values.c ) {
 			values.c = "gzip";
@@ -495,7 +495,7 @@ var ImageService = require("./image-service");
 	      text: "DSS1@SAO"
 	    , value: "saoDSS"
 	    , surveys: [ { value: "DSS1", text: "DSS1" } ]
-	    , url: "http://www.cfa.harvard.edu/archive/dss?r={r}&d={d}&w={w}&h={h}&e={e}&c={c}"
+	    , url: "https://www.cfa.harvard.edu/archive/dss?r={r}&d={d}&w={w}&h={h}&e={e}&c={c}"
 	    , calc: function(values) {
 		    if ( values.c ) {
 			values.c = "gzip";
@@ -513,7 +513,7 @@ var ImageService = require("./image-service");
 			 , { value: "poss1_red", 	text: "STScI DSS1 Red"	}
 			 , { value: "poss1_blue",	text: "STScI DSS1 Blue"	}
 			]
-	    , url: "http://stdatu.stsci.edu/cgi-bin/dss_search?r={r}&d={d}&w={w}&h={h}&e={e}&c={c}&v={s}&f=fits"
+	    , url: "https://stdatu.stsci.edu/cgi-bin/dss_search?r={r}&d={d}&w={w}&h={h}&e={e}&c={c}&v={s}&f=fits"
 	    , calc: function(values) {
 		    if ( values.c ) {
 			values.c = "gz";
@@ -532,7 +532,7 @@ var ImageService = require("./image-service");
 			 , { value: "DSS2-blue",	text: "ESO DSS2 Blue"	}
 			 , { value: "DSS1",		text: "ESO DSS1"	}
 			]
-	    , url: "http://archive.eso.org/dss/dss?ra={r}&dec={d}&equinox=J2000&x={w}&y={h}&mime-type={c}&Sky-Survey={s}"
+	    , url: "https://archive.eso.org/dss/dss?ra={r}&dec={d}&equinox=J2000&x={w}&y={h}&mime-type={c}&Sky-Survey={s}"
 	    , calc: function(values) {
 		    if ( values.c ) {
 			values.c = "display/gz-fits";
@@ -543,19 +543,19 @@ var ImageService = require("./image-service");
 		}
 	});
 
-	var ipac2m  = new ImageService({
-	      text: "2Mass@IPAC"
-	    , value: "ipac2m"
-	    , surveys: [   { value: "j", 		text: "IPAC 2Mass J"		}
-			 , { value: "h", 		text: "IPAC 2Mass H"		}
-			 , { value: "k", 		text: "IPAC 2Mass K"		}
-			]
-	    , url: "http://irsa.ipac.caltech.edu/cgi-bin/Oasis/2MASSImg/nph-2massimg?objstr={r},{d}&size={radius}&band={s}"
-	    , calc: function(values) {
-		    values.radius = Math.floor(Math.sqrt(values.w*values.w+values.h*values.h)*60);
-		    values.name   = imageName(values);
-		}
-	});
+//	var ipac2m  = new ImageService({
+//	      text: "2Mass@IPAC"
+//	    , value: "ipac2m"
+//	    , surveys: [   { value: "j", 		text: "IPAC 2Mass J"	//	}
+//			 , { value: "h", 		text: "IPAC 2Mass H"	//	}
+//			 , { value: "k", 		text: "IPAC 2Mass K"	//	}
+//			]
+//	    , url: "https://irsa.ipac.caltech.edu/cgi-bin/Oasis/2MASSImg/nph-2massimg?objstr={r},{d}&size={radius}&band={s}"
+//	    , calc: function(values) {
+//		    values.radius = Math.floor(Math.sqrt(values.w*values.w+values.h*values.h)*60);
+//		    values.name   = imageName(values);
+//		}
+//	});
 
 //	var dasch  = new ImageService({
 //	      text: "DASCH"

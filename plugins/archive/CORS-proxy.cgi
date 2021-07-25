@@ -35,13 +35,12 @@ url=`echo "$QUERY_STRING" | awk '{
 
 # sanity check on known archives
 case "$url" in
-    http://archive.eso.org/dss/dss*)					;;
-    http://www.cfa.harvard.edu/archive/dss*)				;;
-    http://www.cfa.harvard.edu/catalog/scat*)				;;
-    http://stdatu.stsci.edu/cgi-bin/dss_search*)			;;
-    http://irsa.ipac.caltech.edu/cgi-bin/Oasis/2MASSImg/nph-2massimg*)	;;
-
-    http://vizier.u-strasbg.fr/viz-bin/asu-tsv*)			;;
+    *//archive.eso.org/dss/dss*)					;;
+    *//www.cfa.harvard.edu/archive/dss*)				;;
+    *//www.cfa.harvard.edu/catalog/scat*)				;;
+    *//stdatu.stsci.edu/cgi-bin/dss_search*)			        ;;
+    *//irsa.ipac.caltech.edu/cgi-bin/Oasis/2MASSImg/nph-2massimg*)      ;;
+    *//vizier.u-strasbg.fr/viz-bin/asu-tsv*)			        ;;
 
     *) exit 1;;
 esac

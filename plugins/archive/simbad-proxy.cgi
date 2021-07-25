@@ -6,7 +6,7 @@ if [ -f ./js9config.cgi ]; then
 fi
 
 # default simbad URL
-URL=http://simbad.u-strasbg.fr
+URL=https://simbad.u-strasbg.fr
 
 # error handler
 error() {
