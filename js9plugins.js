@@ -543,19 +543,19 @@ var ImageService = require("./image-service");
 		}
 	});
 
-//	var ipac2m  = new ImageService({
-//	      text: "2Mass@IPAC"
-//	    , value: "ipac2m"
-//	    , surveys: [   { value: "j", 		text: "IPAC 2Mass J"	//	}
-//			 , { value: "h", 		text: "IPAC 2Mass H"	//	}
-//			 , { value: "k", 		text: "IPAC 2Mass K"	//	}
-//			]
-//	    , url: "https://irsa.ipac.caltech.edu/cgi-bin/Oasis/2MASSImg/nph-2massimg?objstr={r},{d}&size={radius}&band={s}"
-//	    , calc: function(values) {
-//		    values.radius = Math.floor(Math.sqrt(values.w*values.w+values.h*values.h)*60);
-//		    values.name   = imageName(values);
-//		}
-//	});
+	var ipac2m  = new ImageService({
+	      text: "2Mass@IPAC"
+	    , value: "ipac2m"
+	    , surveys: [   { value: "j", 		text: "IPAC 2Mass J"		}
+			 , { value: "h", 		text: "IPAC 2Mass H"		}
+			 , { value: "k", 		text: "IPAC 2Mass K"		}
+			]
+	    , url: "https://irsa.ipac.caltech.edu/cgi-bin/Oasis/2MASSImg/nph-2massimg?objstr={r},{d}&size={radius}&band={s}"
+	    , calc: function(values) {
+		    values.radius = Math.floor(Math.sqrt(values.w*values.w+values.h*values.h)*60);
+		    values.name   = imageName(values);
+		}
+	});
 
 //	var dasch  = new ImageService({
 //	      text: "DASCH"
