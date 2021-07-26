@@ -114,7 +114,7 @@ WEBHELP	=	help
 PREFFILES =	js9Prefs.json js9prefs.js
 
 MFILES =	Makefile Makefile.in configure configure.ac \
-		js9 js9load js9wait README.md
+		js9 js9load js9wait js9msg README.md
 
 # clean up from previous versions
 RMFILES =	analysis-plugins/imageSection.json \
