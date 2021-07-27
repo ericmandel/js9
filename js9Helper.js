@@ -61,6 +61,7 @@ const globalOpts = {
     // v2 requires cors to be set explicitly
     // allowEIO3 support socketio v2
     helperOpts:       {maxHttpBufferSize: 10E9,
+		       pingInterval:      20000,
 		       pingTimeout:       30000,
 		       cors:{origin:      true},
 		       allowEIO3:         true},
