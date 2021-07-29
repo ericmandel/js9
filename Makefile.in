@@ -492,15 +492,7 @@ install-sao:	install-gzip saoprefs install-webcgi install-demos install-tests
 allinone:	FORCE
 		@($(BSCR)/mkallinone $(ALLIN1) $(VERSION))
 
-gitprefs:	FORCE
-		@(if [ -d .git ]; then \
-		     git checkout -- js9Prefs.json; \
-		     git checkout -- js9prefs.js; \
-                     git checkout -- sao/js9Prefs.json; \
-                     git checkout -- sao/js9prefs.js; \
-		  fi;)
-
-release:	clean gitprefs
+release:	clean
 		(mkdir -p $(DISTDIR)/$(DISTNAME); \
 	        touch $(DISTDIR)/foo; \
 		export COPYFILE_DISABLE=true; \
