@@ -4177,7 +4177,8 @@ JS9.Image.prototype.getZoom = function(){
 
 // return zoom from zoom string
 JS9.Image.prototype.parseZoom = function(zval){
-    let ozoom, nzoom;
+    let i, ozoom, nzoom, w, h, pt, angle, x0, x1, y0, y1;
+    const pts = [];
     // get old zoom
     ozoom = this.rgb.sect.zoom;
     // determine new zoom
@@ -4202,7 +4203,29 @@ JS9.Image.prototype.parseZoom = function(zval){
 	    break;
 	case "T":
 	case "t":
-	    nzoom = Math.min(this.display.width/this.raw.width, this.display.height/this.raw.height);
+	    if(  this.params.transformAngle ){
+		angle = -this.params.transformAngle;
+		pt = {x: -this.raw.width / 2, y: this.raw.height / 2};
+		pts[0] = JS9.rotatePoint(pt, angle);
+		pt = {x: this.raw.width / 2, y: this.raw.height / 2};
+		pts[1] = JS9.rotatePoint(pt, angle);
+		pt = {x: -this.raw.width / 2, y: -this.raw.height / 2};
+		pts[2] = JS9.rotatePoint(pt, angle);
+		pt = {x: this.raw.width / 2, y: -this.raw.height / 2};
+		pts[3] = JS9.rotatePoint(pt, angle);
+		for(i=0; i<pts.length; i++){
+		    if( JS9.isNull(x0) || pts[i].x < x0 ){ x0 = pts[i].x; }
+		    if( JS9.isNull(x1) || pts[i].x > x1 ){ x1 = pts[i].x; }
+		    if( JS9.isNull(y0) || pts[i].y < y0 ){ y0 = pts[i].y; }
+		    if( JS9.isNull(y1) || pts[i].y > y1 ){ y1 = pts[i].y; }
+		}
+		w = x1 - x0;
+		h = y1 - y0;
+	    } else {
+		w = this.raw.width;
+		h = this.raw.height;
+	    }
+	    nzoom = Math.min(this.display.width/w, this.display.height/h);
 	    // a little rounding makes the zoom nicer
 	    nzoom = Math.round((nzoom + 0.0000001) * 1000000) / 1000000;
 	    break;
