@@ -10374,7 +10374,7 @@ JS9.Panner.disp = function(im){
     nheight = im.display.height * tblky / sect.zoom;
     // position of the rectangle
     nx = (sect.x0 - panner.x0) * tblkx + panner.ix;
-    ny = (panDisp.height - 1) - ((sect.y1 - panner.y0) * tblky + panner.iy);
+    ny = panDisp.height - ((sect.y1 - panner.y0) * tblky + panner.iy);
     // adjust for section offset
     if( im.display.width !== sect.width ){
 	nx -= (im.display.width - sect.width) * tblkx / sect.zoom / 2;
