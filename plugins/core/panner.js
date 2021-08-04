@@ -145,7 +145,7 @@ JS9.Panner.create = function(im){
     let i, j, ii, jj, kk;
     let ioff, ooff;
     let width, height;
-    let pos, ix, iy, temp;
+    let pos, ix, iy;
     let dlayer;
     // sanity checks
     if( !im || !im.raw                              ||
@@ -264,19 +264,6 @@ JS9.Panner.create = function(im){
 	if( im ){
 	    panDisp = im.display.pluginInstances.JS9Panner;
 	    pos = opts.target.getCenterPoint();
-	    // rotations will change the pan direction
-	    if( im.params.rot90 === 90 ){
-		temp = pos.x;
-		pos.x = panDisp.height - pos.y;
-		pos.y = temp;
-	    } else if( im.params.rot90 === 180 ){
-		pos.x = panDisp.width - pos.x;
-		pos.y = panDisp.height - pos.y;
-	    } else if( im.params.rot90 === -90 ){
-		temp = panDisp.width - pos.x;
-		pos.x = pos.y;
-		pos.y = temp;
-	    }
 	    // flips will change the pan position
 	    if( im.params.flip === "x" ){
 		pos.x = panDisp.width - pos.x;
@@ -285,6 +272,12 @@ JS9.Panner.create = function(im){
 	    } else if( im.params.flip === "xy" ){
 		pos.x = panDisp.width - pos.x;
 		pos.y = panDisp.height - pos.y;
+	    }
+	    // rotations will change the pan position
+	    if( im.params.rot90 ){
+		pos = JS9.rotatePoint(pos,
+				      im.params.rot90,
+				      {x:panDisp.width/2, y:panDisp.height/2});
 	    }
 	    // rotations will change the pan position
 	    if( im.params.rotate ){
@@ -316,8 +309,7 @@ JS9.Panner.disp = function(im){
     let obj, nx, ny, nwidth, nheight, cenx, ceny, pos;
     let npos1, npos2, nobj, nobjt;
     let epos1, epos2, eobj, eobjt;
-    let angle, xflip, yflip, wcsinfo, w2, h2, m, ctx, temp;
-    const FUDGE = 1;
+    let angle, xflip, yflip, wcsinfo, w2, h2, m, ctx;
     const img2canvas = (im, img) => {
 	let context, canvas;
 	let panner = im.display.pluginInstances.JS9Panner;
@@ -330,7 +322,7 @@ JS9.Panner.disp = function(im){
 	    }
 	    panner.offscreenRGB = {canvas, context};
 	}
-	panner.offscreenRGB.canvas.width= img.width;
+	panner.offscreenRGB.canvas.width  = img.width;
 	panner.offscreenRGB.canvas.height = img.height;
 	panner.offscreenRGB.context.putImageData(img, 0, 0);
 	return panner.offscreenRGB.canvas;
@@ -359,11 +351,11 @@ JS9.Panner.disp = function(im){
 	return;
     }
     // offsets into display
-    if( panner.img.width < panDisp.canvas.width ){
-	panner.ix = Math.floor((panDisp.canvas.width - panner.img.width)/2);
+    if( panner.img.width < panDisp.width ){
+	panner.ix = Math.floor((panDisp.width - panner.img.width)/2);
     }
-    if( panner.img.height < panDisp.canvas.height ){
-        panner.iy = Math.floor((panDisp.canvas.height - panner.img.height)/2);
+    if( panner.img.height < panDisp.height ){
+        panner.iy = Math.floor((panDisp.height - panner.img.height)/2);
     }
     // clear first
     JS9.Panner.clear.call(this, im);
@@ -374,8 +366,8 @@ JS9.Panner.disp = function(im){
 	// this is the transform matrix
 	m = im.params.transform;
 	// translate origin to center of display
-	w2 = panDisp.canvas.width / 2;
-	h2 = panDisp.canvas.height / 2;
+	w2 = panDisp.width / 2;
+	h2 = panDisp.height / 2;
 	ctx.translate(w2, h2);
 	// set new transform
 	ctx.transform(m[0][0], m[0][1], m[1][0], m[1][1], m[2][0], m[2][1]);
@@ -392,51 +384,21 @@ JS9.Panner.disp = function(im){
     tblkx = panner.zoom / panner.xblock;
     tblky = panner.zoom / panner.yblock;
     // size of rectangle
-    // nwidth = sect.width * tblkx / sect.zoom * bin;
-    // nheight = sect.height * tblky / sect.zoom * bin;
     nwidth = im.display.width * tblkx / sect.zoom;
     nheight = im.display.height * tblky / sect.zoom;
     // position of the rectangle
     nx = (sect.x0 - panner.x0) * tblkx + panner.ix;
     ny = (panDisp.height - 1) - ((sect.y1 - panner.y0) * tblky + panner.iy);
-    // adjust if section is entirely inside the display
-    if( im.display.width > sect.width ){
+    // adjust for section offset
+    if( im.display.width !== sect.width ){
 	nx -= (im.display.width - sect.width) * tblkx / sect.zoom / 2;
     }
-    if( im.display.height > sect.height ){
+    if( im.display.height !== sect.height ){
 	ny -= (im.display.height - sect.height) * tblky / sect.zoom / 2;
     }
-    // why is the fudge needed???
-    nx  += FUDGE;
-    ny  += FUDGE;
     // convert to center pos
     nx += nwidth / 2;
     ny += nheight / 2;
-    // nice integer values
-    nx = Math.floor(nx);
-    ny = Math.floor(ny);
-    nwidth = Math.floor(nwidth);
-    nheight = Math.floor(nheight);
-    // hide rectangle if it covers the full panner
-    if( nwidth >= panDisp.width && nheight >= panDisp.height ){
-	nx = panDisp.width / 2;
-	ny = panDisp.height / 2;
-	nwidth = panDisp.width + 10;
-	nheight = panDisp.height + 10;
-    }
-    // rotations will change the pan direction
-    if( im.params.rot90 === 90 ){
-	temp = nx;
-	nx = panDisp.height - ny;
-	ny = temp;
-    } else if( im.params.rot90 === 180 ){
-	nx = panDisp.width - nx;
-	ny = panDisp.height - ny;
-    } else if( im.params.rot90 === -90 ){
-	temp = panDisp.width - nx;
-	nx = ny;
-	ny = temp;
-    }
     // flips will change the pan position
     if( im.params.flip === "x" ){
 	nx = panDisp.width - nx;
@@ -447,12 +409,29 @@ JS9.Panner.disp = function(im){
 	ny = panDisp.height - ny;
     }
     // rotations will change the pan position
+    if( im.params.rot90 ){
+	pos = JS9.rotatePoint({x: nx, y: ny},
+			      - im.params.rot90,
+			      {x:panDisp.width/2, y:panDisp.height/2});
+	nx = pos.x;
+	ny = pos.y;
+    }
+    // rotations will change the pan position
     if( im.params.rotate ){
 	pos = JS9.rotatePoint({x: nx, y: ny},
 			      - im.params.rotate,
 			      {x:panDisp.width/2, y:panDisp.height/2});
 	nx = pos.x;
 	ny = pos.y;
+    }
+    // hide rectangle if it covers the full panner
+    if( nwidth >= panDisp.width ){
+	nx = panDisp.width / 2;
+	nwidth = panDisp.width + 10;
+    }
+    if( nheight >= panDisp.height ){
+	ny = panDisp.height / 2;
+	nheight = panDisp.height + 10;
     }
     // object containing position and size parameters:
     obj = {left: nx, top: ny, width: nwidth, height: nheight};
