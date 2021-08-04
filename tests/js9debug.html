@@ -27,6 +27,7 @@
       font: normal 18px Helvetica;
     }
     .catdiv{
+      width: 512;
       background: #99FFCC;
       padding: 10px;
     }
@@ -92,6 +93,7 @@
     </tr>
     <tr valign="top">
     <td colspan="2">
+    <center>
     <form autocomplete="off" action="noop()">
     Blobs:
     <input type="file" multiple="true" onchange="javascript:GetBlobs(this.files)">
@@ -151,16 +153,17 @@
         <option value="darken">darken</option>
     </select>
     </form>
+    </center>
     </td>
     </tr>
 
-    <tr valign="top">
-    <td>
-    <div class="JS9Menubar" id="SUPERMENU_" data-buttonClass="JS9Button-border" data-backgroundColor="darkgreen" data-displays="*" data-style="mac" data-usermenus="true" data-width="560"></div>
+    <tr valign="top" spa>
+    <td colspan="2">
+    <center>
+    <div class="JS9Menubar" id="SUPERMENU_" data-buttonClass="JS9Button-border" data-backgroundColor="darkgreen" data-displays="*" data-style="mac" data-usermenus="true" data-width="800"></div>
+    </center>
     </td>
-    <td>
-      &nbsp;
-    </td>
+
     </tr>
 
     <tr valign="bottom">
@@ -181,15 +184,15 @@
     </tr>
     <tr valign="top">
     <td>
-    <div class="JS9" data-width="400px" data-height="400px"></div>
-    <div class="JS9Colorbar" id="JS9Colorbar" data-showTicks="false" data-height="10px" data-width="400px"></div>
+    <div class="JS9" data-width="500px" data-height="400px"></div>
+    <div class="JS9Colorbar" id="JS9Colorbar" data-showTicks="false" data-height="10px" data-width="500px"></div>
     <p>
     <div class="catdiv">
     <select id="display">
       <option value="" selected="selected" style="display:none">Display</option>
-      <option value="box">Box Catalog (with tooltips)</option>
-      <option value="circle">Circle Catalog (event handlers, movable)</option>
-      <option value="both">Both Catalogs (non-interactive)</option>
+      <option value="box">Box Cat (with tooltips)</option>
+      <option value="circle">Circle Cat (movable)</option>
+      <option value="both">Both (non-interactive)</option>
     </select>
     <select id="hide">
       <option value="" selected="selected" style="display:none">Hide</option>
@@ -212,10 +215,10 @@
     </div>
     </td>
     <td>
-    <div class="JS9Menubar" id="myJS9Menubar"></div>
-    <div class="JS9Toolbar" id="myJS9Toolbar"></div>
-    <div class="JS9" id="myJS9"></div>
-    <div class="JS9Statusbar" id="myJS9Statusbar"></div>
+    <div class="JS9Menubar" id="myJS9Menubar" data-width="768"></div>
+    <div class="JS9Toolbar" id="myJS9Toolbar" data-width="768"></div>
+    <div class="JS9" id="myJS9" data-height="512" data-width="768"></div>
+    <div class="JS9Statusbar" id="myJS9Statusbar" data-width="768"></div>
     </td>
     </tr>
     <tr valign="top">
