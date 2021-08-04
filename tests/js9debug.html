@@ -45,21 +45,13 @@
     <tr>
     <td>
     <ul>
-    <li> <a href='javascript:JS9.Load("data/fits/casa.fits");'>CAS-A (Chandra)</a>
-    <li> <a href='javascript:JS9.Load("data/fits/3c58.fits", {colormap: "heat"}, {display: "JS9"});'>3c58 (Chandra)</a>
-    <li> <a href='javascript:JS9.Load("data/fits/m13.fits", "{\"scale\":\"linear\", \"colormap\": \"sls\"}");'>M13 (via SkyView)</a>
     <li> <a href='javascript:JS9.Load("data/fits/snr.fits");'>CTB 109 (Einstein)</a>
-    <li> <a href='javascript:JS9.Load("data/fits/ngc1316.fits", {scale:"linear"});'>ngc1316 (AIPS)</a>
     <li> <a href='javascript:JS9.Load("data/png/dmitri.png");'>Dmitri (classic PNG)</a>
     </ul>
     </td>
     <td>
     <ul>
-    <li> <a href='javascript:JS9.Load("data/fits/b10.fits");'>byte 10x10 (v=x*10+y)</a>
-    <li> <a href='javascript:JS9.Load("data/fits/s100.fits", {scale:"linear", colormap:"grey"});'>s100 (v=x*100+y)</a>
-    <li> <a href='javascript:JS9.Load("data/fits/i1000.fits", "{\"scale\":\"linear\", \"colormap\":\"viridis\"}");'>i1000 (v=x*1000+y)</a>
     <li> <a href='javascript:JS9.Load("data/fits/f1000.fits");'>float 1000x1000 (v=x.y/1000)</a>
-    <li> <a href='javascript:JS9.Load("data/fits/d1000.fits");'>double 1000x1000 (v=x.y/1000)</a>
     <li> <a href='javascript:JS9.LoadProxy("http://nxsa.esac.esa.int/nxsa-sl/servlet/data-action-aio?obsno=0791580701&name=3COLIM&level=PPS&extension=FTZ", {colormap: "red", scale: "log", scalemin: 0, contrast: 9.2, bias: 0.047, onload: function(im){ nextSlice(im, 2); }});'>XMM (proxy/rgb)</a>
     </ul>
     </td>
@@ -71,9 +63,6 @@
     <tr>
     <td>
     <ul>
-    <li> <a href='javascript:JS9.Load("data/fits/casa.fits", {display: "myJS9"});'>CAS-A (Chandra)</a>
-    <li> <a href='javascript:JS9.Load("data/fits/3c58.fits", {colormap: "heat", ra: 31.407894, dec: 64.828423, scale: "log"}, {display: "myJS9"});'>3c58 (Chandra)</a>
-    <li> <a href='javascript:JS9.Load("data/fits/ngc1316.fits[*,-*]", {scale:"linear"}, {display: "myJS9"});'>ngc1316 (AIPS)</a>
     <li> <a href='javascript:JS9.Load("data/fits/nicmos.fits", {display: "myJS9"});'>Multi-extension FITS</a>
     <li> <a href='javascript:JS9.Load("data/fits/jupiter_cube.fits", {display: "myJS9"});'>Jupiter Cube</a>
     </ul>
@@ -81,15 +70,95 @@
 
     <td>
     <ul>
-    <li> <a href='javascript:JS9.Load("data/fits/b10.fits", {colormap: "grey"}, {display: "myJS9"});'>b10.fits</a>
     <li> <a href='javascript:JS9.Load("data/m13/m13_gzip.fits", {colormap: "red"}, {display: "myJS9"});'>M13 (gzip tile compress)</a>
-    <li> <a href='javascript:JS9.Load("data/fits/dot.fits", {colormap: "grey"}, {display: "myJS9"});'>dot.fits (256,256 has value 2)</a>
     <li> <a href='javascript:JS9.LoadProxy("http://hea-www.cfa.harvard.edu/~eric/coma.fits", {scale: "linear"}, {display: "myJS9"});'>coma.fits (proxy)</a>
+    </ul>
+    </td>
+
+    <td>
+    <ul>
+    <li> <a href='javascript:JS9.Load("data/fits/i1000.fits", {display: "myJS9"});'>i1000 (v=x*1000+y)</a>
     <li> <a href='javascript:JS9.Load("data/tests/casa_smartx_regions.fits.gz", {rgbFile: "data/tests/casa_smartx.png", parentFile: "data/tests/casa_obs4637_img.fits"}, {display: "myJS9"});'>CAS-A (with RGB overlay)</a>
     </ul>
     </td>
+
     </tr>
     </table>
+
+    <tr valign="top" spa>
+    <td colspan="2">
+    <center>
+    <div class="JS9Menubar" id="SUPERMENU_" data-buttonClass="JS9Button-border" data-backgroundColor="darkgreen" data-displays="*" data-style="mac" data-usermenus="true" data-width="800"></div>
+    </center>
+    </td>
+    </tr>
+
+    <tr valign="top">
+    <td>
+    <div class="JS9Info"></div>
+    </td>
+    <td>
+    <table>
+    <tr valign="bottom">
+    <td>
+    <div class="JS9Panner" id="myJS9Panner" data-toolbarseparate="true"></div>
+    </td>
+    <td>
+    <div class="JS9Magnifier" data-js9id="myJS9" data-width="150px" data-height="150px"></div>
+    </td>
+    </table>
+    </td>
+    </tr>
+
+    <tr valign="top">
+    <td>
+    <div class="JS9" data-width="512px" data-height="512px"></div>
+    <div class="JS9Colorbar" id="JS9Colorbar" data-showTicks="false" data-height="10px" data-width="512px"></div>
+    <p>
+    <div class="catdiv">
+    <select id="display">
+      <option value="" selected="selected" style="display:none">Display</option>
+      <option value="box">Box Cat (with tooltips)</option>
+      <option value="circle">Circle Cat (movable)</option>
+      <option value="both">Both (non-interactive)</option>
+    </select>
+    <select id="hide">
+      <option value="" selected="selected" style="display:none">Hide</option>
+      <option value="box">Box Catalog</option>
+      <option value="circle">Circle Catalog</option>
+      <option value="both">Both Catalogs</option>
+    </select>
+    <select id="show">
+      <option value="" selected="selected" style="display:none">Show</option>
+      <option value="box">Box Catalog</option>
+      <option value="circle">Circle Catalog</option>
+      <option value="both">Both Catalogs</option>
+    </select>
+    <p>
+    <b>Move circle catalog: </b>
+    <button id="up">Up</button>
+    <button id="down">Down</button>
+    <button id="left">Left</button>
+    <button id="right">Right</button>
+    </div>
+    </td>
+    <td>
+    <div class="JS9Menubar" id="myJS9Menubar" data-width="768"></div>
+    <div class="JS9Toolbar" id="myJS9Toolbar" data-width="768"></div>
+    <div class="JS9" id="myJS9" data-height="512" data-width="768"></div>
+    <div class="JS9Statusbar" id="myJS9Statusbar" data-width="768"></div>
+    </td>
+    </tr>
+
+    <tr valign="top">
+    <td>
+    <div class="PLUGINtest" data-js9id="JS9"></div>
+    </td>
+    <td>
+    <div class="JS9Console" id="myJS9Console" data-width="512px" data-height="300px"></div>
+    </td>
+    </tr>
+
     </tr>
     <tr valign="top">
     <td colspan="2">
@@ -157,78 +226,6 @@
     </td>
     </tr>
 
-    <tr valign="top" spa>
-    <td colspan="2">
-    <center>
-    <div class="JS9Menubar" id="SUPERMENU_" data-buttonClass="JS9Button-border" data-backgroundColor="darkgreen" data-displays="*" data-style="mac" data-usermenus="true" data-width="800"></div>
-    </center>
-    </td>
-
-    </tr>
-
-    <tr valign="bottom">
-    <td>
-    <div class="JS9Info"></div>
-    </td>
-    <td>
-    <table>
-    <tr valign="bottom">
-    <td>
-    <div class="JS9Panner" id="myJS9Panner" data-toolbarseparate="true"></div>
-    </td>
-    <td>
-    <div class="JS9Magnifier" data-js9id="myJS9" data-width="150px" data-height="150px"></div>
-    </td>
-    </table>
-    </td>
-    </tr>
-    <tr valign="top">
-    <td>
-    <div class="JS9" data-width="500px" data-height="400px"></div>
-    <div class="JS9Colorbar" id="JS9Colorbar" data-showTicks="false" data-height="10px" data-width="500px"></div>
-    <p>
-    <div class="catdiv">
-    <select id="display">
-      <option value="" selected="selected" style="display:none">Display</option>
-      <option value="box">Box Cat (with tooltips)</option>
-      <option value="circle">Circle Cat (movable)</option>
-      <option value="both">Both (non-interactive)</option>
-    </select>
-    <select id="hide">
-      <option value="" selected="selected" style="display:none">Hide</option>
-      <option value="box">Box Catalog</option>
-      <option value="circle">Circle Catalog</option>
-      <option value="both">Both Catalogs</option>
-    </select>
-    <select id="show">
-      <option value="" selected="selected" style="display:none">Show</option>
-      <option value="box">Box Catalog</option>
-      <option value="circle">Circle Catalog</option>
-      <option value="both">Both Catalogs</option>
-    </select>
-    <p>
-    <b>Move circle catalog: </b>
-    <button id="up">Up</button>
-    <button id="down">Down</button>
-    <button id="left">Left</button>
-    <button id="right">Right</button>
-    </div>
-    </td>
-    <td>
-    <div class="JS9Menubar" id="myJS9Menubar" data-width="768"></div>
-    <div class="JS9Toolbar" id="myJS9Toolbar" data-width="768"></div>
-    <div class="JS9" id="myJS9" data-height="512" data-width="768"></div>
-    <div class="JS9Statusbar" id="myJS9Statusbar" data-width="768"></div>
-    </td>
-    </tr>
-    <tr valign="top">
-    <td>
-    <div class="PLUGINtest" data-js9id="JS9"></div>
-    </td>
-    <td>
-    <div class="JS9Console" id="myJS9Console" data-width="512px" data-height="300px"></div>
-    </td>
-    </tr>
     </table>
     <script type="text/javascript">
     var im0, im1, im;
