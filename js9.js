@@ -15936,8 +15936,8 @@ JS9.Fabric._ungroupAnnulus = function(layerName, shape){
     objs.sort((a, b) => {return b.radius - a.radius;});
     // add circle for edit
     for(i=0; i<objs.length; i++){
-	opts.radius = objs[i].radius * shape.scaleX;
-	// can't edit radius of 0, because fabric tracks scaleX * radius
+	opts.radius = objs[i].radius;
+	// can't edit radius of 0 ...
 	// so make it tiny, and undo as needed on the other end
 	if( opts.radius === 0 ){
 	    opts.radius = epsilon;
