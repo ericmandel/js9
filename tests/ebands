@@ -1,9 +1,14 @@
 #!/bin/bash
 # set -x
 
-js9 -a &
+js9 -a --width 1100 --height 770 &
 XPID=$!
-sleep 2
+printf "waiting for js9 window "
+while [ x`js9 targets` != x1 ]; do
+  printf "."
+  sleep 1
+done
+printf " OK\n"
 
 # Chandra event file of Kes75 SNR
 file="data/kes75/kes75_evt2.fits.gz"
