@@ -211,9 +211,11 @@ if test x$CFITSIOLIB != x; then
     CFITSIOLIB="-lcfitsio"
   fi
   # cfitsio 3.440 probably requires the curl library in the link line!
-  # might also require bz2 library ...
   AC_CHECK_LIB(curl, curl_easy_init, CFITSIOLIB="$CFITSIOLIB -lcurl")
+  # might also require bz2 library ...
   AC_CHECK_LIB(bz2, BZ2_bzReadOpen, CFITSIOLIB="$CFITSIOLIB -lbz2")
+  # cfitsio 4.0.0 no longer supplies zlib routines if they are installed
+  AC_CHECK_LIB(z, inflate, CFITSIOLIB="$CFITSIOLIB -lz")
   CFITSIOOBJS="jsfitsio.o healpix.o"
   FITSLIB="cfitsio"
 fi

@@ -4218,7 +4218,6 @@ if test x$CFITSIOLIB != x; then
     CFITSIOLIB="-lcfitsio"
   fi
   # cfitsio 3.440 probably requires the curl library in the link line!
-  # might also require bz2 library ...
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for curl_easy_init in -lcurl" >&5
 $as_echo_n "checking for curl_easy_init in -lcurl... " >&6; }
 if ${ac_cv_lib_curl_curl_easy_init+:} false; then :
@@ -4259,6 +4258,7 @@ if test "x$ac_cv_lib_curl_curl_easy_init" = xyes; then :
   CFITSIOLIB="$CFITSIOLIB -lcurl"
 fi
 
+  # might also require bz2 library ...
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for BZ2_bzReadOpen in -lbz2" >&5
 $as_echo_n "checking for BZ2_bzReadOpen in -lbz2... " >&6; }
 if ${ac_cv_lib_bz2_BZ2_bzReadOpen+:} false; then :
@@ -4297,6 +4297,47 @@ fi
 $as_echo "$ac_cv_lib_bz2_BZ2_bzReadOpen" >&6; }
 if test "x$ac_cv_lib_bz2_BZ2_bzReadOpen" = xyes; then :
   CFITSIOLIB="$CFITSIOLIB -lbz2"
+fi
+
+  # cfitsio 4.0.0 no longer supplies zlib routines if they are installed
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for inflate in -lz" >&5
+$as_echo_n "checking for inflate in -lz... " >&6; }
+if ${ac_cv_lib_z_inflate+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lz  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char inflate ();
+int
+main ()
+{
+return inflate ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_z_inflate=yes
+else
+  ac_cv_lib_z_inflate=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_z_inflate" >&5
+$as_echo "$ac_cv_lib_z_inflate" >&6; }
+if test "x$ac_cv_lib_z_inflate" = xyes; then :
+  CFITSIOLIB="$CFITSIOLIB -lz"
 fi
 
   CFITSIOOBJS="jsfitsio.o healpix.o"
