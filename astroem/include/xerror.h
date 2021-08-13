@@ -21,6 +21,7 @@
 char *xerrorstring(void);
 int setxerror(int flag);
 FILE *setxerrorfd(FILE *fd);
+void setxerrorexit(void (*rtn)(void));
 void xerror(FILE *fd, char *format, ...);
 char *xwarningstring(void);
 int setxwarning(int flag);
