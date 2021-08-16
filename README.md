@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5148424.svg)](https://doi.org/10.5281/zenodo.5148424)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5205774.svg)](https://doi.org/10.5281/zenodo.5205774)
 
 [![DeepScan grade](https://deepscan.io/api/teams/12940/projects/15985/branches/329797/badge/grade.svg)](https://deepscan.io/dashboard#view=project&tid=12940&pid=15985&bid=329797)
 
@@ -116,6 +116,8 @@ JS9 is distributed under the terms of The MIT License.
 
 What's the recent release history?
 ----------------------------------
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5205774.svg)](https://doi.org/10.5281/zenodo.5205774)  __v3.6.1__ &nbsp; (08/16/2021)
+
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5148424.svg)](https://doi.org/10.5281/zenodo.5148424)  __v3.6.0__ &nbsp; (07/30/2021)
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4891274.svg)](https://doi.org/10.5281/zenodo.4891274)  __v3.5.0__ &nbsp; (06/01/2021)
