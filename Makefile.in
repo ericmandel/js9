@@ -522,7 +522,10 @@ smoke:		FORCE
 	          echo "$$X" | egrep -q -s '^ERROR|^0$$|^$$';		\
 		  if [ $$? = 0 ]; then					\
 			js9 -a -v --webpage tests/smoke.html --width 1060 --height 670 & \
-			sleep 3;					\
+			while [ x`js9 targets` != x1 ]; do 		\
+			  printf "."; 					\
+			  sleep 1; 					\
+			done; 						\
 		  fi;							\
 		  python3 tests/smoke.py)
 
