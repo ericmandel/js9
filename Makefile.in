@@ -518,11 +518,11 @@ js9helper:	FORCE
 		@(build/nnode)
 
 smoke:		FORCE
-		@(X=`js9 targets`; 					\
+		@(X="`js9 targets`"; 					\
 	          echo "$$X" | egrep -q -s '^ERROR|^0$$|^$$';		\
 		  if [ $$? = 0 ]; then					\
 			js9 -a -v --webpage tests/smoke.html --width 1060 --height 670 & \
-			while [ x`js9 targets` != x1 ]; do 		\
+			while [ x"`js9 targets`" != x1 ]; do 		\
 			  printf "."; 					\
 			  sleep 1; 					\
 			done; 						\
@@ -530,20 +530,26 @@ smoke:		FORCE
 		  python3 tests/smoke.py)
 
 smoke2:		FORCE
-		@(X=`js9 targets`; 					\
+		@(X="`js9 targets`"; 					\
 	          echo "$$X" | egrep -q -s '^ERROR|^0$$|^$$';		\
 		  if [ $$? = 0 ]; then					\
 			js9 -a -v --webpage tests/smoke.html --width 1060 --height 670 & \
-			sleep 3;					\
+			while [ x"`js9 targets`" != x1 ]; do 		\
+			  printf "."; 					\
+			  sleep 1; 					\
+			done; 						\
 		  fi;							\
 		  python3 tests/smoke2.py)
 
 smoke3:		FORCE
-		@(X=`js9 targets`; 					\
+		@(X="`js9 targets`"; 					\
 	          echo "$$X" | egrep -q -s '^ERROR|^0$$|^$$';		\
 		  if [ $$? = 0 ]; then					\
 			js9 -a -v --webpage tests/smoke.html --savedir `pwd` --width 1060 --height 670 & \
-			sleep 3;					\
+			while [ x"`js9 targets`" != x1 ]; do 		\
+			  printf "."; 					\
+			  sleep 1; 					\
+			done; 						\
 		  fi;							\
 		  python3 tests/smoke3.py)
 

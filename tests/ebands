@@ -4,7 +4,7 @@
 js9 -a --width 1100 --height 770 &
 XPID=$!
 printf "waiting for js9 window "
-while [ x`js9 targets` != x1 ]; do
+while [ x"`js9 targets`" != x1 ]; do
   printf "."
   sleep 1
 done
