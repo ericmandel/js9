@@ -1,18 +1,17 @@
 # astroem: astronomy/astrophysics C code compiled to javascript via emscripten
 # see: http://kripken.github.io/emscripten-site/index.html
 
-# output file name for the emscripten-compiled javascript file
-ASTROEMJS	=	astroem.js
-# files for wasm support:
-ASTROEMWJS	=	astroemw.js
-ASTROEMWASM	=	astroemw.wasm
+# astroem library containing our support code:
 ASTROEMLIB	=	libastroem.a
 
-# where is output file is installed
-INSTALLDIR =	../js
+# export files for wasm support:
+ASTROEMWJS	=	astroemw.js
+ASTROEMWASM	=	astroemw.wasm
+# export files for non-wasm (javasript) support:
+ASTROEMJS	=	astroem.js
 
-# astroem: emscripten-compiled bitcode for astronomical libraries
-ASTROEM =	$$HOME/astroem
+# where is export files are installed
+INSTALLDIR =	..
 
 # use emscripten ports, rather than our own
 # https://github.com/emscripten-ports
@@ -22,7 +21,6 @@ EMPORTS	=	-s USE_ZLIB=1 -s USE_BZIP2=1
 EMFS =		-lnodefs.js
 
 # emcc compiler flags
-# NB: -O2 is the recommended optimization (not -O3, as of 1/27/2015)
 # can't use mem file: we don't know where the mem file will resides
 # EMFLAGS = 	-g --memory-init-file 0
 # debugging
@@ -119,7 +117,7 @@ PKGDIRS =	$(JSFITSIO) $(MONTAGE) $(ZSCALE) $(ZEXTRA)
 LIBS =		lib/libcfitsio.a lib/libregions.a lib/libwcs.a lib/libutil.a \
 		lib/libem.a
 #		use Emscripten ports instead of our own
-#		lib/libem.a lib/libz.a lib/libbz2.a
+#		lib/libz.a lib/libbz2.a
 
 # combine into EMCC command
 EMCC =		emcc $(EMFLAGS) $(EMOPTS) $(EMEXPORTS) $(EMINCS) $(EMEXTRAS)
@@ -160,23 +158,15 @@ install:	FORCE
 		@(if [ -d $(INSTALLDIR) ]; then \
 		    echo "installing $(ASTROEMJS) in: $(INSTALLDIR)"; \
 		    cp -p $(ASTROEMJS) $(INSTALLDIR)/.; \
-		    cp -p $(ASTROEMJS) $(INSTALLDIR)/..; \
 		    if [ x"$(ASTROEMWASM)" != x ]; then \
 		      echo "also installing $(ASTROEMWJS): $(INSTALLDIR)"; \
 		      cp -p $(ASTROEMWJS)  $(INSTALLDIR)/.; \
-		      cp -p $(ASTROEMWJS)  $(INSTALLDIR)/..; \
 		      cp -p $(ASTROEMWASM) $(INSTALLDIR)/.; \
-		      cp -p $(ASTROEMWASM) $(INSTALLDIR)/..; \
 		    fi; \
 		    cd .. && $(MAKE) js9support; \
 		  else \
 		    echo "could not find JS9 directory: $(JS9)"; \
 		  fi;)
-
-# get the astroem libraries
-astroem:	FORCE
-		@(cp -p $(ASTROEM)/include/*.h include/.; \
-		  cp -p $(ASTROEM)/lib/*.a lib/.;)
 
 clean:		FORCE
 		@(rm -rf *.o *~ a.out* foo* *.map \#*  \
