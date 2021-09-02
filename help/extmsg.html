@@ -182,9 +182,13 @@ host to contact. For example, if the helper is running on
 js9.cfa.harvard.edu, you can send a command to your instance of JS9
 this way:
 <pre>
-  sh> js9 --host https://js9.si.edu region circle
+  sh> js9 --host https://js9.si.edu:443 region circle
   OK
 </pre>
+(Note that the main JS9 web site uses a reverse proxy to communicate
+with an internal-facing JS9 helper. You send a message to the main web
+server port 443, and it is relayed to the helper listening internally
+on port 2718.)
 <p>
 If more than one instance of JS9 appears on a single web page, the
 <b>--id</b> switch can differentiate between instances. The value of
@@ -209,7 +213,7 @@ or, from the readline loop:
 Putting the last two techniques together, you can talk to one of many JS9
 instances on a page connected to a remote helper this way:
 <pre>
-  sh> js9 --host https://js9.si.edu --id myJS9 cmap heat
+  sh> js9 --host https://js9.si.edu:443 --id myJS9 cmap heat
   OK
 </pre>
 
@@ -335,7 +339,7 @@ for HTTP-based commands is analogous to the scripting syntax, if
 somewhat more primitive: you pass a JSON-formatted string to the
 helper in a GET or POST request, as show below.
 <pre>
-  export MYHOST="https://js9.si.edu:2718"
+  export MYHOST="https://js9.si.edu:443"
   export ID="JS9"
   export WARGS="-q -O-"
   # GET request, using public api:
@@ -352,7 +356,7 @@ helper in a GET or POST request, as show below.
   wget $WARGS --post-data='{"id": "'$ID'", "cmd": "RunAnalysis", "args": ["counts"]}' $MYHOST/msg
 </pre>
 
-<h5>Last updated: October 30, 2020</h5>
+<h5>Last updated: September 2, 2021</h5>
 </div>
 
 </body>
