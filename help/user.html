@@ -285,17 +285,24 @@ you to hide plugins defined statically on the web page.
 The <b>View</b> menu also contains the following <b>Display
 Options</b> submenus:
 <ul>
-<li><b>show ...</b>: various options on the display:
+<li><b>show ...</b> options on the display:
 <ul>
-<li><b>display value/position</b>: specifies whether image position
-and image pixel value is displayed as the mouse (or finger) moves over
+<li><b>value/position ...</b> a submenu of options for displaying
+the current value/position, including:
+<ul>
+<li><b>update value/position</b>: specifies whether the image position
+and pixel value is displayed as the mouse (or finger) moves over
 the image. By default, this information is displayed in the upper left
 of the image. The display can be moved anywhere inside the JS9 window by
 clicking on it with the mouse and moving.  You also can redirect the
 display to a movable, light-weight window by choosing the
 <b>InfoBox</b> menu option.
-<li><b>display coords in val/pos</b>: specifies whether display coordinates
+<li><b>value/pos color</b>: allows you to change the color of the
+value/pos display. You can enter color names (e.g., red, green, blue,
+cyan)  or values in #RRGGBB format (e.g., #00FF00 is the default bright green).
+<li><b>also show display coords</b>: specifies whether display coordinates
 are shown in the value/position display when the WCS sys is set to "image".
+</ul>
 <li><b>active shape layers</b>: toggles display of shape layers
 <li><b>crosshair for this image</b>: displays a
 crosshair at the mouse position when the Shift key is held down
@@ -312,7 +319,7 @@ a new image grabs the image params (e.g., colormap, scale, zoom, etc.)
 from the currently displayed image. If false, these params are taken
 from the default JS9.imageOpts object.
 </ul>
-<li><b>resize</b>: the display:
+<li><b>resize ...</b> options to resize the display:
 <ul>
 <li><b>change width/height</b> specify a new width and height for the
 JS9 display.

@@ -7838,6 +7838,35 @@ JS9.Menubar.createMenus = function(){
 	    const items = {};
 	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
 	    const tim = tdisp.image;
+	    const editValposColor = (disp, obj) => {
+		delete tdisp.tmp.editingMenu;
+		if( obj.valposcolor ){
+		    JS9.textColorOpts.info = obj.valposcolor;
+		    if( disp && disp.image ){
+			disp.image.updateValpos(disp.image.ipos, true);
+		    }
+		}
+	    }
+	    const keyValposColor = (e) => {
+		JS9.Menubar.getDisplays.call(this).forEach((val) => {
+		    const obj = $.contextMenu.getInputValues(e.data);
+		    const keycode = e.which || e.keyCode;
+		    const vdisp = val;
+		    // make sure display is still valid
+		    if( $.inArray(vdisp, JS9.displays) < 0 ){
+			return;
+		    }
+		    switch( keycode ){
+		    case 9:
+		    case 13:
+			editValposColor(vdisp, obj);
+			break;
+		    default:
+			vdisp.tmp.editingMenu = true;
+			break;
+		    }
+		});
+	    };
 	    const editResize = (disp, obj) => {
 		let v1, v2, arr;
 		delete tdisp.tmp.editingMenu;
@@ -7925,18 +7954,32 @@ JS9.Menubar.createMenus = function(){
 		    }
 		}
 	    };
-	    items.vdisps.items.valpos = xname("value/position");
-	    items.vdisps.items.valposdisp = xname("display coords in val/pos");
+	    items.vdisps.items.valpos = {
+		name: "value/position ...",
+		items: {
+		    valpostitle: {
+			name: "value/pos options:",
+			disabled: true
+		    },
+		    valpos: xname("update value/pos"),
+		    valposcolor: {
+			events: {keyup: keyValposColor},
+			name: "value/pos color:",
+			type: "text"
+		    },
+		    valposdisp: xname("also show display coords")
+		}
+	    };
 	    // disable if we don't have info plugin
 	    if( !Object.prototype.hasOwnProperty.call(JS9, "Info") ){
 		items.vdisps.items.valpos.disabled = true;
-		items.vdisps.items.valposdisp.disabled = true;
 	    } else if( tdisp.image ){
 		if( tdisp.image.params.valpos ){
 		    items.vdisps.items.valpos.icon = JS9.globalOpts.menuSelected;
+		    items.vdisps.items.valpos.items.valpos.icon = JS9.globalOpts.menuSelected;
 		}
 		if( JS9.globalOpts.valposDCoords ){
-		    items.vdisps.items.valposdisp.icon = JS9.globalOpts.menuSelected;
+		    items.vdisps.items.valpos.items.valposdisp.icon = JS9.globalOpts.menuSelected;
 		}
 	    }
 	    items.vdisps.items.toggleLayers = xname("active shape layers");
@@ -8118,6 +8161,7 @@ JS9.Menubar.createMenus = function(){
 			if( udisp  ){
 			    obj.resize = sprintf("%d %d",
 						 udisp.width, udisp.height);
+			    obj.valposcolor = JS9.textColorOpts.info;
 			    $.contextMenu.setInputValues(opt, obj);
 			    JS9.jupyterFocus(".context-menu-item");
 			}
