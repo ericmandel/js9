@@ -164,18 +164,20 @@ function startHelper(mode){
 	// get process list and look for a js9 helper
 	// see async usage example https://github.com/sindresorhus/ps-list
 	(async () => {
-	    let i, got;
-	    let pslist = await psList();
+	    let i, got, cmd;
+	    let rexp = /node .*js9Helper.js/;
+	    let pslist = await psList({all: js9Electron.psOpts.all});
 	    // look for a Node-based JS9 helper already running
 	    for(i=0, got=0; i<pslist.length; i++){
-		if( pslist[i].cmd.match(/node .*js9Helper.js/) ){
+		cmd = pslist[i].cmd;
+		if( cmd.indexOf("node ") >= 0 && cmd.match(rexp) ){
 		    // found a node-based helper, so we can just exit
 		    // but merge first, if necessary
 		    if( js9Electron.merge ){
 			domerge();
 		    }
 		    return;
-		} else if( pslist[i].cmd.match(/js9Electron.js/) ){
+		} else if( cmd.indexOf("js9Electron.js") >= 0 ){
 		    got++;
 		}
 	    }
@@ -573,6 +575,11 @@ js9Electron.cmdlineOpts = {
 js9Electron.exportOpts = {
     inputScript: "js9msg",
     outputScript: "js9msg"
+};
+
+// psList options
+js9Electron.psOpts = {
+    all: false
 };
 
 js9Electron.startArg = 1;
