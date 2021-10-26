@@ -212,7 +212,10 @@ def countsTest(j, file=None):
     j.AddRegions("circle")
     displayMessage(j, 'j.CountsinRegions()')
     s = j.CountsInRegions("$sregions", {"cmdswitches":"-j"})
-    obj = json.loads(s)
+    if type(s) is dict:
+        obj = s
+    else:
+        obj = json.loads(s)
     c = obj["backgroundSubtractedResults"][0]["netCounts"]
     displayMessage(j, "    counts: %f" % c)
     if c != 16703.0:

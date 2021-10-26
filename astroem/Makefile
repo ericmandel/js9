@@ -21,14 +21,13 @@ EMPORTS	=	-s USE_ZLIB=1 -s USE_BZIP2=1
 EMFS =		-lnodefs.js
 
 # emcc compiler flags
-# can't use mem file: we don't know where the mem file will resides
-# EMFLAGS = 	-g --memory-init-file 0
+# EMFLAGS = 	-g
 # debugging
-# EMFLAGS	= --memory-init-file 0 -s ASSERTIONS=1
+# EMFLAGS	= -s ASSERTIONS=1
 # debugging with symbols
 # EMFLAGS	= -O0 --memory-init-file 0  -s ASSERTIONS=1 -s SAFE_HEAP=1
 # production
-EMFLAGS		= -O3 --memory-init-file 0
+EMFLAGS		= -O3
 
 # initial memory: support zscale up to 4096 * 4096 * 4-byte images
 # EMOPTS =	-s TOTAL_MEMORY=67108864
@@ -38,12 +37,15 @@ EMOPTS =	-s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1 $(EMPORTS) $(EMFS)
 # https://github.com/emscripten-core/emscripten/issues/13899
 # and try:
 # -s BINARYEN_EXTRA_PASSES=--one-caller-inline-max-function-size=1
+# can't use mem file: we don't know where the mem file will resides
+# (moved out of compiler switches because this gives warning as of v2.0.32)
+MEMOPTS =	--memory-init-file 0
 # javascript instead of wasm:
-NOWASMOPTS =	-s WASM=0
+NOWASMOPTS =	-s WASM=0 $(MEMOPTS)
 # wasm support:
-WASMOPTS =	-s WASM=1
+WASMOPTS =	-s WASM=1 $(MEMOPTS)
 # debugging
-# WASMOPTS =	-s WASM=1 -s SAFE_HEAP=1 -s ASSERTIONS=1
+# WASMOPTS =	-s WASM=1 -s SAFE_HEAP=1 -s ASSERTIONS=1 $(MEMOPTS)
 
 EMEXPORTS =	-s EXPORTED_FUNCTIONS="['_malloc', '_free', '_initwcs', '_freewcs', '_wcsinfo', '_pix2wcsstr', '_wcs2pixstr', '_reg2wcsstr', '_wcssys', '_wcsunits', '_saostrtod', '_saodtostr', '_saodtype', '_zscale', '_gzopen', '_gzread', '_gzwrite', '_gzclose', '_gzseek',  '_BZ2_bzopen', '_BZ2_bzread', '_BZ2_bzwrite', '_BZ2_bzclose', '_openFITSFile', '_openFITSMem', '_getImageToArray', '_filterTableToImage', '_getHeaderToString', '_closeFITSFile', '_maxFITSMemory', '_ffgerr', '_ffgisz', '_ffmahd', '_ffghdn','_ffmnhd', '_ffghdt', '_ffgky', '_fffree', '_listhdu', '_tanhdr', '_reproject', '_madd', '_imgtbl', '_makehdr', '_shrinkhdr', '_imsection', '_imannulusi', '_imboxi', '_imcirclei', '_imellipsei', '_imfieldi', '_imlinei', '_impiei', '_imqtpiei', '_impointi', '_impandai', '_imnannulusi', '_imnboxi', '_imnellipsei', '_imnpiei', '_impolygoni', '_imvannulusi', '_imvboxi', '_imvellipsei', '_imvpiei', '_imvpointi', '_imannulus', '_imbox', '_imcircle', '_imellipse', '_imfield', '_imline', '_impie', '_imqtpie', '_impoint', '_impanda', '_imnannulus', '_imnbox', '_imnellipse', '_imnpie', '_impolygon', '_imvannulus', '_imvbox', '_imvellipse', '_imvpie', '_imvpoint', '_regcnts', '_vls', '_vcat']" -s EXPORTED_RUNTIME_METHODS="['ccall', 'cwrap', 'writeArrayToMemory', 'writeAsciiToMemory']"
 
