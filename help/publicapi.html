@@ -144,6 +144,8 @@ can pass a generic <b>data object</b> containing the following properties:
 <li><b>dmax</b>: data max (optional)
 <li><b>refresh</b>: refresh data when reloading image?
 <li><b>allext</b>: load all image extensions?
+<li><b>file</b>: set the file property in cases where the url is a script
+<li><b>id</b>: set the id property
 </ul>
 The <a href="#JS9.RefreshImage"><b>JS9.RefreshImage()</b></a>
 and <a href="#JS9.Load"><b>JS9.Load()</b></a> routines differ in that
@@ -193,6 +195,15 @@ after the image is loaded:
     JS9.Load("data/fits/3c273.fits", {scale: "linear", onload: func});
 </pre>
 The image handle is passed as the first argument to the callback.
+<p>
+If your url is a function returning a FITS file (e.g. CGI or PHP
+script accessing an archive), the filename will end up being the name
+of the script, which probably is not what you want. In this case, you
+can set the <b>file</b> property explicitly:
+<pre>
+    JS9.Load("mycgi?FITSFILE=acisf00361N003_evt2.fits", {file:"acisf00361N003_evt2.fits"})
+</pre>
+Similarly, you can set the <b>id</b> property explicitly (without setting the file) to tailor the id for special needs.
 <p>
 To load an image into a specified display, pass the <b>display object</b> as the last argument:
 <pre>
