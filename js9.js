@@ -21346,7 +21346,7 @@ JS9.msgHandler =  function(msg, cb){
     }
     // get command and display
     obj = JS9.lookupCommand(cmd);
-    tdisp = JS9.lookupDisplay(id);
+    tdisp = JS9.lookupDisplay(id, false);
     if( obj && tdisp ){
 	obj.getDisplayInfo(tdisp);
 	if( msg.args ){
