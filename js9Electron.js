@@ -143,54 +143,28 @@ function savePreferences(obj){
     });
 }
 
-// start up a JS9 helper, if possible and necessary
-function startHelper(mode){
-    const domerge = () => {
-	try{
-	    proc.exec(`js9 merge "${js9Electron.merge}"`);
-	}
-	catch(e){
-	    dialog.showErrorBox("Error merging helper",
-				`can't merge: ${js9Electron.merge}`);
-	}
-    };
-    // start up the helper first, if necessary
+function startHelper(force){
+    // start up the helper, if necessary
     if( js9Electron.doHelper ){
-	// if mode is true, just try to start the helper and return
-	if( mode ){
+	// if force is true, just try to start the helper and return
+	// used via GUI when instance1 was connected to instance2's helper,
+	// but instance2 then exited, leaving instance1 unconnected
+	if( force ){
 	    js9Electron.helper = require(js9Electron.helperpage);
 	    return;
 	}
-	// get process list and look for a js9 helper
-	// see async usage example https://github.com/sindresorhus/ps-list
-	(async () => {
-	    let i, got, cmd;
-	    let rexp = /node .*js9Helper.js/;
-	    let pslist = await psList({all: js9Electron.psOpts.all});
-	    // look for a Node-based JS9 helper already running
-	    for(i=0, got=0; i<pslist.length; i++){
-		cmd = pslist[i].cmd;
-		if( cmd.indexOf("node ") >= 0 && cmd.match(rexp) ){
-		    // found a node-based helper, so we can just exit
-		    // but merge first, if necessary
-		    if( js9Electron.merge ){
-			domerge();
-		    }
-		    return;
-		} else if( cmd.indexOf("js9Electron.js") >= 0 ){
-		    got++;
-		}
+	// start a new helper or merge into existing helper
+	if( !js9Electron.helpers && js9Electron.instances <= 1 ){
+	    js9Electron.helper = require(js9Electron.helperpage);
+	} else if( js9Electron.merge ){
+	    try{
+		proc.exec(`js9 merge "${js9Electron.merge}"`);
 	    }
-	    // if we're the first electron instance, start up the helper
-	    if( got === 0 || got == 1 ){
-		js9Electron.helper = require(js9Electron.helperpage);
-	    } else {
-		// merge, if necessary
-		if( js9Electron.merge ){
-		    domerge();
-		}
+	    catch(e){
+		dialog.showErrorBox("Error merging helper",
+				    `can't merge: ${js9Electron.merge}`);
 	    }
-	})();
+	}
     }
 }
 
@@ -581,6 +555,10 @@ js9Electron.psOpts = {
     all: false
 };
 
+// init helpers and instances
+js9Electron.helpers = 0;
+js9Electron.instances = 0;
+
 js9Electron.startArg = 1;
 // skip args passed to Electron itself
 // skip --no-sandbox
@@ -745,28 +723,35 @@ if( js9Electron.hostfs                                &&
     process.exit();
 }
 
-// start helper, if necessary
-if( !js9Electron.webpage.match(/^(https?|ftp):\/\//) ||
-    js9Electron.webpage.match(/localhost/)           ){
-    startHelper();
-}
-
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
     (async () => {
-	let i, got;
-	let pslist = await psList({all: js9Electron.psOpts.all});
-	// look for multiple Electron instances ... requires special handling
-	for(i=0, got=0; i<pslist.length; i++){
-	    if( pslist[i].cmd.indexOf("js9Electron.js") >= 0 ){
-		got++;
+	let i, cmd;
+	let erexp = /Electron .*js9Electron.js/;
+	let hrexp = /node .*js9Helper.js/;
+	js9Electron.pslist = await psList({all: js9Electron.psOpts.all});
+	// look for helpers and instances
+	for(i=0; i<js9Electron.pslist.length; i++){
+	    cmd = js9Electron.pslist[i].cmd;
+	    if( cmd.indexOf("Electron ") >= 0 && cmd.match(erexp) ){
+		js9Electron.instances++;
+	    }
+	    if( cmd.indexOf("node ") >= 0 && cmd.match(hrexp) ){
+		js9Electron.helpers++;
 	    }
 	}
-	if( got >= 2 ){
+	// start new helper, if necessary
+	if( !js9Electron.webpage.match(/^(https?|ftp):\/\//) ||
+	    js9Electron.webpage.match(/localhost/)           ){
+	    startHelper();
+	}
+	// multiple instances have some special handling
+	if( js9Electron.instances >= 2 ){
 	    process.env.JS9_MULTIELECTRON = "true";
 	}
+	// create the js9 window
 	createWindow();
     })();
 });
