@@ -505,7 +505,6 @@ function createWindow() {
 	    catch(e){ /* empty */ }
 	}
     });
-
     // emitted when the window has been closed
     js9Electron.win.on('closed', () => {
 	// Dereference the window object, usually you would store windows
@@ -758,10 +757,10 @@ if( !js9Electron.webpage.match(/^(https?|ftp):\/\//) ||
 app.on('ready', () => {
     (async () => {
 	let i, got;
-	let pslist = await psList();
+	let pslist = await psList({all: js9Electron.psOpts.all});
 	// look for multiple Electron instances ... requires special handling
 	for(i=0, got=0; i<pslist.length; i++){
-	    if( pslist[i].cmd.match(/js9Electron.js/) ){
+	    if( pslist[i].cmd.indexOf("js9Electron.js") >= 0 ){
 		got++;
 	    }
 	}
