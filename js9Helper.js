@@ -234,8 +234,8 @@ const getTargets = function(socket, msg){
 	    // look for matches in display id
 	    displays = c.js9.displays;
 	    for(j=0; j<displays.length; j++){
-		// look for matching displays
-		if( (msg.id === "*") || (msg.id === displays[j]) ){
+		// look for matching display
+		if( msg.id === displays[j] ){
 		    targets.push(c);
 		}
 	    }
