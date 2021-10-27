@@ -880,7 +880,7 @@ const pageReady = function(socket, obj, cbfunc, tries){
 	// look for targets
 	targets = getTargets(socket, obj);
 	// if we have at least one ...
-	if( (targets.length === 1) || obj.multi ){
+	if( (targets.length === 1) || (targets.length > 1 && obj.multi) ){
 	    // send command to JS9 instance(s)
 	    for(i=0; i<targets.length; i++){
 		targets[i].emit("msg", obj, myfunc);
@@ -950,7 +950,7 @@ const sendMsg = function(socket, obj, cbfunc) {
 	return;
     }
     // look for one target (or else that multi is allowed)
-    if( (targets.length === 1) || obj.multi ){
+    if( (targets.length === 1) || (targets.length > 1 && obj.multi) ){
 	// send command to JS9 instance(s)
 	for(i=0; i<targets.length; i++){
 	    targets[i].emit("msg", obj, myfunc);
