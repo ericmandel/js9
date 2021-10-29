@@ -22914,6 +22914,10 @@ JS9.hdus2Str = function(hdus){
 	    t += sprintf("&#09;<b>rows</b>: %d%s<b>cols</b>: [", obj.rows, s);
 	    for(j=0; j<obj.cols.length; j++){
 		t += `${obj.cols[j].name}`;
+		if( JS9.notNull(obj.cols[j].min) &&
+		    JS9.notNull(obj.cols[j].max) ){
+		    t += `:${obj.cols[j].min}:${obj.cols[j].max}`;
+		}
 		if( j !== obj.cols.length-1 ){
 		    t += ", ";
 		}

@@ -139,8 +139,20 @@ int _listhdu(char *iname, char *oname){
             fits_read_key(fptr, TSTRING, keyname, colname, NULL, &status);
             fits_make_keyn("TFORM", ii, keyname, &status); /* make keyword */
             fits_read_key(fptr, TSTRING, keyname, coltype, NULL, &status);
-            fprintf(fd, "{\"name\":\"%s\", \"type\":\"%s\"}", 
-		    colname, coltype);
+            fprintf(fd, "{\"name\":\"%s\",\"type\":\"%s\"", colname, coltype);
+            tstatus = 0;
+            fits_make_keyn("TLMIN", ii, keyname, &tstatus); /* make keyword */
+            fits_read_key(fptr, TSTRING, keyname, vbuf, NULL, &tstatus);
+            if( tstatus == 0 ){
+	      fprintf(fd, ",\"min\":%s", vbuf);
+            }
+            tstatus = 0;
+            fits_make_keyn("TLMAX", ii, keyname, &tstatus); /* make keyword */
+            fits_read_key(fptr, TSTRING, keyname, vbuf, NULL, &tstatus);
+            if( tstatus == 0 ){
+	      fprintf(fd, ",\"max\":%s", vbuf);
+	    }
+	    fprintf(fd, "}");
 	    if( ii != ncols ){
 	      fprintf(fd, ",");
 	    }
