@@ -397,7 +397,7 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
   return got;
 }
 
-/* copy image section from input to putput, with binning */
+/* copy image section from input to output, with binning */
 int copyImageSection(fitsfile *ifptr, fitsfile *ofptr,
 		     int *dims, double *cens, double bin, int binMode,
 		     char *slice, int *status)
@@ -422,8 +422,8 @@ int copyImageSection(fitsfile *ifptr, fitsfile *ofptr,
     bin = 1.0 / fabs(bin);
   }
   // get array
-  buf = getImageToArray(ifptr, dims, cens, bin, binMode, slice, start, end,
-			&bitpix, status);
+  buf = getImageToArray(ifptr, dims, cens, bin, binMode, slice, NULL,
+			start, end, &bitpix, status);
   if( !buf || *status ){
     fits_get_errstatus(*status, tbuf);
     fprintf(stderr, "ERROR: could not create section for output image: %s\n",
@@ -597,7 +597,7 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
 	fprintf(stderr, WRONGARGS2, cmd, 2);
 	return 1;
       }
-      ifptr = openFITSFile(finfo->fitsfile, READONLY, EXTLIST, &hdutype,
+      ifptr = openFITSFile(finfo->fitsfile, READONLY, EXTLIST, NULL, &hdutype,
 			   &status);
       if( status ){
 	fprintf(stderr, "ERROR: can't open FITS file '%s'\n", finfo->fitsfile);
@@ -649,7 +649,8 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
 	break;
       default:
 	/* table: let jsfitsio create an image section by binning the table */
-	tfptr = filterTableToImage(ifptr, filter, cols, dims, cens, 1, &status);
+	tfptr = filterTableToImage(ifptr, filter, cols, dims, cens, 1, NULL,
+				   &status);
 	if( status ){
 	  fits_get_errstatus(status, tbuf);
 	  fprintf(stderr,
@@ -664,7 +665,6 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
 	  }
 	}
 	status = 0;
-
 	/* copy section to new image */
 	if( copyImageSection(tfptr, ofptr, dims, tcens, bin, binMode,
 			     NULL, &status) ){

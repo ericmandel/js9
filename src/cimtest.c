@@ -224,10 +224,10 @@ int main(int argc, char *argv[])
   if( domem ){
     // read and open fits file in memory for reading, go to a useful HDU
     imem = FileContents(ifile, &ilen);
-    fptr = openFITSMem((void **)&imem, &ilen, EXTLIST, &hdutype, &status);
+    fptr = openFITSMem((void **)&imem, &ilen, EXTLIST, NULL, &hdutype, &status);
   } else {
     // open fits file for reading, go to a useful HDU
-    fptr = openFITSFile(ifile, READONLY, EXTLIST, &hdutype, &status);
+    fptr = openFITSFile(ifile, READONLY, EXTLIST, NULL, &hdutype, &status);
   }
   errchk(status);
   fprintf(stdout, "File: %s\n", ifile);
@@ -254,7 +254,7 @@ int main(int argc, char *argv[])
   case IMAGE_HDU:
     fprintf(stdout, "HDU: image\n");
     // get image array
-    buf = getImageToArray(fptr, NULL, NULL, bin, binMode, cube,
+    buf = getImageToArray(fptr, NULL, NULL, bin, binMode, cube, NULL,
 			   start, stop, &bitpix, &status);
     idim1 = stop[0] - start[0] + 1;
     idim2 = stop[1] - start[1] + 1;
@@ -282,11 +282,11 @@ int main(int argc, char *argv[])
 	  tfilt=(char *)strtok(NULL, ";")){
 	// image from table
 	fprintf(stdout, "Filter: %s\n", tfilt);
-	ofptr = filterTableToImage(fptr, tfilt, colname, dims, NULL, 1, 
+	ofptr = filterTableToImage(fptr, tfilt, colname, dims, NULL, 1, NULL,
 				   &status);
 	errchk(status);
 	// get image array
-	buf = getImageToArray(ofptr, NULL, NULL, bin, binMode, cube,
+	buf = getImageToArray(ofptr, NULL, NULL, bin, binMode, cube, NULL,
 			      start, stop, &bitpix, &status);
 	errchk(status);
 	idim1 = stop[0] - start[0] + 1;
@@ -300,10 +300,11 @@ int main(int argc, char *argv[])
       }
     } else {
       // image from table
-      ofptr = filterTableToImage(fptr, NULL, colname, dims, NULL, 1, &status);
+      ofptr = filterTableToImage(fptr, NULL, colname, dims, NULL, 1, NULL,
+				 &status);
       errchk(status);
       // get image array
-      buf = getImageToArray(ofptr, dims, NULL, bin, binMode, cube,
+      buf = getImageToArray(ofptr, dims, NULL, bin, binMode, cube, NULL,
 			    start, stop, &bitpix, &status);
       errchk(status);
       idim1 = stop[0] - start[0] + 1;

@@ -1000,7 +1000,7 @@ JS9.Image = function(file, params, func){
     }
     // change the cursor to show the waiting status
     JS9.waiting(true, this.display);
-    // file arg can be an object containing raw data or
+    // file arg can be an object containing raw data
     switch( typeof file ){
     case "object":
 	// save source
@@ -1010,8 +1010,11 @@ JS9.Image = function(file, params, func){
 	    this.source = "fits";
 	}
 	// generate the raw data array from the hdu
+	// (11/2021: leave check on 'filename' for backward compatibility)
 	this.mkRawDataFromHDU(file,
-			      $.extend({}, {file: file.filename}, localOpts));
+			      $.extend({},
+				       {file: file.file||file.filename},
+				       localOpts));
 	// set scaling params from opts
 	mkscale(localOpts);
 	// set up initial zoom
@@ -1661,10 +1664,11 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	this.file = opts.file;
 	this.id = null;
     } else if( opts.filename && opts.filename !== this.file ){
+	// (11/2021: leave check on 'filename' for backward compatibility)
 	this.file = opts.filename;
 	this.id = null;
-    } else if( hdu.filename && hdu.filename !== this.file ){
-	this.file = hdu.filename;
+    } else if( hdu.file && hdu.file !== this.file ){
+	this.file = hdu.file;
 	this.id = null;
     }
     this.file = JS9.cleanPath(this.file) || (JS9.ANON + JS9.uniqueID());
@@ -3362,9 +3366,13 @@ JS9.Image.prototype.displaySection = function(opts, func){
 	}
 	// change id and file if extension changed
 	if( ss ){
-	    topts.id = this.id.replace(/\[.*\]/,"") + ss;
+	    if( !topts.id ){
+		topts.id = this.id.replace(/\[.*\]/,"") + ss;
+	    }
 	    // NB: this was removed in v2.3 ... why? ... added back in v2.5
-	    topts.file = this.file.replace(/\[.*\]/,"") + ss;
+	    if( !topts.file ){
+		topts.file = this.file.replace(/\[.*\]/,"") + ss;
+	    }
 	}
 	if( topts.separate ){
 	    // display section as a separate image in the specified display
@@ -3527,7 +3535,7 @@ JS9.Image.prototype.displaySection = function(opts, func){
 	}
     }
     // get previous values to use as defaults
-    if( hdu.table ){
+    if( this.imtab === "table" && hdu.table ){
 	// tables are easy: all the previous values should be present
 	sect = hdu.table;
     } else {
@@ -3634,6 +3642,25 @@ JS9.Image.prototype.displaySection = function(opts, func){
     opts.columns = getval3(opts.columns, sect.columns, "");
     // save the columns, if necessary
     this.raw.columns = opts.columns || "";
+    // cube column
+    opts.cubecol = opts.cubecol || "";
+    if( opts.cubecol ){
+	// set id to original id and indication that this is now a cube
+	if( !opts.id ){
+	    opts.id =
+		`${this.id.replace(/\[.*\]/, "")} (cube: ${opts.cubecol})`;
+	}
+	// set a filename for a virtual file that contains the cube info
+	if( !opts.file ){
+	    opts.file = this.file
+		.split("/")
+		.reverse()[0]
+		.replace(/\[.*\]/,"")
+		.replace(".fits", `_cube:${opts.cubecol}.fits`)
+		.replace(".ftz", `_cube:${opts.cubecol}.ftz`)
+		.replace(/:/g, "_");
+	}
+    }
     // start the waiting!
     if( opts.waiting !== false ){
 	JS9.waiting(true, this.display);
@@ -25729,12 +25756,12 @@ JS9.mkPublic("Load", function(...args){
     if( file instanceof Blob ){
 	if( file.path || file.name ){
 	    // new file (or, for Electron.js desktop, the path, which is better)
-	    opts.filename = JS9.cleanPath(file.path || file.name);
+	    opts.file = JS9.cleanPath(file.path || file.name);
 	    // does this image already exist?
 	    if( typeof opts.refresh === "object" ){
 		im = opts.refresh;
 	    } else {
-		im = JS9.lookupImage(opts.filename, opts.display);
+		im = JS9.lookupImage(opts.file, opts.display);
 	    }
 	    if( im ){
 		// do we refresh or redisplay?
@@ -25765,8 +25792,8 @@ JS9.mkPublic("Load", function(...args){
 	    // remove any extraneous refresh flag
 	    delete opts.refresh;
 	}
-	if( !opts.filename ){
-	    opts.filename = JS9.ANON + JS9.uniqueID();
+	if( !opts.file ){
+	    opts.file = JS9.ANON + JS9.uniqueID();
 	}
 	// look for a mime type to tell us how to process this blob
 	if( file.type && file.type.includes("image/") ){
@@ -25777,7 +25804,7 @@ JS9.mkPublic("Load", function(...args){
 		ptype = "img";
 		break;
 	    }
-	} else if( opts.filename.split(".").pop().match(/(png|jpg|jpeg)/i) ){
+	} else if( opts.file.split(".").pop().match(/(png|jpg|jpeg)/i) ){
 	    ptype = "img";
 	}
 	// processing type: img or fits
@@ -25825,10 +25852,10 @@ JS9.mkPublic("Load", function(...args){
 	    bytes[i] = file.charCodeAt(i);
 	}
 	blob = new Blob([new Uint8Array(bytes)]);
-	if( !opts.filename ){
-	    opts.filename = JS9.ANON + JS9.uniqueID();
+	if( !opts.file ){
+	    opts.file = JS9.ANON + JS9.uniqueID();
 	}
-	blob.name = opts.filename;
+	blob.name = opts.file;
 	topts = $.extend(true, {}, JS9.fits.options, opts);
 	try{ JS9.handleFITSFile(blob, topts, JS9.NewFitsImage); }
 	catch(e){ JS9.error("can't process FITS file", e); }
@@ -27815,7 +27842,7 @@ JS9.mkPublic("WindowToPDF", function(...args){
     const obj = JS9.parsePublicArgs(args);
     const opts = {cmd: "pdf"};
     if( window.electron ){
-	opts.filename = obj.argv[0] || "js9.pdf";
+	opts.file = obj.argv[0] || "js9.pdf";
 	if( obj.argv[1] ){
 	    opts.opts = obj.argv[1];
 	}
@@ -27834,7 +27861,7 @@ JS9.mkPublic("SaveScript", function(...args){
     const obj = JS9.parsePublicArgs(args);
     const opts = {cmd: "script"};
     if( window.electron && window.electron.app ){
-	opts.filename = obj.argv[0] || "";
+	opts.file = obj.argv[0] || "";
 	window.setTimeout(() => {
 	    try{ window.electron.sendMsg(opts); }
 	    catch(e){ JS9.error("could not create messaging script", e); }

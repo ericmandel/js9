@@ -908,7 +908,8 @@ module.exports = xhr;
 	// sanity check
 	if( !im || !im.raw ) { return; }
 	// initialize opts
-	opts = {xcen:0, ycen:0, xdim:0, ydim:0, bin:1, filter:"", columns:""};
+	opts = {xcen:0, ycen:0, xdim:0, ydim:0, bin:1, filter:"",
+		columns:"", cubecol:""};
 	// get opts from form
 	if( JS9.isNumber(form.xcen.value) ){
 	    opts.xcen = parseFloat(form.xcen.value);
@@ -934,12 +935,14 @@ module.exports = xhr;
 	}
 	opts.filter = form.filter.value;
 	opts.columns = form.columns.value;
+	opts.cubecol = form.cubecol.value;
 	// if columns changed, we have to reset the center to 0
 	if( im.raw.hdu.table && im.raw.hdu.table.columns !== opts.columns ){
 	    opts. xcen = 0;
 	    opts. ycen = 0;
 	}
 	opts.separate = $(form.separate).prop("checked");
+	if( opts.cubecol ) opts.separate = true;
 	opts.binMode = $('input[name="binmode"]:checked').val();
 	im.displaySection(opts);
     }
@@ -994,6 +997,7 @@ module.exports = xhr;
 		    form.ydim.value = String(Math.floor(hdu.table.ydim));
 		    form.filter.value = hdu.table.filter || "";
 		    form.columns.value = hdu.table.columns || "";
+		    form.cubecol.value = "";
 		    form.bin.disabled = false;
 		    form.xcen.disabled = false;
 		    form.ycen.disabled = false;
@@ -1002,6 +1006,7 @@ module.exports = xhr;
 		    // form.binmode.disabled = false;
 		    form.filter.disabled = false;
 		    form.columns.disabled = false;
+		    form.cubecol.disabled = false;
 		} else {
 		    hdu.bin = hdu.bin || 1;
 		    bin = hdu.bin > 0 ? hdu.bin : 1 / Math.abs(hdu.bin);
@@ -1026,6 +1031,7 @@ module.exports = xhr;
 		    form.ydim.value = String(Math.floor(hdu.naxis2 * bin));
 		    form.filter.value = "";
 		    form.columns.value = "";
+		    form.cubecol.value = "";
 		    form.bin.disabled = false;
 		    form.xcen.disabled = false;
 		    form.ycen.disabled = false;
@@ -1036,7 +1042,17 @@ module.exports = xhr;
 		    form.filter.style.backgroundColor="#E0E0E0";
 		    form.columns.disabled = true;
 		    form.columns.style.backgroundColor="#E0E0E0";
+		    form.cubecol.disabled = true;
+		    form.cubecol.style.backgroundColor="#E0E0E0";
 		}
+		// cube support makes no sense using a parentFile
+		if( im.parentFile &&
+		    JS9.helper.connected && JS9.helper.js9helper ){
+		    form.cubecol.value = "";
+		    form.cubecol.disabled = true;
+		    form.cubecol.style.backgroundColor="#E0E0E0";
+		}
+		// average or sum
 		if( hdu.binMode === "a" ){
 		    $('input:radio[class="avg-pixels"]').prop('checked',true);
 		} else {
@@ -1049,6 +1065,7 @@ module.exports = xhr;
     }
 
     function binningInit() {
+	let i, s, cols, el, elhdu, smode;
 	let binblock, binblocked;
 	let that = this;
 	let html = "";
@@ -1066,9 +1083,11 @@ module.exports = xhr;
 	if( im.imtab === "image" ){
 	    binblock = "Block";
 	    binblocked = "blocked";
+	    elhdu = "&nbsp;";
 	} else {
 	    binblock = "Bin";
 	    binblocked = "binned";
+            elhdu = '<select name="selectcube" class="js9-binning-hdulist">';
 	}
 
 	html = `<form class="js9BinningForm js9Form">
@@ -1076,7 +1095,7 @@ module.exports = xhr;
 	           <tr>	<td><input type=button class="js9-binning-full JS9Button2" value="Load full image" style="text-align:right;"></td>
 			<td>&nbsp;</td>
 			<td>&nbsp;</td>
-			<td>&nbsp;</td>
+                        <td>${elhdu}</td>
 		   </tr>
 	           <tr>	<td>Center:</td>
 			<td><input type=text name=xcen size=10 style="text-align:right;"></td>
@@ -1114,9 +1133,14 @@ module.exports = xhr;
 			<td>&nbsp(event/row filter for table)</td>
 		   </tr>
 
-		   <tr>	<td>Columns:</td>
+		   <tr>	<td>BinCols:</td>
 			<td colspan="2"><textarea name=columns rows="1" cols="22" style="padding-left:5px; text-align:left;" autocapitalize="off" autocorrect="off"></textarea></td>
-			<td>&nbsp(alt binning cols for table)</td>
+			<td>&nbsp(alternate binning cols for table)</td>
+		   </tr>
+
+	           <tr>	<td>CubeCol:</td>
+			<td colspan="2"><textarea name=cubecol class="js9-binning-cubecol" rows="1" cols="22" style="padding-left:5px; text-align:left;" autocapitalize="off" autocorrect="off"></textarea></td>
+			<td>&nbsp(table &rarr; cube: col[:min:max:binsiz])</td>
 		   </tr>
 
 	           <tr>	<td>Separate:</td>
@@ -1144,6 +1168,37 @@ module.exports = xhr;
 	$(div).find(".js9-binning-close").on("click", function () { if( win ){ win.close(); } });
 	$(div).find(".js9-binning-sep").change(function() { that.sep = $(this).prop("checked"); });
 	$(div).find(".js9-binning-sep").prop("checked", !!that.sep);
+	$(div).find(".js9-binning-cubecol").on("input", function () {
+	    // cubes are generated as separate displays
+	    // but resetting the cubecol should reset the separate mode
+	    smode = $(this).val() ? true : !!that.sep;
+	    $(div).find(".js9-binning-sep").prop("checked", smode);
+	});
+
+	if( im.imtab === "table" && im.hdus && im.hdus.length ){
+	    for(i=0; i<im.hdus.length; i++){
+		if( im.hdus[i].name === "EVENTS" ||
+		    im.hdus[i].name === "STDEVT" ){
+		    cols = im.hdus[i].cols;
+		    break;
+		}
+	    }
+	    el = $(div).find(".js9-binning-hdulist");
+	    el.append(`<option value="" disabled=disabled>List columns</option>`);
+	    for(i=0; i<cols.length; i++){
+		s = `${cols[i].name}:${cols[i].type}`;
+		if( cols[i].min && cols[i].max ){
+		    s += `:${cols[i].min}:${cols[i].max}`;
+		}
+		el.append(`<option>${s}</option>`);
+	    }
+	    el.prop('selectedIndex', 0);
+	    el.on("change", function () {
+		s = $(this).val().replace(/:.*/, "");
+		JS9.CopyToClipboard(s, im);
+		el.prop('selectedIndex', 0);
+	    });
+	}
 
 	// set up to rebin when <cr> is pressed, if necessary
 	if( JS9.globalOpts.runOnCR ){
@@ -1170,7 +1225,7 @@ module.exports = xhr;
 
 	    help:     "fitsy/binning.html",
 
-            winDims: [520, 320]
+            winDims: [570, 345]
     });
 }());
 /*
@@ -3794,11 +3849,7 @@ JS9.Cube.xnext = function(did, id, target){
     let s, slice, plugin, header;
     const im = JS9.lookupImage(id, did);
     if( im ){
-	if( im.parent && im.parent.raw && im.parent.raw.header ){
-	    header = im.parent.raw.header;
-	} else {
-	    header = im.raw.header;
-	}
+	header = im.raw.header;
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	slice = plugin.sval + 1;
 	s = `NAXIS${plugin.sidx}`;
@@ -3815,11 +3866,7 @@ JS9.Cube.xprev = function(did, id, target){
     let s, slice, plugin, header;
     const im = JS9.lookupImage(id, did);
     if( im ){
-	if( im.parent && im.parent.raw && im.parent.raw.header ){
-	    header = im.parent.raw.header;
-	} else {
-	    header = im.raw.header;
-	}
+	header = im.raw.header;
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	slice = plugin.sval - 1;
 	if( slice < 1 ){
@@ -3836,11 +3883,7 @@ JS9.Cube.xlast = function(did, id, target){
     let s, slice, plugin, header;
     const im = JS9.lookupImage(id, did);
     if( im ){
-	if( im.parent && im.parent.raw && im.parent.raw.header ){
-	    header = im.parent.raw.header;
-	} else {
-	    header = im.raw.header;
-	}
+	header = im.raw.header;
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	s = `NAXIS${plugin.sidx}`;
 	slice = header[s];
@@ -3853,11 +3896,7 @@ JS9.Cube.xorder = function(did, id, target){
     let i, arr, plugin, header;
     const im = JS9.lookupImage(id, did);
     if( im ){
-	if( im.parent && im.parent.raw && im.parent.raw.header ){
-	    header = im.parent.raw.header;
-	} else {
-	    header = im.raw.header;
-	}
+	header = im.raw.header;
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	plugin.slice = target.value;
 	arr = plugin.slice.split(/[ ,:]/);
@@ -3874,10 +3913,11 @@ JS9.Cube.xorder = function(did, id, target){
 };
 
 // blink
-JS9.Cube.blink = function(did, id, target){
+JS9.Cube.blink = function(did, id, target, niter){
     let plugin;
     const im = JS9.lookupImage(id, did);
     if( im ){
+	niter = niter || 0;
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	if( plugin.blinkMode === false ){
 	    delete plugin.blinkMode;
@@ -3888,7 +3928,11 @@ JS9.Cube.blink = function(did, id, target){
 	    plugin.blinkMode = true;
 	} 
 	JS9.Cube.tid = window.setTimeout(() => {
-	    JS9.Cube.blink(did, id, target);
+	    if( !niter || im.status.displaySection !== "error" ){
+		JS9.Cube.blink(did, id, target, ++niter);
+	    } else {
+		delete plugin.blinkMode;
+	    }
 	}, plugin.rate);
     }
 };
@@ -3990,12 +4034,7 @@ JS9.Cube.init = function(opts){
     // do we have an image?
     im = this.display.image;
     if( im && (opts.mode !== "clear") ){
-	if( im.parent && im.parent.raw && im.parent.raw.header ){
-	    header = im.parent.raw.header;
-	} else {
-	    header = im.raw.header;
-	}
-	// convenience variables
+	header = im.raw.header;
 	imid = im.id;
 	dispid = im.display.id;
 	if( im.slice ){

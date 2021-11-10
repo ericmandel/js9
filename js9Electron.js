@@ -832,7 +832,7 @@ ipcMain.on("msg", (event, arg) => {
 	    case "pdf":
 		opts = Object.assign(js9Electron.pdfOpts, obj.opts);
 		win.webContents.printToPDF(opts).then(data => {
-		    let file = obj.filename || "js9.pdf";
+		    let file = obj.file || "js9.pdf";
 		    fs.writeFile(file, data, (e) => {
 			if( e ){
 			    dialog.showErrorBox("ERROR in WindowToPDF",
@@ -855,7 +855,7 @@ ipcMain.on("msg", (event, arg) => {
 			    return;
 			}
 			dir = js9Electron.savedir || process.cwd() || ".";
-			file = path.join(dir, obj.filename || js9Electron.exportOpts.outputScript);
+			file = path.join(dir, obj.file || js9Electron.exportOpts.outputScript);
 			data = data
 			    .replace(/JS9_SRCDIR=".*"/, `JS9_SRCDIR="${__dirname}"`)
 			    .replace(/JS9_INSTALLDIR=".*"/, `JS9_INSTALLDIR="${__dirname}"`);

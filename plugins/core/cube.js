@@ -100,11 +100,7 @@ JS9.Cube.xnext = function(did, id, target){
     let s, slice, plugin, header;
     const im = JS9.lookupImage(id, did);
     if( im ){
-	if( im.parent && im.parent.raw && im.parent.raw.header ){
-	    header = im.parent.raw.header;
-	} else {
-	    header = im.raw.header;
-	}
+	header = im.raw.header;
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	slice = plugin.sval + 1;
 	s = `NAXIS${plugin.sidx}`;
@@ -121,11 +117,7 @@ JS9.Cube.xprev = function(did, id, target){
     let s, slice, plugin, header;
     const im = JS9.lookupImage(id, did);
     if( im ){
-	if( im.parent && im.parent.raw && im.parent.raw.header ){
-	    header = im.parent.raw.header;
-	} else {
-	    header = im.raw.header;
-	}
+	header = im.raw.header;
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	slice = plugin.sval - 1;
 	if( slice < 1 ){
@@ -142,11 +134,7 @@ JS9.Cube.xlast = function(did, id, target){
     let s, slice, plugin, header;
     const im = JS9.lookupImage(id, did);
     if( im ){
-	if( im.parent && im.parent.raw && im.parent.raw.header ){
-	    header = im.parent.raw.header;
-	} else {
-	    header = im.raw.header;
-	}
+	header = im.raw.header;
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	s = `NAXIS${plugin.sidx}`;
 	slice = header[s];
@@ -159,11 +147,7 @@ JS9.Cube.xorder = function(did, id, target){
     let i, arr, plugin, header;
     const im = JS9.lookupImage(id, did);
     if( im ){
-	if( im.parent && im.parent.raw && im.parent.raw.header ){
-	    header = im.parent.raw.header;
-	} else {
-	    header = im.raw.header;
-	}
+	header = im.raw.header;
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	plugin.slice = target.value;
 	arr = plugin.slice.split(/[ ,:]/);
@@ -180,10 +164,11 @@ JS9.Cube.xorder = function(did, id, target){
 };
 
 // blink
-JS9.Cube.blink = function(did, id, target){
+JS9.Cube.blink = function(did, id, target, niter){
     let plugin;
     const im = JS9.lookupImage(id, did);
     if( im ){
+	niter = niter || 0;
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	if( plugin.blinkMode === false ){
 	    delete plugin.blinkMode;
@@ -194,7 +179,11 @@ JS9.Cube.blink = function(did, id, target){
 	    plugin.blinkMode = true;
 	} 
 	JS9.Cube.tid = window.setTimeout(() => {
-	    JS9.Cube.blink(did, id, target);
+	    if( !niter || im.status.displaySection !== "error" ){
+		JS9.Cube.blink(did, id, target, ++niter);
+	    } else {
+		delete plugin.blinkMode;
+	    }
 	}, plugin.rate);
     }
 };
@@ -296,12 +285,7 @@ JS9.Cube.init = function(opts){
     // do we have an image?
     im = this.display.image;
     if( im && (opts.mode !== "clear") ){
-	if( im.parent && im.parent.raw && im.parent.raw.header ){
-	    header = im.parent.raw.header;
-	} else {
-	    header = im.raw.header;
-	}
-	// convenience variables
+	header = im.raw.header;
 	imid = im.id;
 	dispid = im.display.id;
 	if( im.slice ){

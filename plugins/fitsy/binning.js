@@ -11,7 +11,8 @@
 	// sanity check
 	if( !im || !im.raw ) { return; }
 	// initialize opts
-	opts = {xcen:0, ycen:0, xdim:0, ydim:0, bin:1, filter:"", columns:""};
+	opts = {xcen:0, ycen:0, xdim:0, ydim:0, bin:1, filter:"",
+		columns:"", cubecol:""};
 	// get opts from form
 	if( JS9.isNumber(form.xcen.value) ){
 	    opts.xcen = parseFloat(form.xcen.value);
@@ -37,12 +38,14 @@
 	}
 	opts.filter = form.filter.value;
 	opts.columns = form.columns.value;
+	opts.cubecol = form.cubecol.value;
 	// if columns changed, we have to reset the center to 0
 	if( im.raw.hdu.table && im.raw.hdu.table.columns !== opts.columns ){
 	    opts. xcen = 0;
 	    opts. ycen = 0;
 	}
 	opts.separate = $(form.separate).prop("checked");
+	if( opts.cubecol ) opts.separate = true;
 	opts.binMode = $('input[name="binmode"]:checked').val();
 	im.displaySection(opts);
     }
@@ -97,6 +100,7 @@
 		    form.ydim.value = String(Math.floor(hdu.table.ydim));
 		    form.filter.value = hdu.table.filter || "";
 		    form.columns.value = hdu.table.columns || "";
+		    form.cubecol.value = "";
 		    form.bin.disabled = false;
 		    form.xcen.disabled = false;
 		    form.ycen.disabled = false;
@@ -105,6 +109,7 @@
 		    // form.binmode.disabled = false;
 		    form.filter.disabled = false;
 		    form.columns.disabled = false;
+		    form.cubecol.disabled = false;
 		} else {
 		    hdu.bin = hdu.bin || 1;
 		    bin = hdu.bin > 0 ? hdu.bin : 1 / Math.abs(hdu.bin);
@@ -129,6 +134,7 @@
 		    form.ydim.value = String(Math.floor(hdu.naxis2 * bin));
 		    form.filter.value = "";
 		    form.columns.value = "";
+		    form.cubecol.value = "";
 		    form.bin.disabled = false;
 		    form.xcen.disabled = false;
 		    form.ycen.disabled = false;
@@ -139,7 +145,17 @@
 		    form.filter.style.backgroundColor="#E0E0E0";
 		    form.columns.disabled = true;
 		    form.columns.style.backgroundColor="#E0E0E0";
+		    form.cubecol.disabled = true;
+		    form.cubecol.style.backgroundColor="#E0E0E0";
 		}
+		// cube support makes no sense using a parentFile
+		if( im.parentFile &&
+		    JS9.helper.connected && JS9.helper.js9helper ){
+		    form.cubecol.value = "";
+		    form.cubecol.disabled = true;
+		    form.cubecol.style.backgroundColor="#E0E0E0";
+		}
+		// average or sum
 		if( hdu.binMode === "a" ){
 		    $('input:radio[class="avg-pixels"]').prop('checked',true);
 		} else {
@@ -152,6 +168,7 @@
     }
 
     function binningInit() {
+	let i, s, cols, el, elhdu, smode;
 	let binblock, binblocked;
 	let that = this;
 	let html = "";
@@ -169,9 +186,11 @@
 	if( im.imtab === "image" ){
 	    binblock = "Block";
 	    binblocked = "blocked";
+	    elhdu = "&nbsp;";
 	} else {
 	    binblock = "Bin";
 	    binblocked = "binned";
+            elhdu = '<select name="selectcube" class="js9-binning-hdulist">';
 	}
 
 	html = `<form class="js9BinningForm js9Form">
@@ -179,7 +198,7 @@
 	           <tr>	<td><input type=button class="js9-binning-full JS9Button2" value="Load full image" style="text-align:right;"></td>
 			<td>&nbsp;</td>
 			<td>&nbsp;</td>
-			<td>&nbsp;</td>
+                        <td>${elhdu}</td>
 		   </tr>
 	           <tr>	<td>Center:</td>
 			<td><input type=text name=xcen size=10 style="text-align:right;"></td>
@@ -217,9 +236,14 @@
 			<td>&nbsp(event/row filter for table)</td>
 		   </tr>
 
-		   <tr>	<td>Columns:</td>
+		   <tr>	<td>BinCols:</td>
 			<td colspan="2"><textarea name=columns rows="1" cols="22" style="padding-left:5px; text-align:left;" autocapitalize="off" autocorrect="off"></textarea></td>
-			<td>&nbsp(alt binning cols for table)</td>
+			<td>&nbsp(alternate binning cols for table)</td>
+		   </tr>
+
+	           <tr>	<td>CubeCol:</td>
+			<td colspan="2"><textarea name=cubecol class="js9-binning-cubecol" rows="1" cols="22" style="padding-left:5px; text-align:left;" autocapitalize="off" autocorrect="off"></textarea></td>
+			<td>&nbsp(table &rarr; cube: col[:min:max:binsiz])</td>
 		   </tr>
 
 	           <tr>	<td>Separate:</td>
@@ -247,6 +271,37 @@
 	$(div).find(".js9-binning-close").on("click", function () { if( win ){ win.close(); } });
 	$(div).find(".js9-binning-sep").change(function() { that.sep = $(this).prop("checked"); });
 	$(div).find(".js9-binning-sep").prop("checked", !!that.sep);
+	$(div).find(".js9-binning-cubecol").on("input", function () {
+	    // cubes are generated as separate displays
+	    // but resetting the cubecol should reset the separate mode
+	    smode = $(this).val() ? true : !!that.sep;
+	    $(div).find(".js9-binning-sep").prop("checked", smode);
+	});
+
+	if( im.imtab === "table" && im.hdus && im.hdus.length ){
+	    for(i=0; i<im.hdus.length; i++){
+		if( im.hdus[i].name === "EVENTS" ||
+		    im.hdus[i].name === "STDEVT" ){
+		    cols = im.hdus[i].cols;
+		    break;
+		}
+	    }
+	    el = $(div).find(".js9-binning-hdulist");
+	    el.append(`<option value="" disabled=disabled>List columns</option>`);
+	    for(i=0; i<cols.length; i++){
+		s = `${cols[i].name}:${cols[i].type}`;
+		if( cols[i].min && cols[i].max ){
+		    s += `:${cols[i].min}:${cols[i].max}`;
+		}
+		el.append(`<option>${s}</option>`);
+	    }
+	    el.prop('selectedIndex', 0);
+	    el.on("change", function () {
+		s = $(this).val().replace(/:.*/, "");
+		JS9.CopyToClipboard(s, im);
+		el.prop('selectedIndex', 0);
+	    });
+	}
 
 	// set up to rebin when <cr> is pressed, if necessary
 	if( JS9.globalOpts.runOnCR ){
@@ -273,6 +328,6 @@
 
 	    help:     "fitsy/binning.html",
 
-            winDims: [520, 320]
+            winDims: [570, 345]
     });
 }());

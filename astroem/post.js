@@ -168,13 +168,16 @@ Module["error"] = function(s, e) {
     }
 };
 
-// get immage from an already-opened virtual FITS file
+// get image from an already-opened virtual FITS file
 // fits object contains fptr
 Module["getFITSImage"] = function(fits, hdu, opts, handler) {
-    var i, ofptr, hptr, status, datalen, extnum, extname;
-    var buf, bufptr, buflen, bufptr2, slice, doerr, ctype1, xbin, columns;
+    var i, ofptr, tfptr, hptr, status, datalen, extnum, extname;
+    var buf, bufptr, buflen, bufptr2;
+    var slice, doerr, ctype1, xbin, columns, cubecol, allcols;
     var filter = null;
     var fptr = fits.fptr;
+    var fopts = null;
+    var iopts = null;
     var cens = [0, 0];
     var dims = [0, 0];
     var bin = 1;
@@ -274,6 +277,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	if( opts.table ){
 	    if( opts.table.filter ){ filter = opts.table.filter; }
 	    if( opts.table.columns ){ columns = opts.table.columns; }
+	    if( opts.table.cubecol ){ cubecol = opts.table.cubecol; }
 	    if( opts.table.bin ){ bin = opts.table.bin; }
 	    if( opts.table.binMode ){ binMode = bmode(opts.table.binMode); }
 	    // backward compatibity with pre-v1.12 globals
@@ -294,6 +298,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	if( opts.ycen ){ cens[1] = opts.ycen; }
 	if( opts.filter ){ filter = opts.filter; }
 	if( opts.columns ){ columns = opts.columns; }
+	if( opts.cubecol ){ cubecol = opts.cubecol; }
 	if( opts.bin ){ bin = opts.bin; }
 	if( opts.binMode ){ binMode = bmode(opts.binMode); }
 	setValue(hptr,    dims[0], "i32");
@@ -315,11 +320,22 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	if( !bin ){
 	    bin = 1;
 	}
+	// columns: alt columns for binning and/or cube column
+	if( columns ){
+	    allcols = columns;
+	}
+	if( cubecol ){
+	    if( !columns ) allcols = "X Y";
+	    allcols += " " + cubecol;
+	    if( opts.file ){
+		fopts = `ofile=${opts.file}`;
+	    }
+	}
 	try{
 	    ofptr = ccall("filterTableToImage", "number",
-            ["number", "string", "string", "number", "number", "number",
-	     "number"],
-	    [fptr, filter, columns, hptr, hptr+8, bin, hptr+24]);
+            ["number", "string", "string", "number", "number", "number", 
+	     "string", "number"],
+	    [fptr, filter, allcols, hptr, hptr+8, bin, fopts, hptr+24]);
 	}
 	catch(e){
 	    doerr = true;
@@ -406,9 +422,9 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     }
     try{
 	bufptr = ccall("getImageToArray", "number",
-	["number", "number", "number", "number", "number", "string", "number",
-	 "number", "number", "number"],
-	[ofptr, hptr, hptr+8, bin, binMode, slice, hptr+24, hptr+40, hptr+56, hptr+60]);
+	["number", "number", "number", "number", "number", "string", "string",
+	 "number", "number", "number", "number"],
+	[ofptr, hptr, hptr+8, bin, binMode, slice, iopts, hptr+24, hptr+40, hptr+56, hptr+60]);
     }
     catch(e){
 	doerr = true;
@@ -490,6 +506,28 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     _free(hptr);
     // error check on getHeaderToString()
     Module["errchk"](status);
+    // cubecol => image with a new fptr ...
+    if( cubecol ){
+	// which either replaces orig, or is returned w/o closing the orig
+	if( opts.separate ){
+	    fptr = ofptr;
+	} else {
+	    tfptr = fptr;
+	    fptr = ofptr;
+	    ofptr = tfptr;
+	}
+	// table has become an image
+	hdu.imtab = "image";
+	// so we don't want the table object
+	delete hdu.table;
+	// the file is the vfile
+	hdu.vfile = opts.file;
+	// not the external file
+	hdu.file = null;
+    } else if( opts.file ){
+	// set file name, if possible
+	hdu.file = opts.file;
+    }
     // close the image section "file"
     if( ofptr && (ofptr !== fptr) ){
         hptr = _malloc(4);
@@ -499,13 +537,9 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	_free(hptr);
 	Module["errchk"](status);
     }
-    // set file name, if possible
-    if( opts.filename ){
-	hdu.filename = opts.filename;
-    }
     // make up the return fits object
     hdu.fits = {fptr: fptr, vfile: hdu.vfile, heap: bufptr,
-		cardstr: hdu.cardstr, extnum: extnum, extname: extname };
+		cardstr: hdu.cardstr, extnum: extnum, extname: extname};
     // having extracted a section, remove these to avoid their reuse
     delete opts.xcen;
     delete opts.ycen;
@@ -525,6 +559,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 Module["handleFITSFile"] = function(fits, opts, handler) {
     var fptr, hptr, status, fileReader, filename, earr;
     var extn = "";
+    var oopts = null;
     var hdu = {};
     // opts is optional
     opts = opts || {};
@@ -538,13 +573,13 @@ Module["handleFITSFile"] = function(fits, opts, handler) {
 	    // eslint-disable-next-line no-unused-vars
 	    var narr;
 	    // file name might be in the blob itself
-	    if( !opts.filename && fits.name ){
-		opts.filename = fits.name;
+	    if( !opts.file && fits.name ){
+		opts.file = fits.name;
 	    }
 	    // filename or assume gzip'ed: cfitsio will do the right thing ...
-	    if( opts.filename ){
+	    if( opts.file ){
 		// filename without slashes (don'twant to make subdirs)
-		filename = opts.filename
+		filename = opts.file
 		    .replace(/^\.\./, "")
 		    .replace(/^\./, "")
 		    .replace(/\//g, "_");
@@ -602,8 +637,8 @@ Module["handleFITSFile"] = function(fits, opts, handler) {
 	    hptr = _malloc(8);
 	    setValue(hptr+4, 0, "i32");
 	    fptr = ccall("openFITSFile", "number",
-			 ["string", "number", "string", "number", "number"],
-			 [fitsname, 0, opts.extlist, hptr, hptr+4]);
+			 ["string", "number", "string",  "string", "number", "number"],
+			 [fitsname, 0, opts.extlist, oopts, hptr, hptr+4]);
 	    hdu.type = getValue(hptr,   "i32");
 	    status  = getValue(hptr+4, "i32");
 	    _free(hptr);
@@ -645,8 +680,8 @@ Module["handleFITSFile"] = function(fits, opts, handler) {
 	hptr = _malloc(8);
 	setValue(hptr+4, 0, "i32");
 	fptr = ccall("openFITSFile", "number",
-		     ["string", "number", "string", "number", "number"],
-		     [hdu.vfile, 0, opts.extlist, hptr, hptr+4]);
+		     ["string", "number", "string", "string", "number", "number"],
+		     [hdu.vfile, 0, opts.extlist, oopts, hptr, hptr+4]);
 	hdu.type = getValue(hptr,   "i32");
 	status  = getValue(hptr+4, "i32");
 	_free(hptr);

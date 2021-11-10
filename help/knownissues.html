@@ -134,15 +134,6 @@ not changed to a resize cursor. I couldn't figure out how to work
 around this in a fool-proof way.  We hope Webkit will implement more
 intuitive behavior in the near future.
 
-<li><b>All platforms (June 13, 2014 : unresolved)</b>
-<p>
-When resizing a box region in one direction only (i.e., width or
-height), the width of the region's border will be different in each
-direction.  This is due to the underlying graphics algorithm used to
-resize the region, which changes the scale factor in each direction
-individually and ties the border width to that scale factor. We will
-fix this in a future release.
-
 <li><b>Safari Mobile platforms (April 9, 2015 : unresolved)</b>
 <p>
 A maximum image size is enforced by Apple on Safari mobile devices.
@@ -187,6 +178,17 @@ these problems. Otherwise, we will take a more drastic approach to
 memory management within JS9 (at the expense of speed).
 <p>
 The 64-bit Chrome can make use of 2Gb of memory.
+
+<li><b>All platforms (June 13, 2014 : resolved)</b>
+<p>
+When resizing a box region in one direction only (i.e., width or
+height), the width of the region's border will be different in each
+direction.  This is due to the underlying graphics algorithm used to
+resize the region, which changes the scale factor in each direction
+individually and ties the border width to that scale factor. We will
+fix this in a future release.
+<p>
+Fixed in Fabric.js v4.x
 
 <li><b>All platforms (May 20, 2013: resolved)</b>
 <p>

@@ -10,180 +10,289 @@ passing arrays and passing by reference:
 http://stackoverflow.com/questions/17883799/how-to-handle-passing-returning-array-pointers-to-emscripten-compiled-code
 https://groups.google.com/forum/#!topic/emscripten-discuss/JDaNHIRQ_G4
 */
-#include <unistd.h>
-#include <string.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <ctype.h>
+#include <string.h>
+#include <sys/time.h>
 #include <math.h>
 #include "fitsio.h"
+#include "jsfitsio.h"
 #include "healpix.h"
+#if WITH_IDX
+#include "idx.h"
+#endif
+
+/*
+* http://stackoverflow.com/questions/3599160/unused-parameter-warnings-in-c-code
+*/
+#ifndef UNUSED
+#ifdef __GNUC__
+#  define UNUSED(x) UNUSED_ ## x __attribute__((__unused__))
+#else
+#  define UNUSED(x) UNUSED_ ## x
+#endif
+#endif
+
+int ffpxsz(int datatype);
+
+/*
+ *----------------------------------------------------------------------------
+ *
+ *
+ * 			Private Routines and Data
+ *
+ *
+ *----------------------------------------------------------------------------
+ */
+
+// emscripten does not have access to unlimited memory
+#if __EMSCRIPTEN__
+#define HAVE_MEMORY_LIMIT 1
+#else
+#define HAVE_MEMORY_LIMIT 0
+#endif
+
+// ffhist3 was added to cfitsio v3.39
+#if (CFITSIO_MAJOR < 3) || ((CFITSIO_MAJOR == 3) && (CFITSIO_MINOR < 39))
+#error ffhist3() required: please upgrade cfitsio to v3.39 or higher
+#endif
 
 /* must match what cfitsio expects (i.e., 4 for histogramming) */
 #define IDIM 4
 #define IFILE "mem://"
-#define MFILE "foo"
-#ifndef SZ_LINE
-#define SZ_LINE 1024
-#endif
-
-#define max(a,b) (a>=b?a:b)
-#define min(a,b) (a<=b?a:b)
+#define MFILE "cfitsio_memfile"
 
 #define MAXINT  2147483647
 #define MININT -2147483648
 
-// emscripten does not have access to unlimited memory, unfortunately
-#define MAX_MEMORY 2000000000
-static long max_memory = MAX_MEMORY;
-
-// this routine was added to cfitsio v3.39
-#if (CFITSIO_MAJOR < 3) || ((CFITSIO_MAJOR == 3) && (CFITSIO_MINOR < 39))
-// ffhist3: same as ffhist2, but does not close the original file,
-// and/or replace the original file pointer
-fitsfile *ffhist3(fitsfile *fptr, /* I - ptr to table with X and Y cols*/
-           char *outfile,    /* I - name for the output histogram file      */
-           int imagetype,    /* I - datatype for image: TINT, TSHORT, etc   */
-           int naxis,        /* I - number of axes in the histogram image   */
-           char colname[4][FLEN_VALUE],   /* I - column names               */
-           double *minin,     /* I - minimum histogram value, for each axis */
-           double *maxin,     /* I - maximum histogram value, for each axis */
-           double *binsizein, /* I - bin size along each axis               */
-           char minname[4][FLEN_VALUE], /* I - optional keywords for min    */
-           char maxname[4][FLEN_VALUE], /* I - optional keywords for max    */
-           char binname[4][FLEN_VALUE], /* I - optional keywords for binsize */
-           double weightin,        /* I - binning weighting factor          */
-           char wtcol[FLEN_VALUE], /* I - optional keyword or col for weight*/
-           int recip,              /* I - use reciprocal of the weight?     */
-           char *selectrow,        /* I - optional array (length = no. of   */
-                             /* rows in the table).  If the element is true */
-                             /* then the corresponding row of the table will*/
-                             /* be included in the histogram, otherwise the */
-                             /* row will be skipped.  Ingnored if *selectrow*/
-                             /* is equal to NULL.                           */
-           int *status)
-{
-    fitsfile *histptr;
-    int   bitpix, colnum[4], wtcolnum;
-    long haxes[4];
-    float amin[4], amax[4], binsize[4],  weight;
-
-    if (*status > 0)
-        return(NULL);
-
-    if (naxis > 4)
-    {
-        ffpmsg("histogram has more than 4 dimensions");
-	*status = BAD_DIMEN;
-        return(NULL);
-    }
-
-    /* reset position to the correct HDU if necessary */
-    if ((fptr)->HDUposition != ((fptr)->Fptr)->curhdu)
-        ffmahd(fptr, ((fptr)->HDUposition) + 1, NULL, status);
-
-    if (imagetype == TBYTE)
-        bitpix = BYTE_IMG;
-    else if (imagetype == TSHORT)
-        bitpix = SHORT_IMG;
-    else if (imagetype == TINT)
-        bitpix = LONG_IMG;
-    else if (imagetype == TFLOAT)
-        bitpix = FLOAT_IMG;
-    else if (imagetype == TDOUBLE)
-        bitpix = DOUBLE_IMG;
-    else{
-        *status = BAD_DATATYPE;
-        return(NULL);
-    }
-
-    /*    Calculate the binning parameters:    */
-    /*   columm numbers, axes length, min values,  max values, and binsizes.  */
-
-    if (fits_calc_binning(
-      fptr, naxis, colname, minin, maxin, binsizein, minname, maxname, binname,
-      colnum, haxes, amin, amax, binsize, status) > 0)
-    {
-       ffpmsg("failed to determine binning parameters");
-        return(NULL);
-    }
-
-    /* get the histogramming weighting factor, if any */
-    if (*wtcol)
-    {
-        /* first, look for a keyword with the weight value */
-        if (fits_read_key(fptr, TFLOAT, wtcol, &weight, NULL, status) )
-        {
-            /* not a keyword, so look for column with this name */
-            *status = 0;
-
-            /* get the column number in the table */
-            if (ffgcno(fptr, CASEINSEN, wtcol, &wtcolnum, status) > 0)
-            {
-               ffpmsg(
-               "keyword or column for histogram weights doesn't exist: ");
-               ffpmsg(wtcol);
-               return(NULL);
-            }
-
-            weight = FLOATNULLVALUE;
-        }
-    }
-    else
-        weight = (float) weightin;
-
-    if (weight <= 0. && weight != FLOATNULLVALUE)
-    {
-        ffpmsg("Illegal histogramming weighting factor <= 0.");
-	*status = URL_PARSE_ERROR;
-        return(NULL);
-    }
-
-    if (recip && weight != FLOATNULLVALUE)
-       /* take reciprocal of weight */
-       weight = (float) (1.0 / weight);
-
-    /* size of histogram is now known, so create temp output file */
-    if (fits_create_file(&histptr, outfile, status) > 0)
-    {
-        ffpmsg("failed to create temp output file for histogram");
-        return(NULL);
-    }
-
-    /* create output FITS image HDU */
-    if (ffcrim(histptr, bitpix, naxis, haxes, status) > 0)
-    {
-        ffpmsg("failed to create output histogram FITS image");
-        return(NULL);
-    }
-
-    /* copy header keywords, converting pixel list WCS keywords to image WCS */
-    if (fits_copy_pixlist2image(fptr, histptr, 9, naxis, colnum, status) > 0)
-    {
-        ffpmsg("failed to copy pixel list keywords to new histogram header");
-        return(NULL);
-    }
-
-    /* if the table columns have no WCS keywords, then write default keywords */
-    fits_write_keys_histo(fptr, histptr, naxis, colnum, status);
-
-    /* update the WCS keywords for the ref. pixel location, and pixel size */
-    fits_rebin_wcs(histptr, naxis, amin, binsize,  status);
-
-    /* now compute the output image by binning the column values */
-    if (fits_make_hist(fptr, histptr, bitpix, naxis, haxes, colnum, amin, amax,
-        binsize, weight, wtcolnum, recip, selectrow, status) > 0)
-    {
-        ffpmsg("failed to calculate new histogram values");
-        return(NULL);
-    }
-
-    return(histptr);
-}
+#ifndef min
+#define min(a,b) (a<=b?a:b)
 #endif
+#ifndef max
+#define max(a,b) (a>=b?a:b)
+#endif
+#ifndef SZ_LINE
+#define SZ_LINE 1024
+#endif
+
+#if HAVE_MEMORY_LIMIT
+#define DEF_MAX_MEMORY 2000000000
+#else
+#define DEF_MAX_MEMORY 0
+#endif
+static long def_max_memory = DEF_MAX_MEMORY;
+
+/*
+ *
+ * Routine:	keyword
+ *
+ * Purpose:	look for a keyword=<value> string inside another string,
+ *		remove and return the <value> in another buffer
+ *
+ * Returns:	len if keyword was found, 0 otherwise
+ *
+ */
+static int keyword (char *ibuf, char *key, char *env, char *obuf, int maxlen){
+  int qlev;
+  int len = 0;
+  char *s;
+  char *t;
+  char *u;
+  char *v;
+  char *ibase = NULL;
+  char *iptr=NULL;
+  char quote='\0';
+
+  /* if we have no input string, we are done */
+  if( !ibuf || !*ibuf || !key || !*key ) return 0;
+  /* start out pessimistically */
+  ibase = strdup(ibuf);
+  iptr = ibase;
+  *obuf = '\0';
+  /* maxlen generally is 1 more than we can handle */
+  maxlen--;
+  /* keep trying */
+  while( *iptr ){
+    /* look for key from current position */
+    if( (s = (char *)strstr(iptr, key)) == NULL ) goto done;
+    /* if we found a key, we need to make sure ... */
+    /* it must be preceeded by beginning of string, beginning of bracket,
+       or by a "," from previous keyword */
+    if( (s == ibase) || (*(s-1) == ',') || (*(s-1) == '[') ){
+      /* it can be followed by spaces ... */
+      t = s + strlen(key);
+      while( isspace((int)*t) ) t++;
+      /* but must be followed by an "=" */
+      if( *t == '=' ){
+	t++;
+	/* skip spaces again */
+	while( isspace((int)*t) ) t++;
+	/* this is where the actual value part of the string begins */
+	u = t;
+	/* this will be where it ends */
+	v = t;
+	/* gather up everything to the next "," or end of filter */
+	if( (*t == '"') || (*t == '\'') || (*t == '(') || (*t == '[') ){
+	  switch(*t){
+	  case '"':
+	  case '\'':
+	    quote = *t;
+	    break;
+	  case '(':
+	    quote = ')';
+	    break;
+	  case '[':
+	    quote = ']';
+	    break;
+	  }
+	  /* bump past opening quote char */
+	  t++; u++; v++;
+	  while( *t && (*t != quote) ){
+	    t++; v++;
+	  }
+	  if( *t == quote ){
+	    t++;
+	  }
+	}
+	else{
+	  qlev = 0;
+	  while( *t &&
+		 ((qlev != 0) || (*t != ',')) &&
+		 ((qlev != 0) || (*t != ']')) ){
+	    if( *t == '[' ){
+	      qlev++;
+	    } else if( *t == ']' ){
+	      qlev--;
+	    }
+	    t++; v++;
+	  }
+	}
+	len = min(maxlen, v - u);
+	strncpy(obuf, u, len);
+	obuf[len] = '\0';
+	/* remove keyword=value string from the original buffer */
+	/* first remove preceding comma, if necessary */
+	if( (s > ibase) && (*(s-1) == ',') ){
+	  s--;
+	}
+	/* but leave 1 comma in place */
+	else if( *t == ',' ){
+	  t++;
+	}
+	/* now overwrite original from where the keyword started */
+	memmove(s, t, strlen(t)+1);
+	/* return success */
+	goto done;
+      }
+    }
+    /* start next search just past this one */
+    iptr = s+1;
+  }
+  /* didn't find anything */
+  len = 0;
+done:
+  if( ibase ) free(ibase);
+  /* if not found, check for environment variable, if necessary */
+  if( !len && env && (s = (char *)getenv(env)) ){
+    strncpy(obuf, s, maxlen);
+    len = strlen(obuf);
+  }
+  return len;
+}
+
+/*
+ *
+ * getcolinfo -- read a string containing tlmin, tlmax, binsiz of a column
+ *
+ * col[:tlmin[:tmlax[:binsiz]]]
+ *
+ * If only one arg is given, it's assumed to be the binsize
+ *
+ *
+ */
+static int getcolinfo(char *s, char *col, int clen,
+		      double *tlmin, double *tlmax, double *binsiz){
+  int i, got, tlen;
+  char *v;
+  char vbuf[SZ_LINE];
+  double val[3];
+
+  /* initialize */
+  *col = '\0';
+  /* make sure we have something to do */
+  if( !s || !*s )
+    return 0;
+  /* get column name */
+  for(v=col, tlen=0; *s && (*s != ':') && tlen < clen; tlen++ ){
+    *v++ = *s++;
+  }
+  *v = '\0';
+  /* get image dimensions and bin size */
+  for(i=0, got=0; i<3; i++, got++){
+    if( *s != ':' )
+      break;
+    /* skip past ':' */
+    s++;
+    /* fill buffer with next value */
+    *vbuf = '\0';
+    for(v=vbuf; *s && (*s != ':') && tlen < SZ_LINE; tlen++){
+      *v++ = *s++;
+    }
+    *v = '\0';
+    /* convert string to double */
+    val[i] = atof(vbuf);
+  }
+  switch(got){
+  case 0:
+    *binsiz = 1;
+    got = 1;
+    break;
+  case 1:
+    *binsiz = val[0];
+    break;
+  case 2:
+    *tlmin = val[0];
+    *tlmax = val[1];
+    break;
+  case 3:
+  default:
+    *tlmin = val[0];
+    *tlmax = val[1];
+    *binsiz = val[2];
+    break;
+  }
+  return got;
+}
+
+
+// give a bitpix, return type
+int fitstypeof(int bitpix){
+  switch(bitpix){
+  case 8:
+    return TBYTE;
+  case 16:
+    return TSHORT;
+  case -16:
+    return TUSHORT;
+  case 32:
+    return TINT;
+  case 64:
+    return TLONGLONG;
+  case -32:
+    return TFLOAT;
+  case -64:
+    return TDOUBLE;
+  default:
+    return TINT;
+  }
+}
 
 // gotoFITSHDU: try to go to a reasonable HDU if the primary is useless
 // we look for specified extensions and if not found, go to hdu #2
 // this is how xray binary tables are imaged automatically
-fitsfile *gotoFITSHDU(fitsfile *fptr, char *extlist, int *hdutype, int *status){
+static fitsfile *gotoFITSHDU(fitsfile *fptr,
+			     char *extlist, int *hdutype, int *status){
   int hdunum, naxis, thdutype, gotext=0;
   long naxes[IDIM] = {0, 0, 0, 0};
   char *ext, *textlist;
@@ -218,31 +327,43 @@ fitsfile *gotoFITSHDU(fitsfile *fptr, char *extlist, int *hdutype, int *status){
   return fptr;
 }
 
+/*
+ *----------------------------------------------------------------------------
+ *
+ *
+ * 			Public Routines and Data
+ *
+ *
+ *----------------------------------------------------------------------------
+ */
+
 // openFITSFile: open a FITS file for reading and go to a useful HDU
 //
-fitsfile *openFITSFile(char *ifile, int iomode, char *extlist, int *hdutype,
-		       int *status){
+fitsfile *openFITSFile(char *ifile, int iomode, char *extlist,
+		       char *UNUSED(opts), int *hdutype, int *status){
   fitsfile *fptr;
   // open fits file
   fits_open_file(&fptr, ifile, iomode, status);
   // bail out if there is an error at this point
-  if( *status ){
-    return NULL;
-  }
+  if( *status ) return NULL;
   return gotoFITSHDU(fptr, extlist, hdutype, status);
 }
 
 // openFITSMem: open a FITS memory buffer for reading and go to a useful HDU
 fitsfile *openFITSMem(void **buf, size_t *buflen, char *extlist,
-		      int *hdutype, int *status){
+		      char *UNUSED(opts), int *hdutype, int *status){
   fitsfile *fptr;
   // open fits file
   fits_open_memfile(&fptr, MFILE, READWRITE, buf, buflen, 0, NULL, status);
   // bail out if there is an error at this point
-  if( *status ){
-    return NULL;
-  }
+  if( *status ) return NULL;
   return gotoFITSHDU(fptr, extlist, hdutype, status);
+}
+
+// getHeaderToString: get header as a string
+void getHeaderToString(fitsfile *fptr,
+		       char **cardstr, int *ncard, int *status){
+  fits_convert_hdr2str(fptr, 0, NULL, 0, cardstr, ncard, status);
 }
 
 // update/add WCS params
@@ -353,8 +474,9 @@ void updateWCS(fitsfile *fptr, fitsfile *ofptr,
 }
 
 // getImageToArray: extract a sub-section from an image HDU, return array
-void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
-		      double bin, int binMode, char *slice,
+void *getImageToArray(fitsfile *fptr,
+		      int *dims, double *cens, double bin, int binMode,
+		      char *slice, char *opts,
 		      int *start, int *end, int *bitpix, int *status){
   int b, i, j, k, naxis;
   int idim1, idim2, idim3, sdim1, sdim2, hidim1, hidim2, hidim3;
@@ -380,9 +502,10 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   char tbuf[SZ_LINE];
   char *s, *tslice;
   char *bptr = NULL;
-  int nslice, idx, iaxis0=0, iaxis1=0, iaxis2=0;
+  int nslice, iaxis0=0, iaxis1=0, iaxis2=0;
   int iaxes[3] = {0, 1, 2};
   int saxes[IDIM] = {0, 0, 0, 0};
+  long max_memory = def_max_memory;
   unsigned char *crbuf=NULL, *cobuf=NULL;
   short *srbuf=NULL, *sobuf=NULL;
   unsigned short *usrbuf=NULL, *usobuf=NULL;
@@ -390,6 +513,10 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   long long *lrbuf=NULL, *lobuf=NULL;
   float *frbuf=NULL, *fobuf=NULL;
   double *drbuf=NULL, *dobuf=NULL;
+  // get options
+  if( keyword(opts, "maxsize", "JSFITSIO_MAXMEMORY", tbuf, SZ_LINE) ){
+    max_memory = strtol(tbuf, NULL, 10);
+  }
   // seed buffers
   for(i=0; i<IDIM; i++){
     naxes[i] = 0;
@@ -424,12 +551,12 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
 	tslice = (char *)strdup(tbuf);
       }
     }
-    for(s=(char *)strtok(tslice, ":,"), nslice=0, idx=0;
+    for(s=(char *)strtok(tslice, ":,"), nslice=0, i=0;
 	(s != NULL) && (nslice < IDIM);
 	s=(char *)strtok(NULL,":,"), nslice++){
       if( !strcmp(s, "*") ){
-	if( idx < 2 ){
-	  iaxes[idx++] = nslice;
+	if( i < 2 ){
+	  iaxes[i++] = nslice;
 	}
       } else {
 	// all slices (i.e. the whole data cube)?
@@ -682,13 +809,11 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   }
   if( bin == 1 ){
     totbytes = totpix * tsize;
-#if __EMSCRIPTEN__
     // sanity check on memory limits
-    if( totbytes > max_memory ){
+    if( max_memory && totbytes > max_memory ){
       *status = MEMORY_ALLOCATION;
       return NULL;
     }
-#endif
     // allocate memory for the whole image section
     if(!(obuf = (void *)calloc(totbytes, sizeof(char)))){
       *status = MEMORY_ALLOCATION;
@@ -895,15 +1020,24 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
 }
 
 // filterTableToImage: filter a binary table, create a temp image
-fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char *cols,
-			     int *dims, double *cens, double bin, int *status){
+fitsfile *filterTableToImage(fitsfile *fptr,
+			     char *filter, char *cols,
+			     int *dims, double *cens, double bin,
+			     char *opts,
+			     int *status){
   int i, dim1, dim2, hpx, tstatus;
   int imagetype=TINT, naxis=2, recip=0;
-  long nirow, norow;
+#if WITH_IDX
+  int got=-1;
+#endif
+  long nirow, norow, totbytes;
+  long max_memory = def_max_memory;
   float weight=1;
   double xcen, ycen;
   double minin[IDIM], maxin[IDIM], binsizein[IDIM];
   char *s, *t;
+  char tbuf[SZ_LINE];
+  char filename[SZ_LINE];
   char keyname[FLEN_KEYWORD];
   char param[FLEN_CARD];
   char comment[FLEN_CARD];
@@ -922,6 +1056,16 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char *cols,
   float binsize[IDIM];
   fitsfile *ofptr;
 
+  // look for opts directives
+  if( keyword(opts, "bitpix", "JSFITSIO_TABLEBITPIX", tbuf, SZ_LINE) ){
+    imagetype = fitstypeof(strtol(tbuf, NULL, 10));
+  }
+  if( keyword(opts, "maxsize", "JSFITSIO_MAXMEMORY", tbuf, SZ_LINE) ){
+    max_memory = strtol(tbuf, NULL, 10);
+  }
+  if( keyword(opts, "ofile", "JSFITSIO_OFILE", filename, SZ_LINE) ){
+    outfile = filename;
+  }
   // check for HEALPix table, which is handled specially
   hpx = 0;
   param[0] = '\0';
@@ -942,9 +1086,7 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char *cols,
   // if either case holds, it's HEALPix ...
   if( hpx ){
     ofptr = healpixToImage(fptr, status);
-    if( *status > 0 ){
-      return NULL;
-    }
+    if( *status ) return NULL;
     // if 0,0 was input, change to center of image
     if( cens && ((cens[0] == 0) || (cens[1] == 0)) ){
       tstatus = 0;
@@ -967,6 +1109,14 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char *cols,
     bin = 1.0 / fabs(bin);
   }
   wtcol[0] = '\0';
+  for(i=0; i<IDIM; i++){
+    minin[i] = DOUBLENULLVALUE;
+    maxin[i] = DOUBLENULLVALUE;
+    binsizein[i] = bin;
+    minname[i][0] = '\0';
+    maxname[i][0] = '\0';
+    binname[i][0] = '\0';
+  }
   if( cols ){
     s = (char *)strdup(cols);
     t = (char *)strtok(s, " ,");
@@ -979,18 +1129,16 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char *cols,
       strncpy(colname[1], t, FLEN_VALUE);
       colname[1][FLEN_VALUE-1] = '\0';
     }
+    // optional: column:tlmin:tlmax:binsize
+    t = (char *)strtok(NULL, " ,");
+    if( getcolinfo(t, colname[2], FLEN_VALUE,
+		   &minin[2], &maxin[2], &binsizein[2]) ){
+      naxis = naxis + 1;
+    }
     free(s);
   } else {
     colname[0][0] = '\0';
     colname[1][0] = '\0';
-  }
-  for(i=0; i<IDIM; i++){
-    minin[i] = DOUBLENULLVALUE;
-    maxin[i] = DOUBLENULLVALUE;
-    binsizein[i] = bin;
-    minname[i][0] = '\0';
-    maxname[i][0] = '\0';
-    binname[i][0] = '\0';
   }
   // get total number of rows in input file
   fits_get_num_rows(fptr, &nirow, status);
@@ -998,10 +1146,15 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char *cols,
   rowselect = calloc(nirow+1, sizeof(char));
   // filter the input file and generate selected rows array
   if( filter && *filter ){
-    fits_find_rows(fptr, filter, 0, nirow, &norow, rowselect,  status);
-    if( *status > 0 ){
-      return(NULL);
+#if WITH_IDX
+    got = idx_find_rows(fptr, filter, 0, nirow, &norow, rowselect, status);
+    if( got < 0 ){
+#endif
+      fits_find_rows(fptr, filter, 0, nirow, &norow, rowselect,  status);
+      if( *status ) return NULL;
+#if WITH_IDX
     }
+#endif
   } else {
     for(i=0; i<nirow+1; i++){
       rowselect[i] = TRUE;
@@ -1012,9 +1165,7 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char *cols,
   fits_calc_binning(fptr, naxis, colname, minin, maxin, binsizein,
 		    minname, maxname, binname,
 		    colnum, haxes, amin, amax, binsize, status);
-  if( *status > 0 ){
-    return(NULL);
-  }
+  if( *status ) return NULL;
   // add bin factor back into haxes to get table dimensions
   haxes[0] = (int)(haxes[0] * bin);
   haxes[1] = (int)(haxes[1] * bin);
@@ -1045,13 +1196,22 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char *cols,
     maxin[0] = (int)(xcen + (dim1/2.0));
     maxin[1] = (int)(ycen + (dim2/2.0));
   }
-  // make 2D section histogram from selected rows
+  // sanity check on memory limits
+  if( max_memory ){
+    for(i=0, totbytes=1; i<naxis; i++){
+      totbytes *= (maxin[i] - minin[i]) / binsizein[i];
+    }
+    totbytes *= ffpxsz(imagetype);
+    if( totbytes > max_memory ){
+      *status = MEMORY_ALLOCATION;
+      return NULL;
+    }
+  }
+  // make histogram from selected rows
   ofptr = ffhist3(fptr, outfile, imagetype, naxis, colname,
 		  minin, maxin, binsizein, minname, maxname, binname,
 		  weight, wtcol, recip, rowselect, status);
-  if( *status > 0 ){
-    return NULL;
-  }
+  if( *status ) return NULL;
   // store original table info needed by JS9 in header
   for(i=0; i<2; i++){
     tstatus = 0;
@@ -1084,16 +1244,44 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char *cols,
     cens[0] = xcen;
     cens[1] = ycen;
   }
+  // if we are writing a disk file, flush to ensure header is updated completely
+  if( strcmp(outfile, IFILE) ){
+    fits_flush_file(ofptr, &tstatus);
+  }
   // free up space
   if( rowselect ) free(rowselect);
   // return new file pointer
   return ofptr;
 }
 
-void getHeaderToString(fitsfile *fptr, char **cardstr, int *ncard, int *status){
-  fits_convert_hdr2str(fptr, 0, NULL, 0, cardstr, ncard, status);
+// create a data cube from a FITS bianry table
+fitsfile *createCubeFromTable(fitsfile *fptr, char *filter, char *cols,
+			      int *dims, double *cens, double bin, char *opts,
+			      int *status){
+  int got = 0;
+  char *s = NULL;
+  char *t = NULL;
+  char tbuf[SZ_LINE];
+  fitsfile *ofptr = NULL;
+  // 1 col (X Y is implied) or 3 cols
+  t = strdup(cols);
+  for(s=(char *)strtok(t, " ,"); s; s=(char *)strtok(NULL," ,")){ got++; }
+  if( t ) free(t);
+  switch(got){
+  case 1:
+    snprintf(tbuf, SZ_LINE-1, "X Y %s", cols);
+    break;
+  case 3:
+    strncpy(tbuf, cols, SZ_LINE-1);
+    break;
+  default:
+    *status = NGP_BAD_ARG;
+    return NULL;
+  }
+  // convert table to image
+  ofptr = filterTableToImage(fptr, filter, tbuf, dims, cens, bin, opts, status);
+  return ofptr;
 }
-
 
 // closeFITSFile: close a FITS file or memory object
 void closeFITSFile(fitsfile *fptr, int *status){
@@ -1102,10 +1290,10 @@ void closeFITSFile(fitsfile *fptr, int *status){
 
 // maxFITSMemory: set limit of size of memory available for a FITS image
 int maxFITSMemory(int limit){
-  int old = max_memory;
+  int old = def_max_memory;
   // if 0, don't set, just return current
   if( limit ){
-    max_memory = limit;
+    def_max_memory = limit;
   }
   // return prev value
   return old;

@@ -9,10 +9,12 @@ PYTHON=python3
 
 js9 -a --width $WIDTH --height $HEIGHT --webpage $WEBPAGE $* &
 sleep 2
+i=0;
 
 METHOD="python"
 while true; do
-    echo "using $METHOD ..."
+    echo "using $METHOD ... #${i}"
+    i=$((i+1))
     if [ x$METHOD = "xshell" ]; then
         threeways.sh -a -b ../../data/blend -i $ID -t 2 -z 2 $*
         METHOD="python"
