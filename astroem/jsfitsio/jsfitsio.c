@@ -221,8 +221,9 @@ static int getcolinfo(char *s, char *col, int clen,
   /* initialize */
   *col = '\0';
   /* make sure we have something to do */
-  if( !s || !*s )
+  if( !s || !*s ){
     return 0;
+  }
   /* get column name */
   for(v=col, tlen=0; *s && (*s != ':') && tlen < clen; tlen++ ){
     *v++ = *s++;
@@ -230,8 +231,9 @@ static int getcolinfo(char *s, char *col, int clen,
   *v = '\0';
   /* get image dimensions and bin size */
   for(i=0, got=0; i<3; i++, got++){
-    if( *s != ':' )
+    if( *s != ':' ){
       break;
+    }
     /* skip past ':' */
     s++;
     /* fill buffer with next value */
@@ -1119,17 +1121,19 @@ fitsfile *filterTableToImage(fitsfile *fptr,
   }
   if( cols ){
     s = (char *)strdup(cols);
+    // x column
     t = (char *)strtok(s, " ,");
     if( t ){
       strncpy(colname[0], t, FLEN_VALUE);
       colname[0][FLEN_VALUE-1] = '\0';
     }
+    // y column
     t = (char *)strtok(NULL, " ,");
     if( t ){
       strncpy(colname[1], t, FLEN_VALUE);
       colname[1][FLEN_VALUE-1] = '\0';
     }
-    // optional: column:tlmin:tlmax:binsize
+    // cube column[:min:max][:binsize]
     t = (char *)strtok(NULL, " ,");
     if( getcolinfo(t, colname[2], FLEN_VALUE,
 		   &minin[2], &maxin[2], &binsizein[2]) ){

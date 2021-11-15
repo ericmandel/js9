@@ -177,7 +177,6 @@
 	let win = this.winHandle;
 	let disclose = win ? "" : 'style="display:none;"';
 	let im  = JS9.GetImage({display: this.display});
-
 	if( !im || (im && !im.raw.hdu) ){
 	    div.innerHTML = '<p style="padding: 5px"><center>FITS image sections, with binning and filtering</center>';
 	    return;
@@ -190,7 +189,7 @@
 	} else {
 	    binblock = "Bin";
 	    binblocked = "binned";
-            elhdu = '<select name="selectcube" class="js9-binning-hdulist">';
+            elhdu = '&nbsp;<select name="selectcube" class="js9-binning-hdulist">';
 	}
 
 	html = `<form class="js9BinningForm js9Form">
@@ -203,17 +202,17 @@
 	           <tr>	<td>Center:</td>
 			<td><input type=text name=xcen size=10 style="text-align:right;"></td>
 			<td><input type=text name=ycen size=10 style="text-align:right;"></td>
-			<td>&nbsp(center position of section)</td>
+			<td>&nbsp;center position of section</td>
 		   </tr>
 	           <tr>	<td>Size:</td>
 			<td><input type=text name=xdim size=10 style="text-align:right;"></td>
 			<td><input type=text name=ydim size=10 style="text-align:right;"></td>
-			<td>&nbsp(width, height of section)</td>
+			<td>&nbsp;width, height of section</td>
 		   </tr>
                    <tr>	<td>${binblock}:</td>
 			<td><input type=text name=bin value=1 size=10 style="text-align:right;"></td>
 			<td></td>
-			<td>&nbsp(apply ${binblock.toLowerCase()} factor to ${im.imtab})</td>
+			<td>&nbsp;apply ${binblock.toLowerCase()} factor to ${im.imtab}</td>
 		   </tr>`;
 
 	if( im.imtab === "image" ){
@@ -221,35 +220,35 @@
 	           <tr>	<td>Mode:</td>
                         <td><input type=radio name=binmode value="s" class="sum-pixels" style="text-align:left;">sum</td>
                         <td><input type=radio name=binmode value="a" class="avg-pixels" style="text-align:left;">average</td>
-			<td>&nbsp(sum or avg ${binblocked} pixels?)</td>
+			<td>&nbsp;sum or avg ${binblocked} pixels?</td>
 		   </tr>`;
 	} else {
 	    html += `
 	           <tr>	<td>Mode:</td>
                         <td><input type=checkbox name=xbinmode value="s" class="sum-pixels" style="text-align:left;" checked disabled>sum</td>
 			<td></td>
-			<td>&nbsp(binned tables are summed)</td>
+			<td>&nbsp;binned tables are summed</td>
 		   </tr>`;
 	}
 	html += `  <tr>	<td>Filter:</td>
 			<td colspan="2"><textarea name=filter rows="1" cols="22" style="padding-left:5px; text-align:left;" autocapitalize="off" autocorrect="off"></textarea></td>
-			<td>&nbsp(event/row filter for table)</td>
+			<td>&nbsp;event/row filter for table</td>
 		   </tr>
 
 		   <tr>	<td>BinCols:</td>
 			<td colspan="2"><textarea name=columns rows="1" cols="22" style="padding-left:5px; text-align:left;" autocapitalize="off" autocorrect="off"></textarea></td>
-			<td>&nbsp(alternate binning cols for table)</td>
+			<td>&nbsp;alternate binning cols for table</td>
 		   </tr>
 
 	           <tr>	<td>CubeCol:</td>
 			<td colspan="2"><textarea name=cubecol class="js9-binning-cubecol" rows="1" cols="22" style="padding-left:5px; text-align:left;" autocapitalize="off" autocorrect="off"></textarea></td>
-			<td>&nbsp(table &rarr; cube: col[:min:max:binsiz])</td>
+			<td>&nbsp;table&rarr;cube: col[:min:max][:binsiz]</td>
 		   </tr>
 
 	           <tr>	<td>Separate:</td>
                         <td><input type=checkbox name=separate class="js9-binning-sep" style="text-align:left;"></td>
 			<td></td>
-			<td>&nbsp(display as separate image?)</td>
+			<td>&nbsp;display as separate image?</td>
 		   </tr>
 		   <tr>
 			<td>&nbsp;</td>
