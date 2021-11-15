@@ -182,8 +182,9 @@ int _listhdu(char *iname, char *oname){
     return(status);
 }
 
-#ifdef LISTHDUMAIN
-int main(int argc, char **argv){
+#ifndef __EMSCRIPTEN__
+int main(int argc, char **argv)
+{
     char *iname=NULL, *oname=NULL;
     if (argc < 2) {
       return(0);

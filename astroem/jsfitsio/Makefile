@@ -1,6 +1,6 @@
 RM =		rm -rf
 CC =		gcc
-CFLAGS =	-Wall -I. -I$$HOME/include -DLISTHDUMAIN
+CFLAGS =	-Wall -I. -I$$HOME/include
 LDFLAGS		= -L$$HOME/lib
 LIBS		= -lcfitsio -lz -lcurl -lm
 
