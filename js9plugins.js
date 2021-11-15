@@ -1204,7 +1204,8 @@ module.exports = xhr;
 		el.append(`<option value="" disabled=disabled>List columns</option>`);
 		for(i=0; i<cols.length; i++){
 		    s = `${cols[i].name}:${cols[i].type}`;
-		    if( cols[i].min && cols[i].max ){
+		    if( JS9.notNull(cols[i].min) &&
+			JS9.notNull(cols[i].max) ){
 			s += `:${cols[i].min}:${cols[i].max}`;
 		    }
 		    el.append(`<option>${s}</option>`);
