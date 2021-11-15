@@ -168,7 +168,7 @@ JS9.globalOpts = {
     extlist: "EVENTS STDEVT",	// list of binary table extensions
     imopts: "IMOPTS",           // basename of FITS param containing json opts
     imcmap: "IMCMAP",           // basename of FITS param containing cmaps
-    table: {xdim: 4096, ydim: 4096, bin: 1},// image section size to extract from table
+    table: {xdim: 4096, ydim: 4096, bin: 1, bitpix: 32},// image section size to extract from table
     image: {xdim: 4096, ydim: 4096, bin: 1},// image section size (unlimited=0)
     binMode: "s",               // "s" (sum) or "a" (avg) pixels when binning
     reprojSwitches: "",         // Montage reproject switches
@@ -22657,6 +22657,14 @@ JS9.isHMS = function(wcssys, dtype){
     return (dtype === ":" || dtype === "h") &&
 	    wcssys !== "galactic"           &&
 	    wcssys !== "ecliptic";
+};
+
+// is this a HEALPix image?
+JS9.ishealpix = function(im){
+    return im                                                      &&
+	im.imtab === "table"                                       &&
+	im.raw && im.raw.header                                    &&
+	im.raw.header.CTYPE1 &&	im.raw.header.CTYPE1.match(/--HPX/i);
 };
 
 // parse a FITS card and return name and value

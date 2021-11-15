@@ -174,6 +174,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     var i, ofptr, tfptr, hptr, status, datalen, extnum, extname;
     var buf, bufptr, buflen, bufptr2;
     var slice, doerr, ctype1, xbin, columns, cubecol, allcols;
+    var bitpix;
     var filter = null;
     var fptr = fits.fptr;
     var fopts = null;
@@ -275,6 +276,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	hdu.table = {};
 	hptr = _malloc(28);
 	if( opts.table ){
+	    if( opts.table.bitpix ){ bitpix = opts.table.bitpix; }
 	    if( opts.table.filter ){ filter = opts.table.filter; }
 	    if( opts.table.columns ){ columns = opts.table.columns; }
 	    if( opts.table.cubecol ){ cubecol = opts.table.cubecol; }
@@ -296,6 +298,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	if( opts.ydim !== undefined ){ dims[1] = opts.ydim; }
 	if( opts.xcen ){ cens[0] = opts.xcen; }
 	if( opts.ycen ){ cens[1] = opts.ycen; }
+	if( opts.bitpix ){ bitpix = opts.bitpix; }
 	if( opts.filter ){ filter = opts.filter; }
 	if( opts.columns ){ columns = opts.columns; }
 	if( opts.cubecol ){ cubecol = opts.cubecol; }
@@ -328,8 +331,21 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	    if( !columns ) allcols = "X Y";
 	    allcols += " " + cubecol;
 	    if( opts.file ){
-		fopts = `ofile=!${opts.file}`;
+		if( fopts ){
+		    fopts += ",";
+		} else {
+		    fopts = "";
+		}
+		fopts += `ofile=!${opts.file}`;
 	    }
+	}
+	if( bitpix ){
+	    if( fopts ){
+		fopts += ",";
+	    } else {
+		fopts = "";
+	    }
+	    fopts += `bitpix=${bitpix}`;
 	}
 	try{
 	    ofptr = ccall("filterTableToImage", "number",
@@ -346,6 +362,9 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	hdu.table.xcen = getValue(hptr+8,   "double");
 	hdu.table.ycen = getValue(hptr+16,  "double");
 	hdu.table.bin = bin;
+	if( bitpix ){
+	    hdu.table.bitpix = bitpix;
+	}
 	hdu.table.filter = filter;
 	hdu.table.columns = columns;
 	status  = getValue(hptr+24, "i32");

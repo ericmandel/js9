@@ -933,6 +933,9 @@ module.exports = xhr;
 	} else {
 	    opts.bin = form.bin.value;
 	}
+	if( JS9.isNumber(form.bitpix.value) ){
+	    opts.bitpix = parseInt(form.bitpix.value, 10);
+	}
 	opts.filter = form.filter.value;
 	opts.columns = form.columns.value;
 	opts.cubecol = form.cubecol.value;
@@ -976,7 +979,6 @@ module.exports = xhr;
 	    }
 	}
 	im   = JS9.GetImage({display: display});
-
 	if ( im ) {
 	    form = $(div).find(".js9BinningForm")[0];
 
@@ -985,7 +987,7 @@ module.exports = xhr;
 		hdu.bin = hdu.bin || 1;
 		hdu.binMode = hdu.binMode || JS9.globalOpts.binMode || "s";
 		form.rebin.disabled = false;
-	        if ( hdu.table !== undefined ) {
+	        if( hdu.table !== undefined && !JS9.ishealpix(im) ) {
 		    // get current center
 		    ipos = im.getPan();
 		    // convert to physial (file) coords
@@ -996,6 +998,7 @@ module.exports = xhr;
 		    form.xdim.value = String(Math.floor(hdu.table.xdim));
 		    form.ydim.value = String(Math.floor(hdu.table.ydim));
 		    form.filter.value = hdu.table.filter || "";
+		    form.bitpix.value = hdu.table.bitpix || JS9.globalOpts.table.bitpix;
 		    form.columns.value = hdu.table.columns || "";
 		    form.cubecol.value = "";
 		    form.bin.disabled = false;
@@ -1005,6 +1008,7 @@ module.exports = xhr;
 		    form.ydim.disabled = false;
 		    // form.binmode.disabled = false;
 		    form.filter.disabled = false;
+		    form.bitpix.disabled = false;
 		    form.columns.disabled = false;
 		    form.cubecol.disabled = false;
 		} else {
@@ -1030,6 +1034,7 @@ module.exports = xhr;
 		    form.xdim.value = String(Math.floor(hdu.naxis1 * bin));
 		    form.ydim.value = String(Math.floor(hdu.naxis2 * bin));
 		    form.filter.value = "";
+		    form.bitpix.value = im.raw.header.BITPIX;
 		    form.columns.value = "";
 		    form.cubecol.value = "";
 		    form.bin.disabled = false;
@@ -1040,6 +1045,8 @@ module.exports = xhr;
 		    form.binmode.disabled = false;
 		    form.filter.disabled = true;
 		    form.filter.style.backgroundColor="#E0E0E0";
+		    form.bitpix.disabled = true;
+		    form.bitpix.style.backgroundColor="#E0E0E0";
 		    form.columns.disabled = true;
 		    form.columns.style.backgroundColor="#E0E0E0";
 		    form.cubecol.disabled = true;
@@ -1065,28 +1072,28 @@ module.exports = xhr;
     }
 
     function binningInit() {
-	let i, s, cols, el, elhdu, smode;
-	let binblock, binblocked;
+	let i, s, cols, el, smode;
 	let that = this;
+	let elhdu = "&nbsp;";
+	let binblock = "Block";
+	let binblocked = "blocked";
 	let html = "";
 	let div = this.div;
 	let display = this.display;
 	let win = this.winHandle;
 	let disclose = win ? "" : 'style="display:none;"';
 	let im  = JS9.GetImage({display: this.display});
+
 	if( !im || (im && !im.raw.hdu) ){
 	    div.innerHTML = '<p style="padding: 5px"><center>FITS image sections, with binning and filtering</center>';
 	    return;
 	}
-
-	if( im.imtab === "image" ){
-	    binblock = "Block";
-	    binblocked = "blocked";
-	    elhdu = "&nbsp;";
-	} else {
+	if( im.imtab === "table" ){
 	    binblock = "Bin";
 	    binblocked = "binned";
-            elhdu = '&nbsp;<select name="selectcube" class="js9-binning-hdulist">';
+	    if( !JS9.ishealpix(im) ){
+		elhdu = '&nbsp;<select name="selectcube" class="js9-binning-hdulist">';
+	    }
 	}
 
 	html = `<form class="js9BinningForm js9Form">
@@ -1112,12 +1119,17 @@ module.exports = xhr;
 			<td>&nbsp;apply ${binblock.toLowerCase()} factor to ${im.imtab}</td>
 		   </tr>`;
 
-	if( im.imtab === "image" ){
+	if( im.imtab === "image" || JS9.ishealpix(im) ){
 	    html += `
 	           <tr>	<td>Mode:</td>
                         <td><input type=radio name=binmode value="s" class="sum-pixels" style="text-align:left;">sum</td>
                         <td><input type=radio name=binmode value="a" class="avg-pixels" style="text-align:left;">average</td>
 			<td>&nbsp;sum or avg ${binblocked} pixels?</td>
+		   </tr>`;
+	    html += `
+		   <tr>	<td>Bitpix:</td>
+			<td colspan="2"><textarea name=bitpix rows="1" cols="22" style="padding-left:5px; text-align:left;" autocapitalize="off" autocorrect="off"></textarea></td>
+			<td>&nbsp;image bitpix</td>
 		   </tr>`;
 	} else {
 	    html += `
@@ -1126,10 +1138,15 @@ module.exports = xhr;
 			<td></td>
 			<td>&nbsp;binned tables are summed</td>
 		   </tr>`;
+	    html += `
+		   <tr>	<td>Bitpix:</td>
+			<td colspan="2"><textarea name=bitpix rows="1" cols="22" style="padding-left:5px; text-align:left;" autocapitalize="off" autocorrect="off"></textarea></td>
+			<td>&nbsp;bitpix when binning table</td>
+		   </tr>`;
 	}
 	html += `  <tr>	<td>Filter:</td>
 			<td colspan="2"><textarea name=filter rows="1" cols="22" style="padding-left:5px; text-align:left;" autocapitalize="off" autocorrect="off"></textarea></td>
-			<td>&nbsp;event/row filter for table</td>
+			<td>&nbsp;event/row filter when binning table</td>
 		   </tr>
 
 		   <tr>	<td>BinCols:</td>
@@ -1182,21 +1199,23 @@ module.exports = xhr;
 		    break;
 		}
 	    }
-	    el = $(div).find(".js9-binning-hdulist");
-	    el.append(`<option value="" disabled=disabled>List columns</option>`);
-	    for(i=0; i<cols.length; i++){
-		s = `${cols[i].name}:${cols[i].type}`;
-		if( cols[i].min && cols[i].max ){
-		    s += `:${cols[i].min}:${cols[i].max}`;
+	    if( cols && cols.length ){
+		el = $(div).find(".js9-binning-hdulist");
+		el.append(`<option value="" disabled=disabled>List columns</option>`);
+		for(i=0; i<cols.length; i++){
+		    s = `${cols[i].name}:${cols[i].type}`;
+		    if( cols[i].min && cols[i].max ){
+			s += `:${cols[i].min}:${cols[i].max}`;
+		    }
+		    el.append(`<option>${s}</option>`);
 		}
-		el.append(`<option>${s}</option>`);
-	    }
-	    el.prop('selectedIndex', 0);
-	    el.on("change", function () {
-		s = $(this).val().replace(/:.*/, "");
-		JS9.CopyToClipboard(s, im);
 		el.prop('selectedIndex', 0);
-	    });
+		el.on("change", function () {
+		    s = $(this).val().replace(/:.*/, "");
+		    JS9.CopyToClipboard(s, im);
+		    el.prop('selectedIndex', 0);
+		});
+	    }
 	}
 
 	// set up to rebin when <cr> is pressed, if necessary
@@ -1224,7 +1243,7 @@ module.exports = xhr;
 
 	    help:     "fitsy/binning.html",
 
-            winDims: [570, 345]
+            winDims: [570, 370]
     });
 }());
 /*
