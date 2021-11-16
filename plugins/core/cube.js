@@ -14,13 +14,15 @@ JS9.Cube.WIDTH = 512;	 // width of light window
 JS9.Cube.HEIGHT = 240;	 // height of light window
 JS9.Cube.BASE = JS9.Cube.CLASS + JS9.Cube.NAME;
 
-JS9.Cube.cubeHTML="<div class='JS9CubeLinegroup'>$header</div><p><div class='JS9CubeLinegroup'><span class='JS9CubeSpan' style='float: left'>$range&nbsp;&nbsp;&nbsp;&nbsp;$value&nbsp;&nbsp;&nbsp;&nbsp;$extname</span><span class='JS9CubeSpan' style='float: right'>$order</span></div><div class='JS9CubeLinegroup'><span class='JS9CubeSpan' style='float: left'>$first&nbsp;$next&nbsp;$prev&nbsp;$last</span><span class='JS9CubeSpan' style='float: right'>$blink&nbsp;$stop&nbsp;$rate</span></div><p><div class='JS9CubeLinegroup'>$header2</div><p><div class='JS9CubeLinegroup'><span class='JS9CubeSpan' style='float: left'>$load</span></div>";
+JS9.Cube.cubeHTML="<div class='JS9CubeLinegroup'>$header</div><p><div class='JS9CubeLinegroup'><span class='JS9CubeSpan' style='float: left'>$range&nbsp;&nbsp;&nbsp;&nbsp;$value&nbsp;&nbsp;$value2&nbsp;&nbsp;$extname</span><span class='JS9CubeSpan' style='float: right'>$order</span></div><div class='JS9CubeLinegroup'><span class='JS9CubeSpan' style='float: left'>$first&nbsp;$next&nbsp;$prev&nbsp;$last</span><span class='JS9CubeSpan' style='float: right'>$blink&nbsp;$stop&nbsp;$rate</span></div><p><div class='JS9CubeLinegroup'>$header2</div><p><div class='JS9CubeLinegroup'><span class='JS9CubeSpan' style='float: left'>$load</span></div>";
 
 JS9.Cube.headerHTML='Use the slider, text box, navigation or blink buttons to display a slice of a <b>FITS data cube</b>. Use the menu at the right to specify the slice axis.';
 
-JS9.Cube.rangeHTML='<span class="JS9CubeRangeLine">1<input type="range" min="1" max="%s" value="%s" class="JS9CubeRange" onchange="JS9.Cube.xrange(\'%s\', \'%s\', this)">%s</span>';
+JS9.Cube.rangeHTML='<span class="JS9CubeRangeLine">1<input type="range" min="%s" max="%s" value="%s" class="JS9CubeRange" onchange="JS9.Cube.xrange(\'%s\', \'%s\', this)">%s</span>';
 
-JS9.Cube.valueHTML='<input type="text" class="JS9CubeValue" min="1" max="%s" value="%s" onchange="JS9.Cube.xvalue(\'%s\', \'%s\', this)" size="4">';
+JS9.Cube.valueHTML='<input type="text" class="JS9CubeValue" min="%s" max="%s" value="%s" onchange="JS9.Cube.xvalue(\'%s\', \'%s\', this)" size="4">';
+
+JS9.Cube.value2HTML='<input type="text" class="JS9CubeValue2" min="%s" max="%s" value="%s" onchange="JS9.Cube.xvalue2(\'%s\', \'%s\', this)" size="8">';
 
 JS9.Cube.firstHTML='<input type="button" class="JS9CubeBtn JS9Button2" value="First" onclick="JS9.Cube.xfirst(\'%s\', \'%s\', this)">';
 
@@ -44,8 +46,16 @@ JS9.Cube.header2HTML='Or load each slice separately into JS9:';
 
 JS9.Cube.loadHTML='<input type="button" class="JS9CubeBtn JS9Button2" value="Load All" onclick="JS9.Cube.loadall(\'%s\',\'%s\', this)">';
 
+JS9.Cube.pix2wcs = function(n){
+    return (n - this.smin) * this.cdelt + this.crval;
+};
+
+JS9.Cube.wcs2pix = function(n){
+    return Math.floor((n - this.crval) / this.cdelt + this.smin);
+};
+
 JS9.Cube.doSlice = function(im, slice, elarr){
-    let i, s;
+    let i, s, wcsslice;
     const opts={};
     const plugin = im.display.pluginInstances[JS9.Cube.BASE];
     // are we still working on the previous slice?
@@ -53,8 +63,17 @@ JS9.Cube.doSlice = function(im, slice, elarr){
 	// if so, return
 	return;
     }
+    wcsslice = JS9.Cube.pix2wcs.call(plugin, slice);
     for(i=0; i<elarr.length; i++){
-	plugin.divjq.find(elarr[i]).val(slice);
+	s = elarr[i];
+	switch(s.charAt(s.length-1)){
+	case "2":
+	    plugin.divjq.find(elarr[i]).val(wcsslice);
+	    break;
+	default:
+	    plugin.divjq.find(elarr[i]).val(slice);
+	    break;
+	}
     }
     s = im.expandMacro(plugin.slice, [{name: "slice", value: slice}]);
     plugin.sval = slice;
@@ -69,7 +88,7 @@ JS9.Cube.xrange = function(did, id, target){
     const im = JS9.lookupImage(id, did);
     if( im ){
 	slice = parseInt(target.value, 10);
-	JS9.Cube.doSlice(im, slice, [".JS9CubeValue"]);
+	JS9.Cube.doSlice(im, slice, [".JS9CubeValue", ".JS9CubeValue2"]);
     }
 };
 
@@ -79,7 +98,18 @@ JS9.Cube.xvalue = function(did, id, target){
     const im = JS9.lookupImage(id, did);
     if( im ){
 	slice = parseInt(target.value, 10);
-	JS9.Cube.doSlice(im, slice, [".JS9CubeRange"]);
+	JS9.Cube.doSlice(im, slice, [".JS9CubeValue2", ".JS9CubeRange"]);
+    }
+};
+
+// change slice value2
+JS9.Cube.xvalue2 = function(did, id, target){
+    let slice, plugin;
+    const im = JS9.lookupImage(id, did);
+    if( im ){
+	plugin = im.display.pluginInstances[JS9.Cube.BASE];
+	slice = JS9.Cube.wcs2pix.call(plugin, parseInt(target.value, 10));
+	JS9.Cube.doSlice(im, slice, [".JS9CubeValue", ".JS9CubeRange"]);
     }
 };
 
@@ -90,7 +120,7 @@ JS9.Cube.xfirst = function(did, id, target){
     const im = JS9.lookupImage(id, did);
     if( im ){
 	slice = 1;
-	JS9.Cube.doSlice(im, slice, [".JS9CubeValue", ".JS9CubeRange"]);
+	JS9.Cube.doSlice(im, slice, [".JS9CubeValue", ".JS9CubeValue2", ".JS9CubeRange"]);
     }
 };
 
@@ -107,7 +137,7 @@ JS9.Cube.xnext = function(did, id, target){
 	if( slice > header[s] ){
 	    slice = 1;
 	}
-	JS9.Cube.doSlice(im, slice, [".JS9CubeValue", ".JS9CubeRange"]);
+	JS9.Cube.doSlice(im, slice, [".JS9CubeValue", ".JS9CubeValue2", ".JS9CubeRange"]);
     }
 };
 
@@ -124,7 +154,7 @@ JS9.Cube.xprev = function(did, id, target){
 	    s = `NAXIS${plugin.sidx}`;
 	    slice = header[s];
 	}
-	JS9.Cube.doSlice(im, slice, [".JS9CubeValue", ".JS9CubeRange"]);
+	JS9.Cube.doSlice(im, slice, [".JS9CubeValue", ".JS9CubeValue2", ".JS9CubeRange"]);
     }
 };
 
@@ -138,7 +168,7 @@ JS9.Cube.xlast = function(did, id, target){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	s = `NAXIS${plugin.sidx}`;
 	slice = header[s];
-	JS9.Cube.doSlice(im, slice, [".JS9CubeValue", ".JS9CubeRange"]);
+	JS9.Cube.doSlice(im, slice, [".JS9CubeValue", ".JS9CubeValue2", ".JS9CubeRange"]);
     }
 };
 
@@ -155,11 +185,12 @@ JS9.Cube.xorder = function(did, id, target){
 	    if( arr[i] !== "*" ){
 		plugin.sidx = i+1;
 		plugin.sval = 1;
+		plugin.smin = 1;
 		plugin.smax = header[`NAXIS${plugin.sidx}`];
 	    }
 	}
 	$(".JS9CubeRange").prop("max", plugin.smax);
-	JS9.Cube.doSlice(im, plugin.sval, [".JS9CubeValue", ".JS9CubeRange"]);
+	JS9.Cube.doSlice(im, plugin.sval, [".JS9CubeValue", ".JS9CubeValue2", ".JS9CubeRange"]);
     }
 };
 
@@ -175,7 +206,7 @@ JS9.Cube.blink = function(did, id, target, niter){
 	    return;
 	}
 	JS9.Cube.xnext(did, id, target);
-	if( plugin.blinkMode === undefined ){
+	if( JS9.isNull(plugin.blinkMode) ){
 	    plugin.blinkMode = true;
 	} 
 	JS9.Cube.tid = window.setTimeout(() => {
@@ -253,7 +284,7 @@ JS9.Cube.close = function(){
 
 // constructor: add HTML elements to the plugin
 JS9.Cube.init = function(opts){
-    let i, s, im, arr, mopts, imid, dispid, header;
+    let i, s, im, arr, mopts, imid, dispid, header, slice;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -288,40 +319,62 @@ JS9.Cube.init = function(opts){
 	header = im.raw.header;
 	imid = im.id;
 	dispid = im.display.id;
-	if( im.slice ){
-	    this.slice = im.slice.replace(/[0-9][0-9]*/,"$slice");
-	    arr = im.slice.split(/[ ,:]/);
+	slice = im.raw.hdu.slice;
+	if( slice ){
+	    this.slice = slice.replace(/[0-9][0-9]*/,"$slice");
+	    arr = slice.split(/[ ,:]/);
 	    for(i=0; i<arr.length; i++){
 		if( arr[i] !== "*" ){
 		    this.sidx = i+1;
+		    this.smin = 1;
 		    this.smax = header[`NAXIS${this.sidx}`];
 		    this.sval = parseInt(arr[i], 10);
 		}
 	    }
 	} else {
 	    this.slice = "*:*:$slice";
+	    this.smin = 1;
 	    this.smax = header.NAXIS3;
 	    this.sidx = 3;
 	    this.sval = 1;
 	}
+	if( JS9.notNull(header[`CRPIX${this.sidx}`]) &&
+	    JS9.notNull(header[`CRVAL${this.sidx}`]) &&
+	    JS9.notNull(header[`CDELT${this.sidx}`]) ){
+	    this.crpix = parseFloat(header[`CRPIX${this.sidx}`]);
+	    this.crval = parseFloat(header[`CRVAL${this.sidx}`]);
+	    this.cdelt = parseFloat(header[`CDELT${this.sidx}`]);
+	} else {
+	    delete this.crpix;
+	    delete this.crval;
+	    delete this.cdelt;
+	}
 	if( !this.rate ){
 	    this.rate = 1000;
 	}
-	if( this.tid !== undefined ){
+	if( JS9.notNull(this.tid) ){
 	    window.clearTimeout(this.tid);
 	    delete this.tid;
 	}
-	if( this.blinkMode !== undefined ){
+	if( JS9.notNull(this.blinkMode) ){
 	    delete this.blinkMode;
 	}
 	if( header.NAXIS > 2 ){
 	    mopts = [];
 	    mopts.push({name: "header",  value: JS9.Cube.headerHTML});
 	    mopts.push({name: "range",
-		       value: sprintf(JS9.Cube.rangeHTML, this.smax, this.sval,
+		       value: sprintf(JS9.Cube.rangeHTML,
+				      this.smin, this.smax, this.sval,
 				      dispid, imid, this.smax)});
 	    mopts.push({name: "value",
-		       value: sprintf(JS9.Cube.valueHTML, this.smax, this.sval,
+		       value: sprintf(JS9.Cube.valueHTML,
+				      this.smin, this.smax, this.sval,
+				      dispid, imid)});
+	    mopts.push({name: "value2",
+		       value: sprintf(JS9.Cube.value2HTML,
+				      JS9.Cube.pix2wcs.call(this, this.smin),
+				      JS9.Cube.pix2wcs.call(this, this.smax),
+				      JS9.Cube.pix2wcs.call(this, this.sval),
 				      dispid, imid)});
 	    mopts.push({name: "first",
 		       value: sprintf(JS9.Cube.firstHTML, dispid, imid)});
@@ -367,6 +420,12 @@ JS9.Cube.init = function(opts){
     this.divjq.find(".JS9CubeRange").prop("max", this.smax);
     this.divjq.find(".JS9CubeValue").prop("max", this.smax);
     this.divjq.find(".JS9CubeOrder").val(this.slice);
+    // hide or display wcs display
+    if( this.crpix ){
+	$(".JS9CubeValue2").show();
+    } else {
+	$(".JS9CubeValue2").hide();
+    }
 };
 
 // add this plugin into JS9
