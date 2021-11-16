@@ -6178,6 +6178,12 @@ JS9.Image.prototype.saveFITS = function(fname, opts){
 	    ur = this.displayToImagePos({x:this.rgb.img.width, y:0});
 	    sect = {x0: ll.x, y0: ll.y, x1: ur.x, y1: ur.y};
 	    arr = this.toArray({notab: true, twoaxes: true, sect: sect});
+	} else if( opts === "virtual" || opts.source === "virtual" ){
+	    if( this.raw.hdu && this.raw.hdu.fits && this.raw.hdu.fits.vfile ){
+		arr = JS9.vread(this.raw.hdu.fits.vfile, "binary");
+	    } else {
+		JS9.error("no virtual file available to save");
+	    }
 	} else {
 	    // save entire image: first convert to array (with two axes)
 	    arr = this.toArray({notab: true, twoaxes: true});

@@ -7317,11 +7317,18 @@ JS9.Menubar.createMenus = function(){
 		    },
 		    savefits: xname("FITS"),
 		    savejpeg: xname("JPEG"),
-		    savepng: xname("PNG")
+		    savepng: xname("PNG"),
+		    saveastitle3: {
+			name: "save memory file as:",
+			disabled: true
+		    },
+		    savefitsvirtual: xname("FITS")
 		}
 	    };
 	    if( !tim ){
 		items.saveas.disabled = true;
+	    } else if( !tim.raw.hdu || !tim.raw.hdu.fits || !tim.raw.hdu.fits.vfile ){
+		items.saveas.items.savefitsvirtual.disabled = true;
 	    }
 	    items.closes = {
 		name: "close ...",
@@ -7629,6 +7636,7 @@ JS9.Menubar.createMenus = function(){
 			    }
 			    break;
 			case "savefits":
+			case "savefitsvirtual":
 			case "savefitsentire":
 			    if( uim ){
 				s = uim.id.replace(/\.png/i, ".fits")
@@ -7636,6 +7644,15 @@ JS9.Menubar.createMenus = function(){
 				          .replace(/\[.*\]/,"");
 				if( key === "savefits" ){
 				    uim.saveFITS(s, "display");
+				} else if( key === "savefitsvirtual" ){
+				    if( uim.raw.hdu &&
+					uim.raw.hdu.fits &&
+					uim.raw.hdu.fits.vfile ){
+					uim.saveFITS(uim.raw.hdu.fits.vfile,
+						     "virtual");
+				    } else {
+					JS9.error("no memory file available");
+				    }
 				} else {
 				    uim.saveFITS(s);
 				}
