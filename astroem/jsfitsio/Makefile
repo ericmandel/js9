@@ -32,6 +32,9 @@ $(PROG2):	$(OBJS2)
 $(PROG3):	$(OBJS3)
 		$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
 
+listhdu.o:	listhdu.c
+		$(CC) -c $(CFLAGS) -DLISTHDUMAIN $^ -o $@
+
 clean:		FORCE
 		@($(RM) *{.a,.so,.so.?,.so.?.?,.o,.dylib} \
 		  listhdu mkidx sortidx evcube \
