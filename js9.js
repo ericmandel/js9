@@ -5396,6 +5396,10 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 		    } else {
 			r += e;
 		    }
+		} else if( this.raw && this.raw.hdu && this.raw.hdu.slice ){
+		    e = this.raw.hdu.slice
+			.replace(/:/g, ",").replace(/([0-9][0-9]*)/, "$1:$1");
+		    r += `[${e}]`;
 		}
 	    }
 	    return r;
