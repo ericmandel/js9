@@ -3660,6 +3660,10 @@ JS9.Image.prototype.displaySection = function(opts, func){
 		.replace(".ftz", `_cube:${opts.cubecol}.ftz`)
 		.replace(/:/g, "_");
 	}
+	// unless explicitly set to false, separate is set to true
+	if( opts.separate !== false ){
+	    opts.separate = true;
+	}
     }
     // start the waiting!
     if( opts.waiting !== false ){
