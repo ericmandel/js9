@@ -743,6 +743,8 @@ display the section:
 <li><b>bin</b>: floating bin factor or bin directive string
 <li><b>binMode</b>: "a" to average binned pixels, "s" to sum binned pixels
 <li><b>filter</b>: for tables, row/event filter to apply when extracting section
+<li><b>columns</b>: alternate columns for binning a table (def: "X Y")
+<li><b>cubecol</b>: table to cube conversion column (col[:min:max][:bitpix])
 <li><b>separate</b>: display as a separate image (default is to refresh the current image)
 <li><b>refresh</b>: display as a refreshed image in a different display (default is to refresh the current image)
 <li><b>ondisplaysection</b>: function to perform after section is displayed
@@ -883,6 +885,45 @@ NB: JS9 uses cfitsio by default (you can, but should not, use the
 deprecated fitsy.js), and therefore follows cfitsio filtering
 conventions, which are documented
 <a href="https://heasarc.gsfc.nasa.gov/docs/software/fitsio/c/c_user/node97.html" target="_blank">here</a>.
+
+<p>
+By default, tables are binned into an image using the "X" and "Y" columns. You
+can specify different binning columns using the <b>opts.columns</b> property:
+<pre>
+  JS9.DisplaySection({ ... columns: "DX DY"});
+</pre>
+
+<p>
+Tables can be converted into 3D cubes by specifying the <b>opts.cubecol</b>
+property. The cubecol value should be a string containing the column name and,
+optionally, the min and max values and/or the bin size:
+<pre>
+  # each image in the cube has an width of 100 energy units
+  JS9.DisplaySection({ ... cubecol: "energy:100"});
+  # image cube 3rd dimension is 60 ... each image having a bin width of 100
+  JS9.DisplaySection({ ... cubecol: "energy:1000:7000:100"});
+</pre>
+By default, when <b>opts.cubecol</b> is specified, the <b>opts.separate</b>
+property is set to true, i.e. a separate image is displayed, leaving the
+original intact.
+<p>
+Obviously, cube generation will require a considerable amount of
+memory since the resulting file is maintained in
+the <a href="https://emscripten.org/" target="_blank">Emscripten</a>
+heap. Because browser memory generally is limited, JS9 enforces a
+memory limit on the size of the cube, specified by JS9.globalOpts.maxMemory
+(and currently set to 2Gb). To avoid exceeding this limit, you usually can
+adjust the xdim, ydim, and/or bitpix values as well as the binsize of the
+specified cube column:
+<pre>
+  # each image utilizes approx 2Mb, so that 400 slices should fit ...
+  JS9.DisplaySection({xdim:1024, ydim:1024, bitpix:16, cubecol:"energy:1000:7000:20"});
+</pre>
+
+
+<p>
+Once a cube has been created, you can use the <b>Cube</b> plugin to blink each
+image slice.
 
 <h5 id="JS9.DisplayExtension">Display an extension from a multi-extension FITS file</h5>
 <p>
