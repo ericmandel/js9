@@ -3516,6 +3516,29 @@ JS9.Image.prototype.displaySection = function(opts, func){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse displaySection opts: ${opts}`, e); }
     }
+    // cube column
+    opts.cubecol = opts.cubecol || "";
+    if( opts.cubecol ){
+	// set id to original id and indication that this is now a cube
+	if( !opts.id ){
+	    opts.id =
+		`${this.id.replace(/\[.*\]/, "")} (cube: ${opts.cubecol})`;
+	}
+	// set a filename for a virtual file that contains the cube info
+	if( !opts.file ){
+	    opts.file = this.file
+		.split("/")
+		.reverse()[0]
+		.replace(/\[.*\]/,"")
+		.replace(".fits", `_cube:${opts.cubecol}.fits`)
+		.replace(".ftz", `_cube:${opts.cubecol}.ftz`)
+		.replace(/:/g, "_");
+	}
+	// unless explicitly set to false, separate is set to true
+	if( opts.separate !== false ){
+	    opts.separate = true;
+	}
+    }
     if( opts.separate ){
 	// if we are generating a separate image, copy the hdu
 	hdu = $.extend(true, {}, this.raw.hdu);
@@ -3642,29 +3665,6 @@ JS9.Image.prototype.displaySection = function(opts, func){
     opts.columns = getval3(opts.columns, sect.columns, "");
     // save the columns, if necessary
     this.raw.columns = opts.columns || "";
-    // cube column
-    opts.cubecol = opts.cubecol || "";
-    if( opts.cubecol ){
-	// set id to original id and indication that this is now a cube
-	if( !opts.id ){
-	    opts.id =
-		`${this.id.replace(/\[.*\]/, "")} (cube: ${opts.cubecol})`;
-	}
-	// set a filename for a virtual file that contains the cube info
-	if( !opts.file ){
-	    opts.file = this.file
-		.split("/")
-		.reverse()[0]
-		.replace(/\[.*\]/,"")
-		.replace(".fits", `_cube:${opts.cubecol}.fits`)
-		.replace(".ftz", `_cube:${opts.cubecol}.ftz`)
-		.replace(/:/g, "_");
-	}
-	// unless explicitly set to false, separate is set to true
-	if( opts.separate !== false ){
-	    opts.separate = true;
-	}
-    }
     // start the waiting!
     if( opts.waiting !== false ){
 	JS9.waiting(true, this.display);
