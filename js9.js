@@ -5383,8 +5383,8 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	    let e;
 	    // for tables, we might need to add the binning filter
 	    if( this.imtab === "table" ){
-		if( this.raw.hdu.table.filter &&
-		    !r.match(this.raw.hdu.table.filter) ){
+		if( this.raw.hdu && this.raw.hdu.table.filter &&
+		    !r.match(this.raw.hdu.table.filter)       ){
 		    if( r.match(/\]\[/) ){
 			r = `${r.slice(0,-1)}&&${this.raw.hdu.table.filter}]`;
 		    } else {
@@ -5400,10 +5400,16 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 		    } else {
 			r += e;
 		    }
-		} else if( this.raw && this.raw.hdu && this.raw.hdu.slice ){
+		} else if( this.raw && this.raw.hdu &&
+			   this.raw.hdu.slice       ){
+		    // current slice of 3D cube
 		    e = this.raw.hdu.slice
 			.replace(/:/g, ",").replace(/([0-9][0-9]*)/, "$1:$1");
 		    r += `[${e}]`;
+		} else if( this.raw && this.raw.header &&
+			   this.raw.header.NAXIS > 2   ){
+		    // first slice of 3D cube
+		    r += `[*,*,1:1]`;
 		}
 	    }
 	    return r;
@@ -7386,8 +7392,8 @@ JS9.Image.prototype.countsInRegions = function(...args){
 	       cmdswitches.search(/(^| )-c/) < 0 ){
 	cmdswitches += ` -c ${this.raw.hdu.slice || 1}`;
     }
-    // reduce file size, if necessary
-    if( opts.reduce && !this.parentFile ){
+    // reduce file size, if necessary and possible
+    if( opts.reduce && !this.parentFile && this.raw.header.NAXIS < 3 ){
 	const {xdim, ydim} = this.fileDimensions();
 	bin = Math.floor((Math.max(xdim, ydim) / opts.dim) + 0.5);
 	if( bin > 1 ){
