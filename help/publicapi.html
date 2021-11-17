@@ -912,18 +912,17 @@ memory since the resulting file is maintained in
 the <a href="https://emscripten.org/" target="_blank">Emscripten</a>
 heap. Because browser memory generally is limited, JS9 enforces a
 memory limit on the size of the cube, specified by JS9.globalOpts.maxMemory
-(and currently set to 2Gb). To avoid exceeding this limit, you usually can
-adjust the xdim, ydim, and/or bitpix values as well as the binsize of the
+(and currently set to 2Gb). To avoid exceeding this limit, you usually try
+adjusting the xdim, ydim, and/or bitpix values as well as the binsize of the
 specified cube column:
 <pre>
   # each image utilizes approx 2Mb, so that 400 slices should fit ...
   JS9.DisplaySection({xdim:1024, ydim:1024, bitpix:16, cubecol:"energy:1000:7000:20"});
 </pre>
 
-
 <p>
 Once a cube has been created, you can use the <b>Cube</b> plugin to blink each
-image slice.
+image slice. You can also run external analysis on individual slices.
 
 <h5 id="JS9.DisplayExtension">Display an extension from a multi-extension FITS file</h5>
 <p>
