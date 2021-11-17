@@ -403,10 +403,10 @@ def analysisTest(j, file=None):
     displayMessage(j, '    found %d analysis routines' % len(x))
     displayMessage(j, 'j.RunAnalysis("counts")')
     x = j.RunAnalysis("counts").split("\n")[13].split()[1]
-    if abs(float(x) - 1211) < 0.01:
+    if abs(float(x) - 933) < 0.01:
         displayMessage(j, "    counts: %s" % x)
     else:
-        raise ValueError("incorrect counts")
+        raise ValueError("incorrect counts: %s" % x)
     sleep()
 
 def extTest(j, file=None):
