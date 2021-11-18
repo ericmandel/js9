@@ -5429,7 +5429,11 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	    r = this.id;
 	    break;
 	case "filename":
-	    if( this.parentFile && (u[1] !== "this") ){
+	    // for cubes, process all slices if (all) is specified
+	    if( u[1] == "all" && this.fitsFile &&
+		this.raw && this.raw.header && this.raw.header.NAXIS === 3 ){
+		r = this.fitsFile;
+	    } else if( this.parentFile && (u[1] !== "this") ){
 		// if a filter is defined, add it
 		if( this.raw && this.raw.filter ){
 		    r = this.parentFile;
