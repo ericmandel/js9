@@ -166,7 +166,7 @@ js9helper.o:	js9helper.c
 		$(CC) -c $(CC_SW) -o $@ $+
 
 cimtest.o:	cimtest.c
-		$(CC) -I ./astroem/jsfitsio -c $(CC_SW) -o $@ $+
+		$(CC) -c $(CC_SW) -o $@ $+
 
 install:	install-binaries
 
