@@ -96,6 +96,9 @@ if test x$CFITSIOLIB != x; then
   # cfitsio 4.0.0 no longer supplies zlib routines if they are installed
   AC_CHECK_LIB(z, inflate, CFITSIOLIB="$CFITSIOLIB -lz")
 fi
+if test x"${CFITSIOLIB}" = x; then
+  AC_MSG_ERROR([can't find CFITSIO library, please use --with-cfitsio])
+fi
 # results from cfitsio search
 AC_SUBST(CFITSIOINC)
 AC_SUBST(CFITSIOLIB)
@@ -127,8 +130,6 @@ case $host_os in
 esac
 
 AC_SUBST(EXTRA_LIBS)
-
-fi
 
 # generate Makefiles
 AC_CONFIG_FILES(Makefile)

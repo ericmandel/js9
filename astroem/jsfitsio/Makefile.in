@@ -2,7 +2,7 @@ RM =		rm -rf
 
 OBJS =		jsfitsio.o healpix.o idx.o
 CFLAGS =	-Wall -I. @CFITSIOINC@
-LIBS		= @CFITSIOLIB@
+LIBS		= @CFITSIOLIB@ @EXTRA_LIBS@
 
 all:		listhdu evcube
 
@@ -28,7 +28,7 @@ clean:		FORCE
 		  listhdu mkidx sortidx evcube \
 		  *.exe core core.[0-9]* errs *pure* .nfs* \
 		  foo* *~ *.log \#* TAGS *.E a.out errors \
-		  gmon.out *.pg *.bak regtest.{pr,dy,co} \
+		  gmon.out *.pg *.bak \
 		  config.info config.log autom4te.cache *.dSYM;)
 
 FORCE:
