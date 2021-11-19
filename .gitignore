@@ -23,6 +23,7 @@ js9helper.pc
 a.out.dSYM
 /Makefile
 /src/Makefile
+/astroem/jsfitsio/Makefile
 /data
 /tests2
 /notes

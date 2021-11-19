@@ -4552,7 +4552,7 @@ fi
 
 
 # generate Makefiles
-ac_config_files="$ac_config_files Makefile src/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile astroem/jsfitsio/Makefile"
 
 
 # generate pkg-config meta-data file
@@ -5266,6 +5266,7 @@ do
   case $ac_config_target in
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+    "astroem/jsfitsio/Makefile") CONFIG_FILES="$CONFIG_FILES astroem/jsfitsio/Makefile" ;;
     "src/js9helper.pc") CONFIG_FILES="$CONFIG_FILES src/js9helper.pc" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;

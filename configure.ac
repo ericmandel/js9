@@ -285,7 +285,7 @@ fi
 AC_SUBST(SAODIR)
 
 # generate Makefiles
-AC_CONFIG_FILES(Makefile src/Makefile)
+AC_CONFIG_FILES(Makefile src/Makefile astroem/jsfitsio/Makefile)
 
 # generate pkg-config meta-data file
 AC_CONFIG_FILES(src/js9helper.pc)
