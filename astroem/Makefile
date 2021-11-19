@@ -174,7 +174,13 @@ clean:		FORCE
 		@(rm -rf *.o *~ a.out* foo* *.map \#*  \
 		astroem.* astroemw.* libastroem.a; \
 		for d in $(PKGDIRS); do \
-		  rm -rf $$d/*{.a,.o,~}; \
+		  cd $$d; \
+		  if [ -f Makefile ]; then \
+		    make clean; \
+		  else \
+		    rm -rf $$d/*{.a,.o,~}; \
+		  fi; \
+		  cd ..; \
 		done;)
 
 FORCE:
