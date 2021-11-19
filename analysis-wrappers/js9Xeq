@@ -438,14 +438,27 @@ loadproxy)
           # which chandra inst?
 	  INST=`funhead $OFILE | getpar INSTRUME`
           # generate a rep file
-          case $INST in
+          case "$INST" in
           HRC)
-            XCEN=16384
-            YCEN=16384
-            XDIM=4096
-            YDIM=4096
-            BLOCK=4
-            BITPIX=16
+            DET=`funhead $OFILE | getpar DETNAM`
+            case "$DET" in
+            HRC-S)
+              XCEN=32768
+              YCEN=32768
+              XDIM=4096
+              YDIM=4096
+              BLOCK=4
+              BITPIX=32
+              ;;
+            HRC-I)
+              XCEN=16384
+              YCEN=16384
+              XDIM=4096
+              YDIM=4096
+              BLOCK=4
+              BITPIX=32
+              ;;
+            esac
             ;;
           ACIS)
             XCEN=4096
@@ -453,7 +466,7 @@ loadproxy)
             XDIM=4096
             YDIM=4096
             BLOCK=4
-            BITPIX=16
+            BITPIX=32
             ;;
           esac
           if [ x$BITPIX != x ]; then
