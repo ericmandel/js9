@@ -391,6 +391,24 @@ def cubeTest(j, file=None):
                           imdata2["bitpix"]))
     sleep()
 
+def cubeTest2(j, file=None):
+    """
+    display 3D cube data
+    """
+    if file:
+        closeImage(j)
+        loadImage(j, file, '{"scale":"log","colormap":"viridis"}')
+        j.DisplaySection({"cubecol":"energy:1000:5000:1000", "bitpix":16});
+        waitStatus(j, "DisplaySection")
+        j.SetColormap("heat");
+        j.SetScale("log");
+    for i in range(2, 5):
+        sleep()
+        displayMessage(j, 'j.DisplaySlice(%d)' % i)
+        j.DisplaySlice(i)
+        waitStatus(j, "DisplaySection")
+    sleep()
+
 def analysisTest(j, file=None):
     """
     run an server-side analysis test
@@ -749,6 +767,7 @@ def smokeTests():
     gridTest(j)
     cubeTest(j, "data/fits/jupiter_cube.fits")
     analysisTest(j)
+    cubeTest2(j, "data/fits/casa.fits")
     extTest(j, "data/fits/nicmos.fits")
     mosaicTest(j, "data/fits/mosaicimage.fits")
     staticColormapTest(j)

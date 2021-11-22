@@ -521,7 +521,7 @@ smoke:		FORCE
 		@(X="`js9 targets`"; 					\
 	          echo "$$X" | egrep -q -s '^ERROR|^0$$|^$$';		\
 		  if [ $$? = 0 ]; then					\
-			js9 -a -v --webpage tests/smoke.html --width 1060 --height 670 & \
+			js9 -a -v --webpage tests/smoke.html --width 1110 --height 700 & \
 			while [ x"`js9 targets`" != x1 ]; do 		\
 			  printf "."; 					\
 			  sleep 1; 					\
