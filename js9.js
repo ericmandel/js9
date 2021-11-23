@@ -7442,7 +7442,7 @@ JS9.Image.prototype.radialProfile = function(...args){
     let i, s, xlabel, ylabel, obj, cobj, pobj, res, el, opts;
     let color, errorbars, errorcolor;
     const carr = [];
-    const swobj = {cmdswitches: "-j -r"};
+    const swobj = {cmdswitches: "-G -j -r"};
     // make up arg list, add required radial profile switches to opts
     for(i=0; i<args.length; i++){
 	if( typeof args[i] === "object" ){
