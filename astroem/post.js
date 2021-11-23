@@ -328,15 +328,12 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	    allcols = columns;
 	}
 	if( cubecol ){
-	    if( !columns ) allcols = "X Y";
+	    if( !columns ){
+		allcols = "X Y";
+	    }
 	    allcols += " " + cubecol;
 	    if( opts.file ){
-		if( fopts ){
-		    fopts += ",";
-		} else {
-		    fopts = "";
-		}
-		fopts += `ofile=!${opts.file}`;
+		fopts = `ofile=!${opts.file}`;
 	    }
 	}
 	if( bitpix ){
