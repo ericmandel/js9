@@ -116,13 +116,9 @@ SRCS =		js9helper.c
 
 PROGS =		js9helper
 
-TESTPROGS =	cimtest
-
 INCLUDES =	js9helper.h
 
 UTILLIB	=	libutil.a
-
-CIMTESTOBJS =	cimtest.o @CFITSIOOBJS@
 
 ifeq ($(FITSLIB), cfitsio)
 HELPEROBJS =	js9helper.o jsfitsio.o listhdu.o healpix.o
@@ -140,13 +136,8 @@ else
 progs:	
 endif
 
-testall:	$(TESTPROGS)
-
 js9helper:	$(UTILLIB) $(HELPEROBJS)
 		$(CC) $(LDFLAGS) $(HELPEROBJS) -o $@ $(UTILLIB) $(LIBS)
-
-cimtest:	$(CIMTESTOBJS)
-		$(CC) $(LDFLAGS) $(CIMTESTOBJS) -o $@ $(LIBS)
 
 $(UTILLIB):	$(UTILOBJS)
 		@(cd util; \
@@ -163,9 +154,6 @@ healpix.o:	$(JSFITSIO)/healpix.c
 		$(CC) -c $(CC_SW) -o $@ $+
 
 js9helper.o:	js9helper.c
-		$(CC) -c $(CC_SW) -o $@ $+
-
-cimtest.o:	cimtest.c
 		$(CC) -c $(CC_SW) -o $@ $+
 
 install:	install-binaries
@@ -212,10 +200,9 @@ maintainer-clean:: clean
 		$(RM) config.status config.cache config.log
 
 Makefile:	Makefile.in
-		$(SHELL) config.status
-
-make:		Makefile.in
-		$(SHELL) config.status
+		@(if [ -f config.status ] ; then 			\
+			$(SHELL) config.status;      			\
+		fi)
 
 depend:		FORCE
 		makedepend -- $(DEPEND_SW) -- $(SRCS)
