@@ -23,9 +23,17 @@ sortidx:	sortidx.o
 listhdu.o:	listhdu.c
 		$(CC) -c $(CFLAGS) -DLISTHDUMAIN $^ -o $@
 
+tfits:		tfits.o $(OBJS)
+		$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
+
+Makefile:	Makefile.in
+		@(if [ -f config.status ] ; then 			\
+			$(SHELL) config.status;      			\
+		fi)
+
 clean:		FORCE
 		@($(RM) *{.a,.so,.so.?,.so.?.?,.o,.dylib} \
-		  listhdu mkidx sortidx evcube \
+		  listhdu mkidx sortidx evcube tfits \
 		  *.exe core core.[0-9]* errs *pure* .nfs* \
 		  foo* *~ *.log \#* TAGS *.E a.out errors \
 		  gmon.out *.pg *.bak \
