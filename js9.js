@@ -25299,9 +25299,9 @@ JS9.initAnalysis = function(){
 	const code = e.which || e.keyCode;
 	let id, el;
 	if( code === 13 ){
-	    e.preventDefault();
 	    id = $(e.currentTarget).data("enterfunc");
 	    if( id ){
+		e.preventDefault();
 		// look at children (key event in a form)
 		el = $(e.currentTarget).find(`[name='${id}']`);
 		if( el.length ){
@@ -25313,8 +25313,8 @@ JS9.initAnalysis = function(){
 			el.click();
 		    }
 		}
+		return false;
 	    }
-	    return false;
 	}
     });
 };
