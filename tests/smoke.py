@@ -398,6 +398,7 @@ def cubeTest2(j, file=None):
     if file:
         closeImage(j)
         loadImage(j, file, '{"scale":"log","colormap":"viridis"}')
+        displayMessage(j,'j.DisplaySection({cubecol:"energy:1000:5000:1000"})')
         j.DisplaySection({"cubecol":"energy:1000:5000:1000", "bitpix":16});
         waitStatus(j, "DisplaySection")
         j.SetColormap("heat");
