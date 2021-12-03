@@ -15427,6 +15427,8 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 		maxr = 0;
 		topts = $.extend(true, {}, opts);
 		topts.stroke = topts.stroke || obj.get("stroke");
+		topts.strokeWidth = topts.strokeWidth || obj.get("strokeWidth");
+		topts.strokeDashArray = topts.strokeDashArray || obj.get("strokeDashArray");
 		for(i=0; i<rlen; i++){
 		    topts.radius = obj.params.radii[i];
 		    s = new fabric.Circle(topts);
@@ -17929,7 +17931,7 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	return fmt(val1) !== fmt(val2);
     };
     const newval = (obj, key, val) => {
-	let v1, v2;
+	// let v1, v2;
 	// special keys having no public or param equivalents
 	if( key === "remove" ){
 	    return val === "selected";
@@ -17978,9 +17980,11 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	}
 	if( key === "radii" && obj.params.radii ){
 	    // https://stackoverflow.com/questions/1773069/using-jquery-to-compare-two-arrays-of-javascript-objects
-	    v1 = val.split(",").map((item) => {return parseFloat(item)});
-	    v2 = obj.params.radii;
-	    return $(v1).not(v2).length !== 0 || $(v2).not(v1).length !== 0;
+	    // v1 = val.split(",").map((item) => {return parseFloat(item)});
+	    // v2 = obj.params.radii;
+	    // return $(v1).not(v2).length !== 0 || $(v2).not(v1).length !== 0;
+	    // always return true or else annuli won't change other properties
+	    return true;
 	}
 	if( key === "angle" ){
 	    return obj.angle !== -parseFloat(val);
