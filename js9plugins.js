@@ -1092,7 +1092,7 @@ module.exports = xhr;
 	    binblock = "Bin";
 	    binblocked = "binned";
 	    if( !JS9.ishealpix(im) ){
-		elhdu = '&nbsp;<select name="selectcube" class="js9-binning-hdulist">';
+		elhdu = '&nbsp;<select name="selectcube" class="js9-binning-hdulist JS9Select">';
 	    }
 	}
 

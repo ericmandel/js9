@@ -2381,6 +2381,7 @@ div.JS9Progress {
     border-color: #d5d5d5;
     border-style: solid;
     outline: none;
+    background-color: white;
 }
 
 .JS9Select:hover {
