@@ -1244,7 +1244,7 @@ module.exports = xhr;
 
 	    help:     "fitsy/binning.html",
 
-            winDims: [570, 370]
+            winDims: [570, 375]
     });
 }());
 /*

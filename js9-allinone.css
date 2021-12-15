@@ -2737,6 +2737,7 @@ canvas.surfacePlotCanvas {
     box-sizing: border-box;
     border: none;
     padding: 2px;
+    font: normal 14px Arial;
 }
 
 .JS9Text:read-only {
