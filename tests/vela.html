@@ -1,0 +1,118 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link type="image/x-icon" rel="shortcut icon" href="../favicon.ico">
+  <link type="text/css" rel="stylesheet" href="../js9support.css">
+  <link type="text/css" rel="stylesheet" href="../js9.css">
+  <script type="text/javascript" src="../js9prefs.js"></script>
+  <script type="text/javascript" src="../js9support.js"></script>
+  <script type="text/javascript" src="../js9.js"></script>
+  <script type="text/javascript" src="../js9plugins.js"></script>
+  <style type="text/css">
+      #centerdiv {
+	  width: 512px;
+      }
+  </style>
+  <title>ROSAT Vela -> cube</title>
+</head>
+<body style="padding: 10px">
+  <center><h3>Exploring event data using 3D cubes</h3></center>
+  <p>
+    We load ROSAT Vela data (from the survey) and generate a 3D cube
+    with pi as the 3rd axis. (You can flip between the cube and the
+    original with the > or < keys.) With a bin width of 128 (i.e.
+    cube slices of pi=1:128 and pi=129:256), Vela Jr pops out as you
+    switch between slices (using Next or Blink in the <b>FITS data
+    cube</b> plugin.)
+  <p>
+    If you change the <b>bin width</b> to create a cube with a different 3rd
+    dimension, it is still possible to see Vela Jr, but less obvious
+    as the slices get narrower.
+    <p>
+    JS9 uses high-level C routines <i>filterTableToImage()</i>
+    and <i>getImageToArray()</i> to generate a 3D cube and flip
+    between slices. We should be able to do this automatically,
+    i.e. using algorithm(s) to explore different sets of slices,
+    without needing to evaluate the results by eye.
+  <p>
+  <table style="border-spacing: 20px">
+    <tr>
+    <td style="vertical-align:top">
+    <div class="JS9Menubar"></div>
+    <div class="JS9Toolbar"></div>
+    <div class="JS9"></div>
+    <div style="margin-top: 2px;">
+    <div class="JS9Statusbar"></div>
+    </div>
+    </td>
+    <td style="vertical-align:top">
+    bin width:&nbsp;&nbsp;<select class="bwidth" onchange="dispcube($(this).val());">
+    </select>
+    <p>
+    <div class="JS9Cube"></div>
+    <p>
+    Refererence:
+    <p>
+    https://www.nature.com/articles/24103.pdf
+    <br>
+    Discovery of a young nearby supernova remnant
+    <br>
+    Bernd Aschenbach 
+    <br>
+    Nature volume 396, pages141–142 (1998)
+    <p>
+    containing this graphic:
+    <br>
+    <img src=" velajr.png" alt="Aschenbach graphic of Vela Jr">
+    </td>
+    </tr>
+  </table>
+  <script>
+    let inited = 0;
+    let file0 = "data/fits/rosat_vela.fits.gz";
+    let bwidths = [16, 32, 64, 128];
+    function dispcube(binwidth) {
+        let i, im;
+        binwidth = binwidth || bwidths[bwidths.length-1];
+        for(i=0; i<JS9.images.length; i++){
+            im = JS9.images[i];
+            if( im.id.match(String(binwidth)) ){
+                JS9.DisplayImage({display: im});
+                return;
+            }
+        }
+	JS9.DisplaySection({cubecol:`pi:1:256:${binwidth}`,
+			    xdim: 46800,
+			    ydim: 46800,
+			    bin: 90,
+			    bitpix:16,
+			    ondisplaysection: () => {
+				JS9.SetScale("log");
+				JS9.SetColormap("heat");
+				if( !inited++ ){
+				    JS9.DisplayPlugin("JS9Cube");
+				}
+			    }}, {display: file0});
+    }
+    $(document).on("JS9:ready", () => {
+	let i;
+	let el = $(".bwidth");
+	for(i=0; i<bwidths.length; i++){
+	    el.append(`<option>${bwidths[i]}</option>`);
+	}
+	$(".bwidth").prop("selectedIndex", bwidths.length-1);
+	JS9.Load(file0, {colormap: "cool",
+			 scale: "log",
+			 xdim: 46800,
+			 ydim: 46800,
+			 bin: 90,
+			 bitpix:16,
+			 onload: (xim2) => { dispcube(); }});
+      });
+  </script>
+</body>
+</html>
