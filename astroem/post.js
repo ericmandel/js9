@@ -331,7 +331,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	    if( !columns ){
 		allcols = "X Y";
 	    }
-	    allcols += `${cubecol}`;
+	    allcols += ` ${cubecol}`;
 	    if( opts.file ){
 		fopts = `ofile=!${opts.file}`;
 	    }
