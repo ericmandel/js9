@@ -6,7 +6,7 @@
  * Organization: Center for Astrophysics | Harvard & Smithsonian, Cambridge MA
  * Contact: emandel@cfa.harvard.edu
  *
- * Copyright (c) 2017 - 2021 Smithsonian Astrophysical Observatory
+ * Copyright (c) 2017 - 2022 Smithsonian Astrophysical Observatory
  *
  */
 
