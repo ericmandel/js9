@@ -8,7 +8,7 @@ Module["print"] = function(text) { console.log(text); };
 Module["rootdir"] = "/";
 
 Module["vfile"] = function(filename, buf, canOwn) {
-  var size;
+  let size;
   // two args: create a virtual file
   if( buf ){
     try{ FS.unlink(Module["rootdir"] + filename); }
@@ -36,7 +36,7 @@ Module["vread"] = function(filename, mode) {
 };
 
 Module["vsize"] = function(filename) {
-  var buf = {size: -1};
+  let buf = {size: -1};
   try{ buf = FS.stat(Module["rootdir"] + filename); }
   catch(e){ /* empty */ }
   return buf.size;
@@ -48,7 +48,7 @@ Module["vunlink"] = function(filename) {
 };
 
 Module["vmount"] = function(root, mntpnt) {
-    var got = 1;
+    let got = 1;
     try{ FS.mkdir(mntpnt); FS.mount(NODEFS, {root: root}, mntpnt); }
     catch(e){ got = 0; FS.rmdir(mntpnt); }
     return got;
@@ -62,9 +62,9 @@ Module["arrfile"] = function(filename, arr) {
 };
 
 Module["gzcompress"] = function(data) {
-  var ret;
-  var gzFile = ccall("gzopen", "number", ["string", "string"], ["output.gz", "wb"]);
-  var buffer = _malloc(data.length);
+  let ret;
+  const gzFile = ccall("gzopen", "number", ["string", "string"], ["output.gz", "wb"]);
+  const buffer = _malloc(data.length);
   HEAPU8.set(data, buffer);
   ccall("gzwrite", "number", ["number", "number", "number"], [gzFile, buffer, data.length]);
   ccall("gzclose", "number", ["number"], [gzFile]);
@@ -75,11 +75,11 @@ Module["gzcompress"] = function(data) {
 };
 
 Module["gzdecompress"] = function(data, filename, canOwn) {
-  var i, ret, curr, len, gzFile;
-  var BUFSIZE = 1024*1024;
-  var buffer = _malloc(BUFSIZE);
-  var chunks = [];
-  var total = 0;
+  let i, ret, curr, len, gzFile;
+  let total = 0;
+  const BUFSIZE = 1024*1024;
+  const buffer = _malloc(BUFSIZE);
+  const chunks = [];
   FS.createDataFile(Module["rootdir"], "input.gz", data, true, true, false);
   gzFile = ccall("gzopen", "number", ["string", "string"], ["input.gz", "rb"]);
   // eslint-disable-next-line no-constant-condition
@@ -107,11 +107,11 @@ Module["gzdecompress"] = function(data, filename, canOwn) {
 };
 
 Module["bz2decompress"] = function(data, filename, canOwn) {
-  var i, ret, curr, len, bz2File;
-  var BUFSIZE = 1024*1024;
-  var buffer = _malloc(BUFSIZE);
-  var chunks = [];
-  var total = 0;
+  let i, ret, curr, len, bz2File;
+  let total = 0;
+  const BUFSIZE = 1024*1024;
+  const buffer = _malloc(BUFSIZE);
+  const chunks = [];
   FS.createDataFile(Module["rootdir"], "input.bz2", data, true, true, false);
   bz2File = ccall("BZ2_bzopen", "number", ["string", "string"], ["input.bz2", "rb"]);
   // eslint-disable-next-line no-constant-condition
@@ -140,9 +140,9 @@ Module["bz2decompress"] = function(data, filename, canOwn) {
 
 // error handler
 Module["errchk"] = function(status) {
-    var i, c, hptr, bytes;
-    var hlen = 82;  // ffgerr returns 80-byte string + null
-    var s="ERROR from astroem/cfitsio: ";
+    let i, c, hptr, bytes;
+    const hlen = 82;  // ffgerr returns 80-byte string + null
+    let s="ERROR from astroem/cfitsio: ";
     if( status ){
 	hptr = _malloc(hlen);
 	ccall("ffgerr", null, ["number", "number"], [status, hptr]);
@@ -171,26 +171,26 @@ Module["error"] = function(s, e) {
 // get image from an already-opened virtual FITS file
 // fits object contains fptr
 Module["getFITSImage"] = function(fits, hdu, opts, handler) {
-    var i, ofptr, tfptr, hptr, status, datalen, extnum, extname;
-    var buf, bufptr, buflen, bufptr2;
-    var slice, doerr, ctype1, xbin, columns, cubecol, allcols;
-    var bitpix;
-    var filter = null;
-    var fptr = fits.fptr;
-    var fopts = null;
-    var iopts = null;
-    var cens = [0, 0];
-    var dims = [0, 0];
-    var bin = 1;
-    var binMode = 0;
-    var bmode = function(x){
+    let i, ofptr, tfptr, hptr, status, datalen, extnum, extname;
+    let buf, bufptr, buflen, bufptr2;
+    let slice, doerr, ctype1, xbin, columns, cubecol, allcols;
+    let bitpix;
+    let filter = null;
+    let fptr = fits.fptr;
+    let fopts = null;
+    let bin = 1;
+    let binMode = 0;
+    const iopts = null;
+    const cens = [0, 0];
+    const dims = [0, 0];
+    const bmode = function(x){
 	// deepscan-disable-next-line COMPARE_INCOMPATIBLE_TYPE_STRICTLY
 	if( x && (x === 1 || x === 'a') ){
 	    return 1;
 	}
 	return 0;
     };
-    var unbmode = function(x){
+    const unbmode = function(x){
 	// deepscan-disable-next-line COMPARE_INCOMPATIBLE_TYPE_STRICTLY
 	if( x && (x === 1 || x === 'a') ){
 	    return 'a';
@@ -331,7 +331,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	    if( !columns ){
 		allcols = "X Y";
 	    }
-	    allcols += " " + cubecol;
+	    allcols += `${cubecol}`;
 	    if( opts.file ){
 		fopts = `ofile=!${opts.file}`;
 	    }
@@ -573,10 +573,10 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 // read a blob as a FITS file
 // open an existing virtual FITS file (e.g. created by Montage reprojection)
 Module["handleFITSFile"] = function(fits, opts, handler) {
-    var fptr, hptr, status, fileReader, filename, earr;
-    var extn = "";
-    var oopts = null;
-    var hdu = {};
+    let fptr, hptr, status, fileReader, filename, earr;
+    let extn = "";
+    let oopts = null;
+    const hdu = {};
     // opts is optional
     opts = opts || {};
     handler = handler || Module["options"].handler;
@@ -585,9 +585,9 @@ Module["handleFITSFile"] = function(fits, opts, handler) {
 	// convert blob into array
 	fileReader = new FileReader();
 	fileReader.onload = function() {
-	    var fitsname, arr;
+	    let fitsname, arr;
 	    // eslint-disable-next-line no-unused-vars
-	    var narr;
+	    let narr;
 	    // file name might be in the blob itself
 	    if( !opts.file && fits.name ){
 		opts.file = fits.name;
@@ -622,23 +622,23 @@ Module["handleFITSFile"] = function(fits, opts, handler) {
 	    // make a virtual file
 	    if( (arr[0] === 0x1f) && (arr[1] === 0x8B) ){
 		// if original is gzip'ed, unzip to virtual file
-		hdu.vfile = "gz::" + hdu.vfile.replace(/\.gz/,"");
-		fitsname =  "gz::" + fitsname.replace(/\.gz/,"");
+		hdu.vfile = `gz::${hdu.vfile.replace(/\.gz/,"")}`;
+		fitsname =  `gz::${fitsname.replace(/\.gz/,"")}`;
 		try{
 		    narr = Module["gzdecompress"](arr, hdu.vfile, false);
 		}
 		catch(e){
-		    Module["error"]("can't gunzip to virtual file: "+hdu.vfile);
+		    Module["error"](`can't gunzip to virtual file: ${hdu.vfile}`);
 		}
 	    } else if((arr[0] === 0x42) && (arr[1] === 0x5A) && (arr[2] === 0x68)){
 		// if original is bzip2'ed, bunzip2 to virtual file
-		hdu.vfile = "bz::" + hdu.vfile.replace(/\.bz2/,"");
-		fitsname =  "bz::" + fitsname.replace(/\.bz2/,"");
+		hdu.vfile = `bz::${hdu.vfile.replace(/\.bz2/,"")}`;
+		fitsname =  `bz::${fitsname.replace(/\.bz2/,"")}`;
 		try{
 		    narr = Module["bz2decompress"](arr, hdu.vfile, false);
 		}
 		catch(e){
-		   Module["error"]("can't bunzip2 to virtual file: "+hdu.vfile);
+		   Module["error"](`can't bunzip2 to virtual file: ${hdu.vfile}`);
 		}
 	    } else {
 		// regular file to virtual file
@@ -646,7 +646,7 @@ Module["handleFITSFile"] = function(fits, opts, handler) {
 		    Module["vfile"](hdu.vfile, arr, false);
 		}
 		catch(e){
-		    Module["error"]("can't create virtual file: "+hdu.vfile);
+		    Module["error"](`can't create virtual file: ${hdu.vfile}`);
 		}
 	    }
 	    // open the virtual file as a FITS file
@@ -710,8 +710,8 @@ Module["handleFITSFile"] = function(fits, opts, handler) {
 };
 
 Module["cleanupFITSFile"] = function(fits, all) {
-    var hptr;
-    // var status;
+    let hptr;
+    // let status;
     // sanity check
     if( !fits ){
 	return;
@@ -753,20 +753,22 @@ Module["cleanupFITSFile"] = function(fits, all) {
 //
 //
 Module["ccall_varargs"] = function(ident, returnType, argTypes, args, opts) {
-    var func = getCFunc(ident);
-    var cArgs = [];
-    var stack = 0;
-    var ret, converter;
-    var i, j;
-    var maxDeclaredArgs, lastInputArg;
-    var vSpecifiers=[[], []], vSpecifiersLen;
-    var vArgs=[], vArgsLen;
-    var vStack, vStackCur;
+    let stack = 0;
+    let ret, converter;
+    let i, j;
+    let maxDeclaredArgs, lastInputArg;
+    let vSpecifiersLen;
+    let vArgsLen;
+    let vStack, vStackCur;
+    const func = getCFunc(ident);
+    const cArgs = [];
+    const vSpecifiers = [[], []];
+    const vArgs = [];
     // taken from emscripten/src/preamble.js
-    var toC = {
+    const toC = {
 	'string': function(str) {
-	    var len;
-	    var ret = 0;
+	    let len;
+	    let ret = 0;
 	    if (str !== null && str !== undefined && str !== 0) {
 		// null string
 	        // at most 4 bytes per UTF-8 code point,+1 for the trailing '\0'
@@ -778,13 +780,13 @@ Module["ccall_varargs"] = function(ident, returnType, argTypes, args, opts) {
 	    return ret;
 	},
 	'array': function(arr) {
-	    var ret = stackAlloc(arr.length);
+	    const ret = stackAlloc(arr.length);
 	    writeArrayToMemory(arr, ret);
 	    return ret;
 	}
     };
-    var vToStack = function(item, offset, type) {
-      var vrem;
+    const vToStack = function(item, offset, type) {
+      let vrem;
       switch (type) {
         case "d":
           vrem = offset % 8;
@@ -877,7 +879,7 @@ Module["ccall_varargs"] = function(ident, returnType, argTypes, args, opts) {
 	cArgs[maxDeclaredArgs] = vStack;
       }
     }
-    ret = func.apply(null, cArgs);
+    ret = func(...cArgs);
     if ((!opts || !opts.async) && typeof EmterpreterAsync === 'object') {
       assert(!EmterpreterAsync.state, 'cannot start async op with normal JS calling ccall');
     }
