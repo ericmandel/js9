@@ -3533,6 +3533,7 @@ JS9.Image.prototype.displaySection = function(opts, func){
 		.replace(".fits", `_cube:${opts.cubecol}.fits`)
 		.replace(/\.ftz$/, `_cube:${opts.cubecol}.fits`)
 		.replace(/\.gz$/, "")
+		.replace(/\.bz2$/, "")
 		.replace(/:/g, "_");
 	}
 	// unless explicitly set to false, separate is set to true

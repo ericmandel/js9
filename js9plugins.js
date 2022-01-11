@@ -7699,8 +7699,9 @@ JS9.Menubar.createMenus = function(){
 			case "savefitsentire":
 			    if( uim ){
 				s = uim.id.replace(/\.png/i, ".fits")
+				          .replace(/\[.*\]/,"")
 				          .replace(/\.gz$/i, "")
-				          .replace(/\[.*\]/,"");
+				          .replace(/\.bz2$/i, "");
 				if( key === "savefits" ){
 				    uim.saveFITS(s, "display");
 				} else if( key === "savefitsvirtual" ){
