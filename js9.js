@@ -3519,22 +3519,23 @@ JS9.Image.prototype.displaySection = function(opts, func){
     // cube column
     opts.cubecol = opts.cubecol || "";
     if( opts.cubecol ){
-	// set id to original id and indication that this is now a cube
-	if( !opts.id ){
-	    opts.id =
-		`${this.id.replace(/\[.*\]/, "")} (cube: ${opts.cubecol})`;
-	}
-	// set a filename for a virtual file that contains the cube info
+	// string containing filename and indication that this is a cube
+	s = this.file
+	    .split("/")
+	    .reverse()[0]
+	    .replace(/\[.*\]/,"")
+	    .replace(".fits", `_cube_${opts.cubecol}.fits`)
+	    .replace(/\.ftz$/, `_cube_${opts.cubecol}.fits`)
+	    .replace(/\.gz$/, "")
+	    .replace(/\.bz2$/, "")
+	    .replace(/:/g, "_");
+	// name of virtual file we will create
 	if( !opts.file ){
-	    opts.file = this.file
-		.split("/")
-		.reverse()[0]
-		.replace(/\[.*\]/,"")
-		.replace(".fits", `_cube:${opts.cubecol}.fits`)
-		.replace(/\.ftz$/, `_cube:${opts.cubecol}.fits`)
-		.replace(/\.gz$/, "")
-		.replace(/\.bz2$/, "")
-		.replace(/:/g, "_");
+	    opts.file = s;
+	}
+	// and its id
+	if( !opts.id ){
+	    opts.id = s;
 	}
 	// unless explicitly set to false, separate is set to true
 	if( opts.separate !== false ){
@@ -6176,12 +6177,15 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 
 // save image as a FITS file
 JS9.Image.prototype.saveFITS = function(fname, opts){
-    let arr, blob, s, ll, ur, sect;
+    let arr, blob, s, sect;
     if( Object.prototype.hasOwnProperty.call(window, "saveAs") ){
 	if( fname ){
 	    fname = fname
-		.replace(/\.fz$/i, "")
-		.replace(/(png|jpg|jpeg)$/i, "fits");
+		.replace(/\s+/g, "_")
+		.replace(/(png|jpg|jpeg|fz)$/i, "fits");
+	    if( !fname.match(/.fits$/) ){
+		fname += ".fits";
+	    }
 	} else {
 	    fname = "js9.fits";
 	}
@@ -6194,9 +6198,7 @@ JS9.Image.prototype.saveFITS = function(fname, opts){
 	// what do we save?
 	if( opts === "display" || opts.source === "display" ){
 	    // save currently displayed section
-	    ll = this.displayToImagePos({x:0, y:this.rgb.img.height});
-	    ur = this.displayToImagePos({x:this.rgb.img.width, y:0});
-	    sect = {x0: ll.x, y0: ll.y, x1: ur.x, y1: ur.y};
+	    sect = this.rgb.sect;
 	    arr = this.toArray({notab: true, twoaxes: true, sect: sect});
 	} else if( opts === "virtual" || opts.source === "virtual" ){
 	    if( this.raw.hdu && this.raw.hdu.fits && this.raw.hdu.fits.vfile ){
@@ -22721,6 +22723,7 @@ JS9.raw2FITS = function(raw, opts){
     let hasend = false;
     let t = "";
     const gots = {};
+    const rexp = /^(NAXIS|CRPIX|CRVAL|CTYPE|CUNIT|CDELT)[34567]/;
     const fixparam = (card, name, val, comm) => {
 	let s, oval, regexp;
 	let ncard = card;
@@ -22896,6 +22899,12 @@ JS9.raw2FITS = function(raw, opts){
 		}
 		if( key === "END" ){
 		    hasend = true;
+		}
+		if( opts.twoaxes && key === "NAXIS" ){
+		    obj[key] = 2;
+		}
+		if( opts.twoaxes && key.match(rexp) ){
+		    continue;
 		}
 		if( key.match(/HISTORY__[0-9]+/) ){
 		    t += sprintf("HISTORY %-72s", obj[key]);

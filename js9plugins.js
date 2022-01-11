@@ -7701,15 +7701,18 @@ JS9.Menubar.createMenus = function(){
 				s = uim.id.replace(/\.png/i, ".fits")
 				          .replace(/\[.*\]/,"")
 				          .replace(/\.gz$/i, "")
-				          .replace(/\.bz2$/i, "");
+				          .replace(/\.bz2$/i, "")
+				          .replace(/\s+/g, "_");
 				if( key === "savefits" ){
 				    uim.saveFITS(s, "display");
 				} else if( key === "savefitsvirtual" ){
 				    if( uim.raw.hdu &&
 					uim.raw.hdu.fits &&
 					uim.raw.hdu.fits.vfile ){
-					uim.saveFITS(uim.raw.hdu.fits.vfile,
-						     "virtual");
+					s = uim.raw.hdu.fits.vfile
+					    .replace(/^bz::/, "")
+					    .replace(/^gz::/, "");
+					uim.saveFITS(s, "virtual");
 				    } else {
 					JS9.error("no memory file available");
 				    }
@@ -7721,8 +7724,10 @@ JS9.Menubar.createMenus = function(){
 			case "savepng":
 			    if( uim ){
 				s = uim.id.replace(/\.fit[s]?/i, ".png")
+				          .replace(/\[.*\]/,"")
 				          .replace(/\.gz$/i, "")
-				          .replace(/\[.*\]/,"");
+				          .replace(/\.bz2$/i, "")
+				          .replace(/\s+/g, "_");
 				uim.savePNG(s);
 			    }
 			    break;

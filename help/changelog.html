@@ -11,9 +11,13 @@
 <div class="helpContainer">
 <center><h3>JS9 ChangeLog</h3></center>
 
-<h3> Patch Release 3.6.3 TBD</h3>
+<h3> Patch Release 3.6.3 (TBD)</h3>
 <ul>
-<li> evcube: generated cube file cannot be a gzip'ed file
+<li> make cubecol's id more akin to a filename (i.e., without parens)
+<li> remove gz:: and bz:: from saved virtual filename
+<li> fix bug when saving one slice of a cube, naxis was not always set to 2
+<li> when saving a section, use the real section instead of recalculating it
+<li> evcube: generated cube file cannot be a gzip'ed file (re: cfitsio)
 <li> update astroem/post.js to es6 to match emscripten v3.1.x
 <li> update emscripten to v3.1.1
 <li> update socket.io to v4.4.1
