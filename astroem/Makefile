@@ -55,20 +55,18 @@ EMINCS =	-I./include
 # extras to build emscripten runtime
 EMEXTRAS =	--pre-js pre.js --post-js post.js
 
-# top-level
-SRCS =  	wrappers.c
-OBJS = 		$(SRCS:%.c=%.o)
+# high-level wrapper code and support routines
+WRAPPERS =	./wrappers
+WSRCS =  	$(WRAPPERS)/wrappers.c \
+		$(WRAPPERS)/js9helper.c \
+		$(WRAPPERS)/listhdu.c
+WOBJS = 	$(WSRCS:%.c=%.o)
 
-# high-level routines on top of cfitsio
+# routines built on top of cfitsio
 JSFITSIO =	./jsfitsio
 JSRCS =  	$(JSFITSIO)/jsfitsio.c \
 		$(JSFITSIO)/healpix.c
 JOBJS = 	$(JSRCS:%.c=%.o)
-
-# routines used by wrapper.c
-WRAPPERS =	./wrappers
-WSRCS =  	$(WRAPPERS)/js9helper.c $(WRAPPERS)/listhdu.c
-WOBJS = 	$(WSRCS:%.c=%.o)
 
 # montage (re-project)
 MONTAGE =	./montage
@@ -107,19 +105,19 @@ MSRCS =		$(MONTAGE)/mGlobals.c \
 		$(MONTAGE)/mtbl.c
 MOBJS =		$(MSRCS:%.c=%.o)
 
-# zlib
-ZEXTRA =		./zextra
-ZSRCS =		$(ZEXTRA)/zcompress.c \
-		$(ZEXTRA)/zuncompress.c
-ZOBJS = 	$(ZSRCS:%.c=%.o)
-
 # iraf zscale
 ZSCALE =	./zscale
 ZSSRCS =	$(ZSCALE)/cdlzscale.c
 ZSOBJS = 	$(ZSSRCS:%.c=%.o)
 
-PKGOBJS =	$(JOBJS) $(WOBJS) $(MOBJS) $(UOBJS) $(ZOBJS) $(ZSOBJS)
-PKGDIRS =	$(JSFITSIO) $(WRAPPERS) $(MONTAGE) $(ZSCALE) $(ZEXTRA)
+# zlib
+ZEXTRA =	./zextra
+ZSRCS =		$(ZEXTRA)/zcompress.c \
+		$(ZEXTRA)/zuncompress.c
+ZOBJS = 	$(ZSRCS:%.c=%.o)
+
+PKGOBJS =	$(WOBJS) $(JOBJS) $(MOBJS) $(ZSOBJS) $(ZOBJS)
+PKGDIRS =	$(WRAPPERS) $(JSFITSIO) $(MONTAGE) $(ZSCALE) $(ZEXTRA)
 
 LIBS =		lib/libcfitsio.a lib/libregions.a lib/libwcs.a lib/libutil.a \
 		lib/libem.a
@@ -135,12 +133,12 @@ CC =		emcc $(EMFLAGS) -I./include -I$(JSFITSIO) -I$(ZSCALE) -D'exit(n)=em_exit(n
 all:		$(ASTROEMLIB) $(ASTROEMJS) $(ASTROEMWJS)
 
 # 2.0.2 breaks this technique: it generates an executable instead of bitcode
-# astroem.bc:	$(OBJS) $(PKGOBJS) $(LIBS)
+# astroem.bc:	$(PKGOBJS) $(LIBS)
 # 		$(EMCC) -r -o $@ $+
 
 # replacement technique: make a library using emar:
 # https://github.com/emscripten-core/emscripten/issues/12382
-$(ASTROEMLIB):	$(OBJS) $(PKGOBJS)
+$(ASTROEMLIB):	$(PKGOBJS)
 		emar rcs $@ $?
 
 $(ASTROEMJS):	$(ASTROEMLIB) pre.js post.js shell-pre.js shell-post.js Makefile
