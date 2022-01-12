@@ -1,0 +1,72 @@
+# source
+#   data_file:		/gz::_Users_eric_js9_data_kes75_kes75_evt2.fits[EVENTS][energy=500:1500]
+#   auto_block:		2.00
+#   arcsec/pixel:	0.984
+# background
+#   constant_value:	0.000000
+# column units
+#   area:		arcsec**2
+#   surf_bri:		cnts/arcsec**2
+#   surf_err:		cnts/arcsec**2
+
+# background-subtracted results
+ reg   net_counts     error   background    berror      area  surf_bri  surf_err
+---- ------------ --------- ------------ --------- --------- --------- ---------
+   1    11311.000   106.353        0.000     0.000 16252572.98     0.001     0.000
+
+# source_region(s):
+# field
+
+# source_data
+ reg       counts    pixels
+---- ------------ ---------
+   1    11311.000  16785409
+
+# source
+#   data_file:		/gz::_Users_eric_js9_data_kes75_kes75_evt2.fits[EVENTS][energy=1500:2500]
+#   auto_block:		2.00
+#   arcsec/pixel:	0.984
+# background
+#   constant_value:	0.000000
+# column units
+#   area:		arcsec**2
+#   surf_bri:		cnts/arcsec**2
+#   surf_err:		cnts/arcsec**2
+
+# background-subtracted results
+ reg   net_counts     error   background    berror      area  surf_bri  surf_err
+---- ------------ --------- ------------ --------- --------- --------- ---------
+   1    39442.000   198.600        0.000     0.000 16252572.98     0.002     0.000
+
+# source_region(s):
+# field
+
+# source_data
+ reg       counts    pixels
+---- ------------ ---------
+   1    39442.000  16785409
+
+# source
+#   data_file:		/gz::_Users_eric_js9_data_kes75_kes75_evt2.fits[EVENTS][energy=2500:8000]
+#   auto_block:		2.00
+#   arcsec/pixel:	0.984
+# background
+#   constant_value:	0.000000
+# column units
+#   area:		arcsec**2
+#   surf_bri:		cnts/arcsec**2
+#   surf_err:		cnts/arcsec**2
+
+# background-subtracted results
+ reg   net_counts     error   background    berror      area  surf_bri  surf_err
+---- ------------ --------- ------------ --------- --------- --------- ---------
+   1    65498.000   255.926        0.000     0.000 16252572.98     0.004     0.000
+
+# source_region(s):
+# field
+
+# source_data
+ reg       counts    pixels
+---- ------------ ---------
+   1    65498.000  16785409
+

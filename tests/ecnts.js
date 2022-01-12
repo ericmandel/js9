@@ -29,7 +29,7 @@ JS9.Load("data/kes75/kes75_evt2.fits.gz", {scale: "log", onload: function(im){
                 // write the results to a log file
   		fs.writeFile("countsInRegions.log", s, function(err) {
 		    if( err ) { JS9.error(err); }
-		    process.stdout.write(`\ncountsInRegions.log:\n\n${s}\n`);;
+		    JS9.Quit();
   		}); 
   	    }
     	};

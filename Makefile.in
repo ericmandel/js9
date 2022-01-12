@@ -558,7 +558,11 @@ smoke4:		FORCE
 		  tests/ebands;                                         \
 		  echo "testing hostfs support ...";                    \
 		  js9 -a -v --hostfs true --cmdfile tests/ecnts.js;     \
-		  rm -f countsInRegions.log);
+		  printf "diff countsInRegions.log:\n";			\
+		  diff countsInRegions.log tests/.; 			\
+		  rm -f countsInRegions.log;				\
+		  echo "\nall done!\n";					\
+)
 
 smokeall:	smoke smoke2 smoke3 smoke4
 
