@@ -49,6 +49,9 @@ WASMOPTS =	-s WASM=1 $(MEMOPTS)
 
 EMEXPORTS =	-s EXPORTED_FUNCTIONS="['_malloc', '_free', '_initwcs', '_freewcs', '_wcsinfo', '_pix2wcsstr', '_wcs2pixstr', '_reg2wcsstr', '_wcssys', '_wcsunits', '_saostrtod', '_saodtostr', '_saodtype', '_zscale', '_gzopen', '_gzread', '_gzwrite', '_gzclose', '_gzseek',  '_BZ2_bzopen', '_BZ2_bzread', '_BZ2_bzwrite', '_BZ2_bzclose', '_openFITSFile', '_openFITSMem', '_getImageToArray', '_filterTableToImage', '_getHeaderToString', '_closeFITSFile', '_maxFITSMemory', '_ffgerr', '_ffgisz', '_ffmahd', '_ffghdn','_ffmnhd', '_ffghdt', '_ffgky', '_fffree', '_listhdu', '_tanhdr', '_reproject', '_madd', '_imgtbl', '_makehdr', '_shrinkhdr', '_imsection', '_imannulusi', '_imboxi', '_imcirclei', '_imellipsei', '_imfieldi', '_imlinei', '_impiei', '_imqtpiei', '_impointi', '_impandai', '_imnannulusi', '_imnboxi', '_imnellipsei', '_imnpiei', '_impolygoni', '_imvannulusi', '_imvboxi', '_imvellipsei', '_imvpiei', '_imvpointi', '_imannulus', '_imbox', '_imcircle', '_imellipse', '_imfield', '_imline', '_impie', '_imqtpie', '_impoint', '_impanda', '_imnannulus', '_imnbox', '_imnellipse', '_imnpie', '_impolygon', '_imvannulus', '_imvbox', '_imvellipse', '_imvpie', '_imvpoint', '_regcnts', '_vls', '_vcat']" -s EXPORTED_RUNTIME_METHODS="['ccall', 'cwrap', 'writeArrayToMemory', 'writeAsciiToMemory']"
 
+# JS9 C source code
+JS9SRC =	../src
+
 # include directories
 EMINCS =	-I./include
 
@@ -58,8 +61,8 @@ EMEXTRAS =	--pre-js pre.js --post-js post.js
 # high-level wrapper code and support routines
 WRAPPERS =	./wrappers
 WSRCS =  	$(WRAPPERS)/wrappers.c \
-		$(WRAPPERS)/js9helper.c \
-		$(WRAPPERS)/listhdu.c
+		$(WRAPPERS)/listhdu.c \
+		$(JS9SRC)/js9helper.c
 WOBJS = 	$(WSRCS:%.c=%.o)
 
 # routines built on top of cfitsio
@@ -128,7 +131,7 @@ LIBS =		lib/libcfitsio.a lib/libregions.a lib/libwcs.a lib/libutil.a \
 EMCC =		emcc $(EMFLAGS) $(EMOPTS) $(EMEXPORTS) $(EMINCS) $(EMEXTRAS)
 
 # flags to generate all emcc objects (i.e. so default rule for $(CC) runs emcc)
-CC =		emcc $(EMFLAGS) -I./include -I$(JSFITSIO) -I$(ZSCALE) -D'exit(n)=em_exit(n)'
+CC =		emcc $(EMFLAGS) $(EMINCS) -I$(JSFITSIO) -I$(ZSCALE) -I$(JS9SRC) -D'exit(n)=em_exit(n)'
 
 all:		$(ASTROEMLIB) $(ASTROEMJS) $(ASTROEMWJS)
 
