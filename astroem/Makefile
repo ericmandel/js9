@@ -59,11 +59,16 @@ EMEXTRAS =	--pre-js pre.js --post-js post.js
 SRCS =  	wrappers.c
 OBJS = 		$(SRCS:%.c=%.o)
 
-# wrapper for cfitsio
+# high-level routines on top of cfitsio
 JSFITSIO =	./jsfitsio
-JSRCS =  	$(JSFITSIO)/jsfitsio.c $(JSFITSIO)/healpix.c \
-		$(JSFITSIO)/listhdu.c js9helper.c
+JSRCS =  	$(JSFITSIO)/jsfitsio.c \
+		$(JSFITSIO)/healpix.c
 JOBJS = 	$(JSRCS:%.c=%.o)
+
+# routines used by wrapper.c
+WRAPPERS =	./wrappers
+WSRCS =  	$(WRAPPERS)/js9helper.c $(WRAPPERS)/listhdu.c
+WOBJS = 	$(WSRCS:%.c=%.o)
 
 # montage (re-project)
 MONTAGE =	./montage
@@ -113,8 +118,8 @@ ZSCALE =	./zscale
 ZSSRCS =	$(ZSCALE)/cdlzscale.c
 ZSOBJS = 	$(ZSSRCS:%.c=%.o)
 
-PKGOBJS =	$(JOBJS) $(MOBJS) $(UOBJS) $(ZOBJS) $(ZSOBJS)
-PKGDIRS =	$(JSFITSIO) $(MONTAGE) $(ZSCALE) $(ZEXTRA)
+PKGOBJS =	$(JOBJS) $(WOBJS) $(MOBJS) $(UOBJS) $(ZOBJS) $(ZSOBJS)
+PKGDIRS =	$(JSFITSIO) $(WRAPPERS) $(MONTAGE) $(ZSCALE) $(ZEXTRA)
 
 LIBS =		lib/libcfitsio.a lib/libregions.a lib/libwcs.a lib/libutil.a \
 		lib/libem.a
