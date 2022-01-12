@@ -13,6 +13,7 @@ DDISTNAME =		${PACKAGE}-data
 
 # code shared with astroem
 JSFITSIO =	../astroem/jsfitsio
+WRAPPERS =	../astroem/wrappers
 
 #----------------------------------------------------------------
 # Things you can change to personalize the Makefile for your own
@@ -61,7 +62,7 @@ LIBS =            	@CFITSIOLIB@ @FUNLIB@ @EXTRA_LIBS@ -lm
 
 # includes
 INCS =			-I. @CFITSIOINC@ @FUNINC@ \
-			-I./util -I./$(JSFITSIO)
+			-I./util -I./$(JSFITSIO) -I./$(WRAPPERS)
 
 # To change the compiler switches, for example to change from -O
 # to -g, change the following line:
@@ -147,10 +148,10 @@ $(UTILLIB):	$(UTILOBJS)
 jsfitsio.o:	$(JSFITSIO)/jsfitsio.c
 		$(CC) -c $(CC_SW) -o $@ $+
 
-listhdu.o:	$(JSFITSIO)/listhdu.c
+healpix.o:	$(JSFITSIO)/healpix.c
 		$(CC) -c $(CC_SW) -o $@ $+
 
-healpix.o:	$(JSFITSIO)/healpix.c
+listhdu.o:	$(WRAPPERS)/listhdu.c
 		$(CC) -c $(CC_SW) -o $@ $+
 
 js9helper.o:	js9helper.c
