@@ -901,6 +901,10 @@ ipcMain.on("msg", (event, arg) => {
 		    break;
 		}
 		break;
+	    case "quit":
+		// quit the app
+		app.quit();
+		break;
 	    default:
 		break;
 	    }

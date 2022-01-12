@@ -27939,6 +27939,20 @@ JS9.mkPublic("SaveDir", function(...args){
     }
 });
 
+// quit the app (Desktop JS9 only)
+// eslint-disable-next-line no-unused-vars
+JS9.mkPublic("Quit", function(...args){
+    const opts = {cmd: "quit"};
+    if( window.electron ){
+	window.setTimeout(() => {
+	    try{ window.electron.sendMsg(opts); }
+	    catch(e){ JS9.error("could not quit app", e); }
+	}, JS9.TIMEOUT);
+    } else {
+	JS9.error("Quit is only available for the JS9 desktop app");
+    }
+});
+
 // ---------------------------------------------------------------------
 // end of JS9 Public Interface
 // ---------------------------------------------------------------------
