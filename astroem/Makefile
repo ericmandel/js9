@@ -174,14 +174,14 @@ install:	FORCE
 		  fi;)
 
 clean:		FORCE
-		@(rm -rf *.o *~ a.out* foo* *.map \#*  \
-		astroem.* astroemw.* libastroem.a; \
+		@(rm -rf *.o *.a *~ a.out* foo* *.map \#*  \
+		astroem.* astroemw.*; \
 		for d in $(PKGDIRS); do \
 		  cd $$d; \
 		  if [ -f Makefile ]; then \
 		    make clean; \
 		  else \
-		    rm -rf $$d/*{.a,.o,~}; \
+		    rm -rf *.o *.a *~ a.out* foo* *.map \#*; \
 		  fi; \
 		  cd ..; \
 		done;)
