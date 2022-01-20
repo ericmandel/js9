@@ -60,7 +60,7 @@ const globalOpts = {
     // default ping timeout is too short, and Chrome gets disconnect errors
     // v2 requires cors to be set explicitly
     // allowEIO3 support socketio v2
-    helperOpts:       {maxHttpBufferSize: 10E9,
+    socketioOpts:     {maxHttpBufferSize: 10E9,
 		       pingInterval:      20000,
 		       pingTimeout:       30000,
 		       cors:{origin:      true},
@@ -348,7 +348,7 @@ const loadPreferences = function(prefs){
 			    globalOpts[opt] = obj.globalOpts[opt];
 			    break;
 			case "object":
-			    globalOpts[opt] = obj.globalOpts[opt];
+			    Object.assign(globalOpts[opt], obj.globalOpts[opt]);
 			    break;
 			default:
 			    break;
@@ -1517,7 +1517,7 @@ if( secure ){
 app.setTimeout(0);
 
 // for each socket.io connection, receive and process custom events
-io = require(server)(app, globalOpts.helperOpts);
+io = require(server)(app, globalOpts.socketioOpts);
 io.on("connection", socketioHandler);
 
 // start listening on the helper port

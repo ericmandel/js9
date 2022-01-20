@@ -399,7 +399,14 @@ JS9.gridOpts = {};
 JS9.emscriptenOpts = {};
 // allows fabric opts (in Fabric.opts) to be overridden via js9prefs.js
 JS9.fabricOpts = {};
-
+// socket.io options
+JS9.socketioOpts = {
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax : 10000,
+    reconnectionAttempts: 100,
+    timeout: JS9.globalOpts.htimeout
+};
 // defaults for blending
 JS9.blendOpts = {
     active: true,
@@ -11495,13 +11502,6 @@ JS9.Helper.prototype.connect = function(type){
 	    timeout: JS9.globalOpts.htimeout,
 	    cache: true,
 	    success: () => {
-		const sockopts = {
-		    reconnection: true,
-		    reconnectionDelay: 1000,
-		    reconnectionDelayMax : 10000,
-		    reconnectionAttempts: 100,
-		    timeout: JS9.globalOpts.htimeout
-		};
 		// if there is no io object, we didn't really succeed
 		// can happen, for example, in the Jupyter environment
 		if( typeof io === "undefined" ){
@@ -11509,7 +11509,7 @@ JS9.Helper.prototype.connect = function(type){
 		    return;
 		}
 		// connect to the helper
-		this.socket = io.connect(this.url, sockopts);
+		this.socket = io.connect(this.url, JS9.socketioOpts);
 		// on-event processing
 		this.socket.on("connect", () => {
 		    let ii, d, p;
