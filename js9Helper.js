@@ -17,6 +17,7 @@
 
 // load required modules
 const http = require('http'),
+      server = require('socket.io'),
       os = require('os'),
       path = require('path'),
       https = require('https'),
@@ -42,7 +43,6 @@ const securefile = path.join(installDir, "js9Secure.json");
 const js9Queue = {};
 const rmQueue = {};
 const merges = {};
-const server = "socket.io";
 
 // secure options ... change as necessary in securefile
 const secureOpts = {
@@ -1513,17 +1513,20 @@ if( secure ){
     app = http.createServer(httpHandler);
 }
 
-// never timeout, analysis requests can be very long
-app.setTimeout(0);
+// start up socket.io server
+io = server(app, globalOpts.socketioOpts);
 
 // for each socket.io connection, receive and process custom events
-io = require(server)(app, globalOpts.socketioOpts);
 io.on("connection", socketioHandler);
+
+// never timeout, analysis requests can be very long
+app.setTimeout(0);
 
 // start listening on the helper port
 app.listen(globalOpts.helperPort, globalOpts.helperHost);
 
 // signal that we are listening for connections
+// (NB: do not remove, this is used by radiopadre to configure their system)
 clog("helper: %s %s", globalOpts.helperHost, globalOpts.helperPort);
 
 // an example of adding an in-line messsage to the analysis task list
