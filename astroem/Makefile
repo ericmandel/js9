@@ -113,40 +113,31 @@ ZSCALE =	./zscale
 ZSSRCS =	$(ZSCALE)/cdlzscale.c
 ZSOBJS = 	$(ZSSRCS:%.c=%.o)
 
-# zlib
-ZEXTRA =	./zextra
-ZSRCS =		$(ZEXTRA)/zcompress.c \
-		$(ZEXTRA)/zuncompress.c
-ZOBJS = 	$(ZSRCS:%.c=%.o)
-
-PKGOBJS =	$(WOBJS) $(JOBJS) $(MOBJS) $(ZSOBJS) $(ZOBJS)
-PKGDIRS =	$(WRAPPERS) $(JSFITSIO) $(MONTAGE) $(ZSCALE) $(ZEXTRA)
+PKGOBJS =	$(WOBJS) $(JOBJS) $(MOBJS) $(ZSOBJS)
+PKGDIRS =	$(WRAPPERS) $(JSFITSIO) $(MONTAGE) $(ZSCALE)
 
 LIBS =		lib/libcfitsio.a lib/libregions.a lib/libwcs.a lib/libutil.a \
 		lib/libem.a
 #		use Emscripten ports instead of our own
 #		lib/libz.a lib/libbz2.a
 
-# combine into EMCC command
-EMCC =		emcc $(EMFLAGS) $(EMOPTS) $(EMEXPORTS) $(EMINCS) $(EMEXTRAS)
+# emcc compiler and compiler flags:
+CC =		emcc
+CFLAGS =	$(EMFLAGS) $(EMINCS) -I$(JSFITSIO) -I$(ZSCALE) -I$(JS9SRC) -D'exit(n)=em_exit(n)'
 
-# flags to generate all emcc objects (i.e. so default rule for $(CC) runs emcc)
-CC =		emcc $(EMFLAGS) $(EMINCS) -I$(JSFITSIO) -I$(ZSCALE) -I$(JS9SRC) -D'exit(n)=em_exit(n)'
+# emcc link command with common opts:
+EMLINK =	emcc $(EMFLAGS) $(EMOPTS) $(EMEXPORTS) $(EMEXTRAS)
 
 all:		$(ASTROEMLIB) $(ASTROEMJS) $(ASTROEMWJS)
 
-# 2.0.2 breaks this technique: it generates an executable instead of bitcode
-# astroem.bc:	$(PKGOBJS) $(LIBS)
-# 		$(EMCC) -r -o $@ $+
-
-# replacement technique: make a library using emar:
+# make a library using emar:
 # https://github.com/emscripten-core/emscripten/issues/12382
 $(ASTROEMLIB):	$(PKGOBJS)
 		emar rcs $@ $?
 
 $(ASTROEMJS):	$(ASTROEMLIB) pre.js post.js shell-pre.js shell-post.js Makefile
 		@(echo "generating raw $(ASTROEMJS) ..."; \
-		$(EMCC) $(NOWASMOPTS) $(ASTROEMLIB) $(LIBS) -o $(ASTROEMJS); \
+		$(EMLINK) $(NOWASMOPTS) $(ASTROEMLIB) $(LIBS) -o $(ASTROEMJS); \
 		echo "adding shell wrapper to generate $(ASTROEMJS) ..."; \
 		cat shell-pre.js > full_$(ASTROEMJS); \
 		cat $(ASTROEMJS) >> full_$(ASTROEMJS); \
@@ -155,7 +146,7 @@ $(ASTROEMJS):	$(ASTROEMLIB) pre.js post.js shell-pre.js shell-post.js Makefile
 
 $(ASTROEMWJS):	$(ASTROEMLIB) pre.js post.js shell-pre.js shell-post.js Makefile
 		@(echo "generating raw $(ASTROEMWJS) ..."; \
-		$(EMCC) $(WASMOPTS) $(ASTROEMLIB) $(LIBS) -o $(ASTROEMWJS); \
+		$(EMLINK) $(WASMOPTS) $(ASTROEMLIB) $(LIBS) -o $(ASTROEMWJS); \
 		echo "adding shell wrapper to generate $(ASTROEMWJS) ..."; \
 		cat shell-pre.js > full_$(ASTROEMWJS); \
 		cat $(ASTROEMWJS) >> full_$(ASTROEMWJS); \
