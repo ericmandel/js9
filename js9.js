@@ -278,6 +278,7 @@ JS9.globalOpts = {
     intensivePlugins: false,	// enable intensive plugin support?
     dynamicSelect: "click",     // dynamic plugins: "click", "move", or false
     dynamicHighlight: true,     // highlight dynamic selection
+    fitsProxy:   "https://js9.si.edu/cgi-bin/FITS-proxy.cgi", // FITS CORS proxy
     corsProxy:   "https://js9.si.edu/cgi-bin/CORS-proxy.cgi",   // CORS proxy
     simbadProxy: "https://js9.si.edu/cgi-bin/simbad-proxy.cgi", // simbad proxy
     catalogs:   {ras: ["RA", "_RAJ2000", "RAJ2000"],  // cols to search for ..
@@ -21805,6 +21806,11 @@ JS9.fetchURL = function(name, url, opts, handler){
     }
     if( !name ){
 	name = /([^\\/]+)$/.exec(url)[1];
+    }
+    // use fits proxy, if necessary
+    if( opts.fitsproxy && JS9.globalOpts.fitsProxy       &&
+	url.match(/\.(fits|ftz|fz|fits\.gz|fits\.bz2)$/) ){
+	url = `${JS9.globalOpts.fitsProxy}?fits=${url}`;
     }
     // avoid the cache (Safari is especially aggressive) for FITS files
     if( !opts.allowCache && !url.match(/\?/) ){

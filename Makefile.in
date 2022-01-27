@@ -137,9 +137,13 @@ GZFILES =	js9.js js9.min.js js9support.js js9support.min.js \
 		js9plugins.js js9-allinone.js \
 		astroem.js astroemw.js astroemw.wasm
 
-SAOFILES =	sao/index.html
+SAOWEBFILES =	sao/index.html
 
-SAOWEBFILES =	sao/js9Prefs.json sao/js9prefs.js
+SAOCGIFILES =	sao/FITS-proxy.cgi \
+		plugins/archive/CORS-proxy.cgi \
+		plugins/archive/simbad-proxy.cgi
+
+SAOPREFSFILES =	sao/js9Prefs.json sao/js9prefs.js
 
 CSSFILES =	css/jquery.contextMenu.css css/dhtmlwindow.css  \
 		css/tabcontent.css css/spectrum.css
@@ -468,18 +472,26 @@ install-gzip:	FORCE
 
 install-sao:	install-gzip saoprefs install-webcgi install-demos install-tests
 	@(if [ -d "$(SAODIR)" ]; then \
-	    for i in $(SAOFILES) ; \
+	    for i in $(SAOWEBFILES) ; \
 	    do \
 		if [ -f $$i ] ; then \
-		    echo "installing file: $$i" ; \
+		    echo "installing sao web file: $$i" ; \
 		    j=`basename $$i`; \
 	            $(CP) $$i $(SAODIR)/$$j; \
 		fi; \
 	    done; \
-	    for i in $(SAOWEBFILES) ; \
+	    for i in $(SAOCGIFILES) ; \
 	    do \
 		if [ -f $$i ] ; then \
-		    echo "installing file: $$i" ; \
+		    echo "installing sao cgi file: $$i" ; \
+		    j=`basename $$i`; \
+	            $(CP) $$i $(SAODIR)/cgi-bin/$$j; \
+		fi; \
+	    done; \
+	    for i in $(SAOPREFSFILES) ; \
+	    do \
+		if [ -f $$i ] ; then \
+		    echo "installing sao prefs file: $$i" ; \
 		    j=`basename $$i`; \
 	            $(CP) $$i $(WEBDIR)/$$j; \
 		    rm -r $$i; \
@@ -509,7 +521,7 @@ release-data:	FORCE
 		tar cf - data | gzip -c > $(DISTDIR)/$(DDISTNAME).tgz;
 
 spell:		FORCE
-		@(for f in $(SAOFILES) $(WEBHELP)/*.html; do \
+		@(for f in $(SAOWEBFILES) $(WEBHELP)/*.html; do \
 			echo "spellcheck $$f ..."; \
 			aspell -c $$f; \
 		  done)
