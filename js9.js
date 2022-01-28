@@ -4790,6 +4790,8 @@ JS9.Image.prototype.refreshLayers = function(panzoomrefresh){
 	    }
 	}
     }
+    // re-select selected regions
+    this.selectShapes("regions", "selected");
 };
 
 // return current file-related position for specified image position
