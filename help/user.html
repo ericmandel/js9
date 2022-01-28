@@ -125,12 +125,10 @@ an <b>images</b> submenu. The displayed image is marked with a
 starburst.  To display a different image, simply choose it from the
 menu. The File menu also contains the following submenus and options:
 <ul>
-<li><b>open ...</b>: images and urls:
-<ul>
-<li><b>local file ...</b> bring up a file browser dialog box to choose a FITS,PNG, or JPEG file for display
-<li><b>url via proxy ...</b> enter a link to a FITS, PNG, or JPG file that will be downloaded onto the web-page server host and displayed (if configured)
-<li><b>url via CORS ...</b> enter a shared Dropbox link to display a FITS file
-</ul>
+
+<li><b>open local...</b> bring up a file browser dialog box to choose a FITS,PNG, or JPEG file for display
+
+<li><b>open remote ...</b> bring up a dialog box to load a remote URL either using a JS9 proxy server (if configured), the cgi proxy on js9.si.edu, or directly using a CORS-enabled server (if available)
 
 <li><b>display ...</b>: components and sections:
 <ul>
@@ -146,9 +144,18 @@ the image is too large)
 <li><b>selected cutouts</b> selected region(s) are used to define the center and size of new image section(s); note that image sections are always rectangles and region angles are ignored
 <li><b>display pageid</b>, a unique ID for this page that can be used to communicate externally with a JS9 instance when multiple JS9 instances are running (js9 --pageid [pageid])
 </ul>
+
 <li><b>move ...</b> move the current image to an existing displays or
 a new display. (The new display will either be a in a light window or
 a CSS grid, depending on how the web page is constructed.)
+
+<li><b>separate ...</b> separate/gather two or more images
+<ul>
+<li><b>separate these images</b> move each image in this display to a
+new display.  (The new display will either be a in a light window or a
+CSS grid, depending on how the web page is constructed.)
+<li><b>gather all images here</b> move all images from other displays to this display
+</ul>
 
 <li><b>save ...</b>the currently displayed image data. You can save
 the currently loaded image (or the currently loaded image section, if
@@ -159,21 +166,6 @@ following formats:
 <li><b>FITS</b> (standard astronomical image file, without 2D graphics)
 <li><b>JPEG</b> (also includes 2D graphics, such as regions)
 <li><b>PNG</b>  (also includes 2D graphics, such as regions)
-</ul>
-
-<li><b>separate ...</b> separate/gather two or more images
-<ul>
-<li><b>separate these images</b> move each image in this display to a
-new display.  (The new display will either be a in a light window or a
-CSS grid, depending on how the web page is constructed.)
-<li><b>gather all images here</b> move all images from other displays to this display
-</ul>
-
-<li><b>sync ...</b> synchronize/unsynchronize two or more images
-<ul>
-<li><b>sync images ...</b> synchronize two or more images, so that when an operation (change of colormap, contrast/bias, pan, regions, scale, wcs, zoom)
-is performed on one image, it also is performed on the other(s)
-<li><b>unsync images ...</b> unsynchronize previously sync'ed images
 </ul>
 
 <li><b>close ...</b> one or more images (or internal image memory)

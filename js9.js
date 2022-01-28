@@ -278,9 +278,9 @@ JS9.globalOpts = {
     intensivePlugins: false,	// enable intensive plugin support?
     dynamicSelect: "click",     // dynamic plugins: "click", "move", or false
     dynamicHighlight: true,     // highlight dynamic selection
-    fitsProxy:   "https://js9.si.edu/cgi-bin/FITS-proxy.cgi", // FITS CORS proxy
-    corsProxy:   "https://js9.si.edu/cgi-bin/CORS-proxy.cgi",   // CORS proxy
-    simbadProxy: "https://js9.si.edu/cgi-bin/simbad-proxy.cgi", // simbad proxy
+    corsProxy:  "https://js9.si.edu/cgi-bin/CORS-proxy.cgi",   // CORS proxy
+    simbadProxy:"https://js9.si.edu/cgi-bin/simbad-proxy.cgi", // simbad proxy
+    cgiProxy:   "https://js9.si.edu/cgi-bin/FITS-proxy.cgi",   // CGI proxy
     catalogs:   {ras: ["RA", "_RAJ2000", "RAJ2000"],  // cols to search for ..
 		 decs: ["Dec", "_DEJ2000", "DEJ2000"],// when loading catalogs
 		 shape: "circle",                     // object shape
@@ -10149,11 +10149,12 @@ JS9.Display.prototype.displayPlugin = function(plugin){
 
 //  display the general file-loading form for this display
 JS9.Display.prototype.displayLoadForm = function(opts){
-    let html, did;
+    let html, did, method;
     const format = JS9.globalOpts.localLoadFormat;
-    const method = JS9.globalOpts.remoteLoadMethod;
-    const doproxy = !JS9.allinone && JS9.globalOpts.helperType !== "none" &&
-		     JS9.globalOpts.workDir && JS9.globalOpts.loadProxy;
+    if( JS9.globalOpts.remoteLoadMethod === "proxy" && !JS9.proxyAvailable() ){
+	JS9.globalOpts.remoteLoadMethod = "cgiproxy";
+    }
+    method = JS9.globalOpts.remoteLoadMethod;
     // opts is optional, defaults to displaying local and remote
     opts = opts || {local:true, remote:true};
     // options for creating window
@@ -10200,13 +10201,10 @@ JS9.Display.prototype.displayLoadForm = function(opts){
 		if( remotefile ){
 		    $(did).find(`input[name="remotefile"]`).val(remotefile);
 		}
-		if( doproxy ){
-		    $(did).find(`input[value=${method}]`).click();
-		} else {
-		    $(did).find(`input[value="cors"]`).click();
+		if( !JS9.proxyAvailable() ){
 		    $(did).find(`input[value="proxy"]`).prop("disabled", true);
 		}
-
+		$(did).find(`input[value=${method}]`).click();
 	    }
 	});
     // create the window
@@ -21821,9 +21819,9 @@ JS9.fetchURL = function(name, url, opts, handler){
 	name = /([^\\/]+)$/.exec(url)[1];
     }
     // use fits proxy, if necessary
-    if( opts.fitsproxy && JS9.globalOpts.fitsProxy       &&
-	url.match(/\.(fits|ftz|fz|fits\.gz|fits\.bz2)$/) ){
-	url = `${JS9.globalOpts.fitsProxy}?fits=${url}`;
+    if( opts.proxy && JS9.globalOpts.cgiProxy              &&
+	url.match(/\.(fits|ftz|fz|fits\.gz|fits\.bz2)(\?.*)?$/) ){
+	url = `${JS9.globalOpts.cgiProxy}?fits=${url}`;
     }
     // avoid the cache (Safari is especially aggressive) for FITS files
     if( !opts.allowCache && !url.match(/\?/) ){
@@ -22717,6 +22715,14 @@ JS9.ishealpix = function(im){
 	im.raw && im.raw.header                                    &&
 	im.raw.header.CTYPE1 &&	im.raw.header.CTYPE1.match(/--HPX/i);
 };
+
+// is the proxy server available for LoadProxy() call?
+JS9.proxyAvailable = function(){
+    return JS9.globalOpts.loadProxy          &&
+        !JS9.allinone                        &&
+        JS9.globalOpts.helperType !== "none" &&
+        JS9.globalOpts.workDir;
+}
 
 // parse a FITS card and return name and value
 JS9.cardpars = function(card){
@@ -24164,8 +24170,12 @@ JS9.dragdropCB = function(id, evt){
 	// assume text
 	s = evt.dataTransfer.getData("text");
 	// check whether its a URL and load via proxy, if possible
-	if( s.match(JS9.URLEXP) && JS9.globalOpts.loadProxy ){
-	    JS9.LoadProxy(s, {display: opts.display});
+	if( s.match(JS9.URLEXP) ){
+	    if( JS9.proxyAvailable() ){
+		JS9.LoadProxy(s, {display: opts.display});
+	    } else if( JS9.globalOpts.cgiProxy ){
+		JS9.Load(s, {proxy: true}, {display: opts.display});
+	    }
 	}
 	return;
     }

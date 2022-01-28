@@ -31,8 +31,10 @@ url=${QUERY_STRING#fits=}
 url=${url%%[*}
 
 # sanity check for FITS file
-FILE=${url##*/}
+FILE="${url##*/}"
+FILE="${FILE%%\?*}"
 EXT1="${FILE##*.}"
+
 case "$EXT1" in
     "fits"|"ftz"|"fz")
         ;;

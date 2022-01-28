@@ -146,7 +146,7 @@ can pass a generic <b>data object</b> containing the following properties:
 <li><b>allext</b>: load all image extensions?
 <li><b>file</b>: set the file property in cases where the url is a script
 <li><b>id</b>: set the id property
-<li><b>fitsproxy</b>: use experimental CGI proxy to load a remote URL
+<li><b>proxy</b>: use experimental CGI proxy to load a remote URL
 </ul>
 An image URL can only be loaded from the same origin as the JS9 JavaScript code,
 which is called the
@@ -160,9 +160,9 @@ retrieves the image into a temp directory before loading it locally.
 For FITS files, we are experimenting with a second way to retrieve
 remote URLs: using a CGI script that adds the required CORS header to
 the retrieved FITS data on the fly. The CGI script is controlled by
-the <b>JS9.globalOpts.fitsProxy</b> global property and has the
+the <b>JS9.globalOpts.cgiProxy</b> global property and has the
 default value <b>https://js9.si.edu/cgi-bin/FITS-proxy.cgi</b>.  If
-you pass <b>fitsproxy: true</b> in opts, this CGI script will be used
+you pass <b>proxy: true</b> in opts, this CGI script will be used
 to retrieve the FITS file and return it with the required CORS header.
 <p>
 The <a href="#JS9.RefreshImage"><b>JS9.RefreshImage()</b></a>

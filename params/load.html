@@ -53,7 +53,7 @@
     position: absolute;
     top: 0;
     left:  100px;
-    width: 390px;
+    width: 432px;
 }
 
 .loadcol_R3 {
@@ -96,6 +96,13 @@
     top: 0;
     left:  420px;
     width: 80px;
+}
+
+.loadcol_R6L {
+    position: absolute;
+    top: 0;
+    left:  420px;
+    width: 160px;
 }
 
 .loadcol_R7 {
@@ -464,6 +471,14 @@ onclick="
 </span>
 
 <span class="loadcol_R loadcol_R4L">
+<input type="radio" class="loadinput" id="loadcgi" name="loadmethod" value="cgiproxy"
+onclick="
+  JS9.globalOpts.remoteLoadMethod = 'cgiproxy';
+">
+<label for="loadimg">cgi proxy</label>
+</span>
+
+<span class="loadcol_R loadcol_R6L">
 <input type="radio" class="loadinput" id="loadcors" name="loadmethod" value="cors"
 onclick="
   JS9.globalOpts.remoteLoadMethod = 'cors';
@@ -487,6 +502,7 @@ const form = $(this).closest('form');
 const win = form.closest(JS9.lightOpts[JS9.LIGHTWIN].top)[0];
 const dispid = $(win).data('dispid');
 const method = form.find(`input[name='loadmethod']:checked`).val();
+const opts = {};
 let url = form.find(`[name='remotefile']`).val();
 if( url && dispid ){
     switch(method){
@@ -494,6 +510,7 @@ if( url && dispid ){
         JS9.LoadProxy(url, null, {display: dispid});
         break;
     case 'cors':
+    case 'cgiproxy':
         if( url.match(/dropbox\.com/) ){
             // http://stackoverflow.com/questions/20757891/cross-origin-image-load-from-cross-enabled-site-is-denied
             url = url.replace('www.dropbox.com', 'dl.dropboxusercontent.com')
@@ -501,9 +518,15 @@ if( url && dispid ){
             url = url.replace('?dl=0', '').trim() + '?raw=1';
         } else if( url.match(/drive\.google\.com/) ){
             url=url.replace(/\/file\/d\/(\w+)\/\w+\?usp=sharing/, '/uc?export=download&amp;id=$1').trim();
-            JS9.error('Google Drive does not support CORS');
+	    // google drive doesn't support CORS
+	    if( method === 'cors' ){
+	        method = 'cgiproxy';
+	    }
         }
-        JS9.Load(url, {display: dispid});
+	if( method === 'cgiproxy' ){
+	  opts.proxy = true;
+	}
+        JS9.Load(url, opts, {display: dispid});
       break;
   default:
       break;
@@ -525,16 +548,19 @@ if( url && dispid ){
 </div>
 <p>
 <div class="remotedoc nodisplay">
-<b>Remote files via proxy server:</b> Links from servers without
+<b>Remote files via proxy:</b> URLs from servers without
 <a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing"
-target="_blank">Cross-Origin Resource Sharing</a>  support
-(e.g., <a href="https://www.cfa.harvard.edu/archive/chandra/search" target="_blank" rel="noopener noreferrer">the Unofficial Chandra Archive</a>)
-won't display directly in JS9, but JS9 servers can be set up to retrieve
-and display these files (proxy button above will be live.)
+target="_blank">CORS</a> can't display directly in JS9. If the JS9
+server is set up as a <b>proxy server</b>, data will be stored
+temporarily (allowing server-side analysis). Otherwise, the <b>cgi
+proxy</b> on <b>https://js9.si.edu</b> will retrieve the data for
+display only.
 
 <p>
-<b>Remote files using a CORS server:</b> Links from servers that support <a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing" target="_blank"> 
-Cross-Origin Resource Sharing</a> (e.g., Dropbox public links) can be displayed directly by JS9.
+<b>Remote files using a CORS-enabled server:</b> URLs from servers that
+support <a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing"
+target="_blank">CORS</a> (e.g., Dropbox) will display directly in JS9
+(but without server-side analysis).
 </div>
 
 </form>
