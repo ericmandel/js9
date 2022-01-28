@@ -15302,7 +15302,7 @@ JS9.Fabric.getShapes = function(layerName, shape, opts){
 // change the specified shape(s)
 // call using image context
 JS9.Fabric.changeShapes = function(layerName, shape, opts){
-    let i, s, sobj, bopts, layer, canvas, ao, rlen, maxr, zoom, exports;
+    let i, s, sobj, bopts, layer, canvas, ao, aos, rlen, maxr, zoom, exports;
     let topts, xopts;
     const orad = [], cpts = [];
     layer = this.getShapeLayer(layerName);
@@ -15323,6 +15323,14 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
     canvas = layer.canvas;
     // active object
     ao = canvas.getActiveObject();
+    if( ao && ao.type === "activeSelection" ){
+	// save and temporarily remove a selected group
+	// fabric.js doesn't deal with this very well
+	aos = canvas.getActiveObjects()
+	canvas.discardActiveObject();
+	canvas.renderAll();
+	ao = null;
+    }
     // this selection is usually saved
     if( JS9.isNull(opts.saveselection) ){ opts.saveselection = true; }
     // process the specified shapes
@@ -15363,15 +15371,19 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	if( sobj.opts.send ){
 	    switch(sobj.opts.send){
 	    case "front":
-		canvas.sendToFront(ao);
-		if( canvas.getActiveObject() ){
-		    canvas.discardActiveObject();
+		if( ao ){
+		    canvas.sendToFront(ao);
+		    if( canvas.getActiveObject() ){
+			canvas.discardActiveObject();
+		    }
 		}
 		break;
 	    case "back":
-		canvas.sendToBack(ao);
-		if( canvas.getActiveObject() ){
-		    canvas.discardActiveObject();
+		if( ao ){
+		    canvas.sendToBack(ao);
+		    if( canvas.getActiveObject() ){
+			canvas.discardActiveObject();
+		    }
 		}
 		break;
 	    default:
@@ -15554,10 +15566,9 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	    catch(e){ JS9.error("in onchangeshapes callback", e, false); }
 	}
     });
-    // if processing a selected group, recalculate bounding box params
-    // https://stackoverflow.com/questions/63256748/fabric-js-3-6-bounding-box-for-group-doesnt-update-when-grouped-objects-are-c
-    if( shape === "selected" && ao && ao.type === "activeSelection" ){
-	ao.addWithUpdate();
+    // reconstitute the selected group, if necessary
+    if( aos ){
+	this.selectShapes(layerName, aos);
     }
     // redraw (unless explicitly specified otherwise)
     if( (opts.redraw === undefined) || opts.redraw ){
