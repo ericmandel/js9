@@ -3417,6 +3417,7 @@ JS9.Image.prototype.displaySection = function(opts, func){
 					    ignoreignore: true,
 					    saveediting: true,
 					    savewcsconfig: true,
+					    sortids: false,
 					    saveid: true});
 	    // func to perform when image is loaded
 	    func = topts.ondisplaysection || topts.onrefresh || func;
@@ -3472,6 +3473,7 @@ JS9.Image.prototype.displaySection = function(opts, func){
 						ignoreignore: true,
 						saveediting: true,
 						savewcsconfig: true,
+						sortids: false,
 						saveid: true});
 		// func to perform when image is loaded
 		func = topts.ondisplaysection || topts.onrefresh || func;
@@ -14151,7 +14153,8 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
     for(j=0; j<selection.length; j++){
 	// convenience variables that might be reset inside this loop
 	// list of objects
-	objects = canvas.getObjects();
+	// reverse the order so we can traverse in reverse order!
+	objects = canvas.getObjects().reverse();
 	olen = objects.length;
 	// list of groups for each object
 	groups = getgroups(canvas, objects);
@@ -15159,7 +15162,7 @@ JS9.Fabric.ungroupShapes = function(layerName, groupid, opts){
 JS9.Fabric.removeShapes = function(layerName, shape, opts){
     let i, layer, canvas, ao;
     let undoao = false;
-    const lopts = {mode: 1, includedcoords: true};
+    const lopts = {mode: 1, includedcoords: true, sortids: false};
     const arr = [];
     const grp = [];
     layer = this.getShapeLayer(layerName);
@@ -15291,9 +15294,11 @@ JS9.Fabric.getShapes = function(layerName, shape, opts){
 	shapes.push(myshape);
     });
     // sort shapes by id to maintain original order of creation
-    shapes.sort((a, b) => {
-	return (a.id||0) - (b.id||0);
-    });
+    if( opts.sortids !== false ){
+	shapes.sort((a, b) => {
+	    return (a.id||0) - (b.id||0);
+	});
+    }
     return shapes;
 };
 
@@ -15363,29 +15368,6 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	    if( sobj.remove !== false && sobj.remove !== "false" ){
 		this.removeShapes(layerName, sobj.remove || "all");
 		return;
-	    }
-	}
-	// send region to front or back of set of overlapping regions
-	if( sobj.opts.send ){
-	    switch(sobj.opts.send){
-	    case "front":
-		if( ao ){
-		    canvas.sendToFront(ao);
-		    if( canvas.getActiveObject() ){
-			canvas.discardActiveObject();
-		    }
-		}
-		break;
-	    case "back":
-		if( ao ){
-		    canvas.sendToBack(ao);
-		    if( canvas.getActiveObject() ){
-			canvas.discardActiveObject();
-		    }
-		}
-		break;
-	    default:
-		break;
 	    }
 	}
 	// get new option names to export when saving regions
@@ -15546,6 +15528,23 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	if( obj.params.changeable === false ){
 	    canvas.sendToBack(obj);
 	}
+	// send region to front or back of set of overlapping regions
+	switch(sobj.opts.send){
+	case "front":
+	    canvas.sendToFront(obj);
+	    if( ao === obj ){
+		canvas.discardActiveObject();
+	    }
+	    break;
+	case "back":
+	    canvas.sendToBack(obj);
+	    if( ao === obj ){
+		canvas.discardActiveObject();
+	    }
+	    break;
+	default:
+	    break;
+	}
 	// update children
 	JS9.Fabric.updateChildren(layer.dlayer, obj, "moving");
 	JS9.Fabric.updateChildren(layer.dlayer, obj, "scaling");
@@ -15589,6 +15588,7 @@ JS9.Fabric.refreshShapes = function(layerName){
 	ignoreignore:true,
 	saveediting:true,
 	savewcsconfig:true,
+	sortids: false,
 	saveid:true
     };
     // temporarily turn off plugin execution to avoid firing regions callbacks
@@ -15632,7 +15632,8 @@ JS9.Fabric.refreshShapes = function(layerName){
 	    this.removeShapes(layerName, "all", {overrideRemovable: true,
 						 sticky: false});
 	    // add back regions in current configuration
-	    this.addShapes(layerName, regstr, {restoreid: true});
+	    this.addShapes(layerName, regstr, {restoreid: true,
+					       sortids: false});
 	    // restore selection
 	    this.restoreSelection(layerName);
 	}
@@ -15674,8 +15675,12 @@ JS9.Fabric.copyShapes = function(layerName, to, which){
 	return;
     }
     // list shapes
-    s = this.listRegions(which,
-	{mode: 1, includedcoords: JS9.globalOpts.regCopyDCoords}, layerName);
+    opts = {
+	mode: 1,
+	includedcoords: JS9.globalOpts.regCopyDCoords,
+	sortids: false
+    };
+    s = this.listRegions(which, opts, layerName);
     for(i=0; i<ims.length; i++){
 	// use this layer's opts, if possible
 	if( this.display.layers[layerName] ){
@@ -18933,6 +18938,8 @@ JS9.Regions.listRegions = function(which, opts, layerName){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse listRegions opts: ${opts}`, e); }
     }
+    // pass sortids from opts to topts (used by getShapes)
+    if( JS9.notNull(opts.sortids) ) topts.sortids = opts.sortids;
     // default is to display, including non-source tags
     mode = opts.mode;
     if( JS9.isNull(mode) ){
