@@ -15531,7 +15531,7 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	// send region to front or back of set of overlapping regions
 	switch(sobj.opts.send){
 	case "front":
-	    canvas.sendToFront(obj);
+	    canvas.bringToFront(obj);
 	    if( ao === obj ){
 		canvas.discardActiveObject();
 	    }
