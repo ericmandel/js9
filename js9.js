@@ -12433,12 +12433,12 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    objs.push({obj: o, siz: myWidth * myHeight});
 	    // sort in order of increasing size
 	    objs.sort( (a, b) => {
-		if( a.siz < b.siz ){
+		// using <= instead of < preserves order for =
+		if( a.siz <= b.siz ){
 		    return -1;
-		} else if( a.siz > b.siz ){
+		} else {
 		    return 1;
 		}
-		return 0;
 	    });
 	    // re-order so smaller objects are in front
 	    olen = objs.length;
