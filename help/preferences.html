@@ -19,7 +19,7 @@ your site without having to modify the js9.js file directly.
 
 <p>
 To support site configuration, load the <b>JS9 json preference file</b>
-file (referred to here as js9prefs.json, but it can be named
+file (referred to here as js9prefs-local.js, but it can be named
 anything, of course) into your web page before loading other JS9 javascript:
 <pre>
   &lt;script type="text/javascript" src="js9prefs-local.js"&gt;&lt;/script&gt;
@@ -27,11 +27,6 @@ anything, of course) into your web page before loading other JS9 javascript:
   &lt;script type="text/javascript" src="js9.min.js"&gt;&lt;/script&gt;
   ...
 </pre>
-<p>
-NB: the JS9 Node.js helper still utilizes the <b>js9Prefs.json</b>
-file. Please ensure that the properties defined in these two files are
-consistent.
-
 <p>
 The following example shows the current js9prefs.js file:
 <pre>
@@ -155,7 +150,24 @@ var JS9Prefs = {
 This will result in a deep (recursive) copy being performed to merge
 the two new keyboardActions properties with the existing properties.
 
-<h5>Last updated: May 8, 2021</h5>
+<p>
+Finally, note that the JS9 Node.js helper utilizes
+the <b>js9Prefs.json</b> file for configuration. Please ensure that
+the following properties defined in these two files are consistent
+with one another:
+<ul>
+<li> helperType
+<li> helperPort
+<li> helperCGI
+<li> loadProxy
+<li> workDir
+<li> workDirQuota
+<li> dataPath
+<li> analysisPlugins
+<li> analysisWrappers
+</ul>
+
+<h5>Last updated: February 15, 2022</h5>
 </div>
 
 </body>

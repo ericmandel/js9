@@ -348,7 +348,11 @@ const loadPreferences = function(prefs){
 			    globalOpts[opt] = obj.globalOpts[opt];
 			    break;
 			case "object":
-			    Object.assign(globalOpts[opt], obj.globalOpts[opt]);
+			    if( jtype === "undefined" ){
+				globalOpts[opt] = obj.globalOpts[opt];
+			    } else {
+				Object.assign(globalOpts[opt], obj.globalOpts[opt]);
+			    }
 			    break;
 			default:
 			    break;
