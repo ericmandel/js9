@@ -27998,7 +27998,7 @@ JS9.mkPublic("Quit", function(...args){
 // ---------------------------------------------------------------------
 
 JS9.init = function(){
-    let uopts, url, ufile, dopts, key;
+    let uopts, url, ufile, dopts, key, arr;
     // sanity check: need HTML5 canvas and JSON
     if( !window.HTMLCanvasElement || !JSON ){
 	JS9.error("your browser does not support JS9 (no HTML5 canvas and/or JSON). Please try a modern version of Firefox, Chrome, Safari, Opera, or Edge.");
@@ -28371,10 +28371,12 @@ JS9.init = function(){
 	return 0;
     });
     // check web page url for file to load, if necessary
+    // check for display rename
     if( JS9.globalOpts.processQueryParams ){
 	url = new URL(window.location);
 	if( url.searchParams ){
 	    uopts = {};
+	    arr = null;
 	    for (const [key, value] of url.searchParams){
 		switch(key){
 		case "url":
@@ -28384,11 +28386,19 @@ JS9.init = function(){
 		case "display":
 		    dopts = {display: value};
 		    break;
+		case "renamedisplay":
+		    arr=value.split(/[:,]/);
+		    break;
 		default:
 		    uopts[key] = value;
 		    break;
 		}
 	    }
+	    // rename display, if necessary
+	    if( arr ){
+		JS9.RenameDisplay(...arr);
+	    }
+	    // preload file, if necessary
 	    if( ufile ){
 		if( dopts ){
 		    JS9.Preload(ufile, uopts, dopts);

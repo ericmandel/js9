@@ -5559,9 +5559,21 @@ of the JS9 display(s) to the specified id(s). Once an id has been
 renamed, external communication (via the js9 script or pyjs9) should
 target the new id instead of the original id.
 <p>
+If also can be used in the query part of a URL when loading a web page
+in order to rename a display, e.g.:
+<pre>
+  https://js9.si.edu?renamedisplay=myJS9
+</pre>
+will rename the default display. In cases where multiple displays are defined
+on a page:
+<pre>
+  https://js9.si.edu/js9/tests/js9debug.html?renamedisplay=myJS9:yourJS9
+</pre>
+will rename the myJS9 display (but not the JS9 display).
+<p>
 The original id is still available internally, so Javascript public
-API calls on the web page itself can target either the original or the
-new id using the {display: "id"} syntax.
+API calls (but not external scripts) on the web page itself can target
+either the original or the new id using the {display: "id"} syntax.
 
 <h5 id="JS9.CloseDisplay">Close all images in a display</h5>
 <p>
