@@ -581,7 +581,6 @@ JS9.helper = {};		// only one helper per page, please
 JS9.fits = {};			// object holding FITS access routines
 JS9.userOpts = {};		// object to hold localStorage opts
 JS9.tmp = {};			// global temp area
-
 // misc params
 // list of scales in mkScaledCells
 JS9.scales = ["linear", "log", "histeq", "power", "sqrt", "squared", "asinh", "sinh"];
@@ -28394,9 +28393,9 @@ JS9.init = function(){
 		    break;
 		}
 	    }
-	    // rename display, if necessary
+	    // rename display when all is ready
 	    if( arr ){
-		JS9.RenameDisplay(...arr);
+		JS9.prerename = [...arr];
 	    }
 	    // preload file, if necessary
 	    if( ufile ){
@@ -28425,6 +28424,10 @@ $(document).ready(() => {
     $(document).on("JS9:ready", () => {
 	if( !JS9.readied ){
 	    JS9.readied = true;
+	    if( JS9.notNull(JS9.prerename) && JS9.prerename.length ){
+		JS9.RenameDisplay(...JS9.prerename);
+		delete JS9.prerename;
+	    }
 	    JS9.Preload(true);
 	}
     });
