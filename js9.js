@@ -11846,7 +11846,7 @@ JS9.WebWorker.prototype.send = function(cmd, args, func, xfer){
 	args = args || [];
 	this.handlers.push({id, cmd, args, func});
     }
-    // send message, possible with transferred data
+    // send message, possibly with transferred data
     if( xfer ){
 	this.worker.postMessage(obj, xfer);
     } else {
