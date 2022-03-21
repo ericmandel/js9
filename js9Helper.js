@@ -76,7 +76,8 @@ const globalOpts = {
     textEncoding:     "ascii",     // encoding for returned stdout from exec
     rmWorkDir:        true,        // remove workdir on disconnect?
     rmWorkDelay:      15000,       // delay before removing workdir
-    remoteMsgs:       1, // 0 => local, 1 => same, 2 => local->all 3 => all->all
+    remoteMsgs:       1,           // -1 => pageid only, 0 => local only,
+                                   // 1 => same, 2 => local->all 3 => all->all
     remoteMsgsHeader: "x-forwarded-for"
 };
 // globalOpts that might need to have paths relative to __dirname
@@ -184,9 +185,17 @@ const getTargets = function(socket, msg){
     const myip = getHost(socket);
     // list of all clients connected on this socket
     const clients = getClients();
-    // authentication func
-    const authenticate = (myip, clip) => {
-	// localhost to localhost is always allowed
+    // authentication function
+    const authenticate = (myip, clip, mypageid, cpageid) => {
+	// pageid only: for when host ip is mangled (e.g. JupyterLab)
+	// (obviously, a page id must be passed or else authentication fails)
+	if( globalOpts.remoteMsgs === -1 ){
+	    if( mypageid && mypageid === cpageid ){
+		return true;
+	    }
+	    return false;
+	}
+	// localhost to localhost is allowed
 	if( ((myip === "127.0.0.1")         ||
 	     (myip === "::ffff:127.0.0.1")  ||
 	     (myip === "::1"))              &&
@@ -225,7 +234,8 @@ const getTargets = function(socket, msg){
 	}
 	// client ip
 	clip = getHost(c);
-	if( !authenticate(myip, clip) ){
+	// authentication
+	if( !authenticate(myip, clip, msg.pageid, c.js9.pageid) ){
 	    continue;
 	}
 	// look for matching clients
