@@ -76,7 +76,8 @@ const globalOpts = {
     textEncoding:     "ascii",     // encoding for returned stdout from exec
     rmWorkDir:        true,        // remove workdir on disconnect?
     rmWorkDelay:      15000,       // delay before removing workdir
-    remoteMsgs:       1 // 0 => local, 1 => same, 2 => local->all 3 => all->all
+    remoteMsgs:       1, // 0 => local, 1 => same, 2 => local->all 3 => all->all
+    remoteMsgsHeader: "x-forwarded-for"
 };
 // globalOpts that might need to have paths relative to __dirname
 const globalRelatives = ["analysisPlugins",
@@ -89,19 +90,22 @@ const globalRelatives = ["analysisPlugins",
 
 // get ip address and port of the current socket or http connection
 const getHost = function(req){
+    let key = globalOpts.remoteMsgsHeader;
     // socket.io
     if( req.handshake ){
-	if( req.handshake.headers                    &&
-	    req.handshake.headers['x-forwarded-for'] ){
-	    return req.handshake.headers['x-forwarded-for'].split(',')[0];
+	if( key && req.handshake.headers && req.handshake.headers[key] ){
+	    return req.handshake.headers[key].split(',')[0];
 	} else {
 	    return req.client.conn.remoteAddress;
 	}
     }
     // http server
     // http://stackoverflow.com/questions/19266329/node-js-get-clients-ip
-    return (req.headers['x-forwarded-for'] || '').split(',')[0] ||
-            req.connection.remoteAddress;
+    if( key && req.headers && req.headers[key] ){
+	return req.headers[key].split(',')[0];
+    } else {
+	return req.connection.remoteAddress;
+    }
 };
 
 // http://stackoverflow.com/questions/6563885/socket-io-how-do-i-get-a-list-of-connected-sockets-clients
