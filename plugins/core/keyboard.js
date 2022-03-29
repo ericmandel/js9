@@ -97,10 +97,18 @@ JS9.Keyboard.Actions = {};
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["open local file"] = function(im, ipos, evt){
-    if( window.isElectron && typeof evt.data === "object" ){
-	evt.data.displayLoadForm();
-    } else {
-	JS9.OpenFileMenu({display: evt.data});
+    let display;
+    if( im ){
+	display = im.display;
+    } else if( evt && typeof evt.data === "object" ){
+	display = evt.data;
+    }
+    if( display ){
+	if( window.isElectron && typeof evt.data === "object" ){
+	    display.displayLoadForm();
+	} else {
+	    JS9.OpenFileMenu({display});
+	}
     }
 };
 
@@ -114,8 +122,14 @@ JS9.Keyboard.Actions["close image"] = function(im, ipos, evt){
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["new JS9 light window"] = function(im, ipos, evt){
     let opts;
-    if( evt && evt.data && evt.data.id ){
-	opts = {clone: evt.data.id};
+    let display;
+    if( im ){
+	display = im.display;
+    } else if( evt && typeof evt.data === "object" ){
+	display = evt.data;
+    }
+    if( display ){
+	opts = {clone: display.id};
     }
     JS9.LoadWindow(null, opts, "light");
 };
@@ -289,12 +303,19 @@ JS9.Keyboard.Actions["tag selected region as 'exclude'"] = function(im, ipos, ev
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["toggle full screen mode"] = function(im, ipos, evt){
-    const display = evt.data;
-    if( (display.width  === display.width0)  &&
-	(display.height === display.height0) ){
-	display.resize("full", {center: true});
-    } else {
-	display.resize("reset");
+    let display;
+    if( im ){
+	display = im.display;
+    } else if( evt && typeof evt.data === "object" ){
+	display = evt.data;
+    }
+    if( display ){
+	if( (display.width  === display.width0)  &&
+	    (display.height === display.height0) ){
+	    display.resize("full", {center: true});
+	} else {
+	    display.resize("reset");
+	}
     }
 };
 
@@ -345,8 +366,15 @@ JS9.Keyboard.Actions["display previous image"] = function(im, ipos, evt){
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["open a local FITS file"] = function(im, ipos, evt){
-    // nb: evt.data is always the js9 display (so no image needed here)
-    JS9.OpenFileMenu({display: evt.data});
+    let display;
+    if( im ){
+	display = im.display;
+    } else if( evt && typeof evt.data === "object" ){
+	display = evt.data;
+    }
+    if( display ){
+	JS9.OpenFileMenu({display});
+    }
 };
 
 // eslint-disable-next-line no-unused-vars
@@ -647,29 +675,53 @@ JS9.Keyboard.Actions["toggle crosshair"] = function(im, ipos, evt){
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["toggle mouse/touch plugin"] = function(im, ipos, evt){
+    let display;
     if( im ){
-	im.display.displayPlugin("JS9MouseTouch");
+	display = im.display;
+    } else if( evt && typeof evt.data === "object" ){
+	display = evt.data;
+    }
+    if( display ){
+	display.displayPlugin("JS9MouseTouch");
     }
 };
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["toggle keyboard actions plugin"] = function(im, ipos, evt){
+    let display;
     if( im ){
-	im.display.displayPlugin("JS9Keyboard");
+	display = im.display;
+    } else if( evt && typeof evt.data === "object" ){
+	display = evt.data;
+    }
+    if( display ){
+	display.displayPlugin("JS9Keyboard");
     }
 };
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["toggle preferences plugin"] = function(im, ipos, evt){
+    let display;
     if( im ){
-	im.display.displayPlugin("JS9Preferences");
+	display = im.display;
+    } else if( evt && typeof evt.data === "object" ){
+	display = evt.data;
+    }
+    if( display ){
+	display.displayPlugin("JS9Preferences");
     }
 };
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["toggle shape layers plugin"] = function(im, ipos, evt){
+    let display;
     if( im ){
-	im.display.displayPlugin("JS9Layers");
+	display = im.display;
+    } else if( evt && typeof evt.data === "object" ){
+	display = evt.data;
+    }
+    if( display ){
+	display.displayPlugin("JS9Layers");
     }
 };
 

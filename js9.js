@@ -9787,6 +9787,9 @@ JS9.Display = function(el){
     // save original width and height
     this.width0 = this.width;
     this.height0 = this.height;
+    // set tabindex so we can sense keyboard events
+    // (this invocation senses keydown when no is image loaded)
+    this.divjq.attr("tabindex", 0);
     // create DOM canvas element
     this.canvas = document.createElement("canvas");
     // jquery version for event handling and DOM manipulation
@@ -9799,7 +9802,10 @@ JS9.Display = function(el){
     // add container to the high-level div
     this.displayConjq = $("<div>")
 	.addClass("JS9Container")
+	.attr("id", `${this.id}DisplayConjq`)
 	.css("z-index", JS9.ZINDEX)
+        // set tabindex so we can sense keyboard events
+        // (this invocation senses keydown after image is loaded)
 	.attr("tabindex", "0")
 	.append(this.canvasjq)
 	.appendTo(this.divjq);
@@ -15186,7 +15192,9 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
 	let i, child, parent;
 	if( (obj.params.removable !== false || opts.overrideRemovable) &&
 	    (!obj.params.sticky || opts.sticky !== false)  	       ){
-	    this._updateShape(layerName, obj, ginfo, "remove");
+	    if( layer.dlayer.dtype === "main" ){
+		this._updateShape(layerName, obj, ginfo, "remove");
+	    }
 	    // clear any dialog box
 	    if( obj.params.winid ){
 		obj.params.winid.close();
