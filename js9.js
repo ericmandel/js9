@@ -15013,7 +15013,7 @@ JS9.Fabric.listGroups = function(which, opts, layerName){
 // call using image context
 // eslint-disable-next-line no-unused-vars
 JS9.Fabric.groupShapes = function(layerName, shape, opts){
-    let  s, layer, dlayer, canvas, obj, id, skip, dupid;
+    let  i, s, layer, dlayer, canvas, obj, id, skip, dupid;
     const objs = [];
     const pubs = [];
     const getid = (opts) => {
@@ -15071,8 +15071,18 @@ JS9.Fabric.groupShapes = function(layerName, shape, opts){
 		if( $.inArray("groupid", obj.params.exports) < 0 ){
 		    obj.params.exports.push("groupid");
 		}
+		// save object
 		objs.push(obj);
 		pubs.push(obj.pub);
+		// save children (i.e., text)
+		// (but not pub, since don't call ongroupcreate on text)
+		if( obj.params && obj.params.children.length ){
+		    for(i=0; i<obj.params.children.length; i++){
+			if( obj.params.children[i].obj ){
+			    objs.push(obj.params.children[i].obj);
+			}
+		    }
+		}
 	    }
 	}
     });
