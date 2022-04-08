@@ -10830,6 +10830,15 @@ JS9.Display.prototype.loadSession = function(file, opts){
 	    // change shape positions if the displays sizes differ
 	    im.refreshLayers();
 	};
+	// see: http://fabricjs.com/v5-breaking-changes
+	const reviver = (data, instance) => {
+	    // detect that version is less than 5
+	    // change radians to degrees (for circles)
+	    if (parseInt(data.version.slice(0, 1), 10) < 5) {
+		if( instance.startAngle ) instance.startAngle *= 180 / Math.PI;
+		if( instance.endAngle )   instance.endAngle *= 180 / Math.PI;
+	    }
+	};
 	obj = objs[im.file] || {};
 	// reconstitute blend state
 	if( obj.blend ){
@@ -10862,7 +10871,7 @@ JS9.Display.prototype.loadSession = function(file, opts){
 		// add a layer instance to this image (no objects yet)
 		im.addShapes(lname, []);
 		// load the session objects into the layer and render
-		dlayer.canvas.loadFromJSON(layer.json, dorender);
+		dlayer.canvas.loadFromJSON(layer.json, dorender, reviver);
 		// restore catalog and starbase, if necessary
 		if( layer.catalog ){
 		    im.layers[lname].catalog = layer.catalog;
@@ -12050,7 +12059,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	}
     };
     // eslint-disable-next-line no-unused-vars
-    const selmultioff = (dlayer, activeObject, opts) => {
+    const selmultioff = (dlayer, opts) => {
 	let i, obj, aobjects;
 	aobjects = dlayer.canvas.getActiveObjects();
 	for(i=0; i<aobjects.length; i++){
@@ -12092,12 +12101,15 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	}
     };
     // eslint-disable-next-line no-unused-vars
-    const selmultion = (dlayer, activeObject, opts) => {
+    const selmultion = (dlayer, opts, activeObject) => {
 	let i, j, obj, parent, child, objs;
 	// turn off previous selection, if necessary
 	if( dlayer.params.sel && (dlayer.params.sel !== activeObject) ){
 	    seloff(dlayer, dlayer.params.sel);
 	}
+	// get current active object if necessary
+	activeObject = activeObject || dlayer.canvas.getActiveObject();
+	// and the associated objects
 	objs = dlayer.canvas.getActiveObjects();
 	for(i=0; i<objs.length; i++){
 	    obj = objs[i];
@@ -12382,29 +12394,6 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
                                       dlayer.canvas.selection;
 	});
     }
-    // fire events when groups are created
-    if( typeof dlayer.opts.ongroupcreate === "function" ){
-	dlayer.opts.canvas.selection = true;
-	dlayer.opts.selectable = true;
-	dlayer.canvas.on("selection:created", (opts) => {
-	    const pubs = [];
-	    const targets = [];
-	    if( dlayer.display.image ){
-		if( opts.target && opts.target.type === "group" ){
-		    opts.target.forEachObject(function(shape){
-			if( shape.pub ){
-			    targets.push(shape);
-			    pubs.push(shape.pub);
-			}
-		    });
-		    dlayer.opts.ongroupcreate.call(dlayer.canvas,
-						   dlayer.display.image,
-						   pubs,
-						   opts.e, targets);
-		}
-	    }
-	});
-    }
     // object modified
     dlayer.canvas.on("object:modified", (opts) => {
 	let o, i, olen, myWidth, myHeight;
@@ -12480,42 +12469,62 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
     // selection created: add anchors to polygon
     dlayer.canvas.on("selection:created", (opts) => {
 	let obj;
-	// sanity check
-	if( !opts.target ){ return; }
 	if( JS9.globalOpts.skipSelectionProcessing ){ return; }
-	obj = opts.target;
-	if(  obj.type === "activeSelection"      ||
-	     (obj.type === "group" && !obj.params) ){
-	    selmultion(dlayer, obj, opts);
-	} else {
-	    selon(dlayer, obj);
+	if( opts.target ){
+	    // fabric v4
+	    obj = opts.target;
+	    if(  obj.type === "activeSelection"      ||
+		 (obj.type === "group" && !obj.params) ){
+		selmultion(dlayer, opts, obj);
+	    } else {
+		selon(dlayer, obj);
+	    }
+	} else if( opts.selected && opts.selected.length ){
+	    // fabric v5
+	    obj = opts.selected[0];
+	    if( opts.selected.length === 1 ){
+		selon(dlayer, obj);
+	    } else {
+		selmultion(dlayer, opts);
+	    }
 	}
     });
     // selection updated (adding a region to the current selection):
     // add anchors to polygon
     dlayer.canvas.on("selection:updated", (opts) => {
 	let obj;
-	// sanity check
-	if( !opts.target ){ return; }
 	if( JS9.globalOpts.skipSelectionProcessing ){ return; }
-	obj = opts.target;
-	if( obj.type === "activeSelection"       ||
-	    (obj.type === "group" && !obj.params) ){
-	    selmultion(dlayer, obj, opts);
-	} else {
-	    selon(dlayer, obj);
+	if( opts.target ){
+	    // fabric v4
+	    obj = opts.target;
+	    if( obj.type === "activeSelection"        ||
+		(obj.type === "group" && !obj.params) ){
+		selmultion(dlayer, opts, obj);
+	    } else {
+		selon(dlayer, obj);
+	    }
+	} else if( opts.selected && opts.selected.length ){
+	    // fabric v5
+	    obj = opts.selected[0];
+	    if( opts.selected.length === 1 ){
+		selon(dlayer, obj);
+	    } else {
+		selmultion(dlayer, opts);
+	    }
 	}
     });
     // selection cleared
+    // v5: why does this work differently from the selection: events above???
+    // (i.e. still utilizes obj.target instead of obj.selected)
     dlayer.canvas.on("before:selection:cleared", (opts) => {
 	let obj;
+	if( JS9.globalOpts.skipSelectionProcessing ){ return; }
 	// sanity check
 	if( !opts.target ){ return; }
-	if( JS9.globalOpts.skipSelectionProcessing ){ return; }
 	obj = opts.target;
-	if(  obj.type === "activeSelection"      ||
+	if(  obj.type === "activeSelection"        ||
 	     (obj.type === "group" && !obj.params) ){
-	    selmultioff(dlayer, obj, opts);
+	    selmultioff(dlayer, opts);
 	} else {
 	    seloff(dlayer, obj);
 	}
@@ -15004,8 +15013,9 @@ JS9.Fabric.listGroups = function(which, opts, layerName){
 // call using image context
 // eslint-disable-next-line no-unused-vars
 JS9.Fabric.groupShapes = function(layerName, shape, opts){
-    let  s, layer, canvas, obj, id, skip, dupid;
+    let  s, layer, dlayer, canvas, obj, id, skip, dupid;
     const objs = [];
+    const pubs = [];
     const getid = (opts) => {
 	let i = 1;
 	let id = opts.groupid || `group_${i}`;
@@ -15017,6 +15027,8 @@ JS9.Fabric.groupShapes = function(layerName, shape, opts){
     };
     // get layer
     layer = this.getShapeLayer(layerName);
+    // dlayer
+    dlayer = layer.dlayer;
     // sanity check
     if( !layer ){ return 0; }
     // opts is optional
@@ -15060,6 +15072,7 @@ JS9.Fabric.groupShapes = function(layerName, shape, opts){
 		    obj.params.exports.push("groupid");
 		}
 		objs.push(obj);
+		pubs.push(obj.pub);
 	    }
 	}
     });
@@ -15094,6 +15107,10 @@ JS9.Fabric.groupShapes = function(layerName, shape, opts){
     // save group id
     this.groups[layerName] = this.groups[layerName] || [];
     this.groups[layerName].push(id);
+    // global callback when a group is created
+    if( typeof dlayer.opts.ongroupcreate === "function" ){
+	dlayer.opts.ongroupcreate.call(dlayer.canvas, id, this, pubs, objs);
+    }
     // return the group id
     return id;
 };

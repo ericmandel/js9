@@ -4426,22 +4426,23 @@ function that will fire when two or more objects are selected into a
 group (which is done using the <b>Command</b> key on a Mac,
 or <b>Control</b> key everywhere else):
 <ul>
-<li><b>ongroupcreate</b>: function(im, xreg, evt);
+<li><b>ongroupcreate</b>: function(im, xreg, id);
 </ul>
 The function will be called with the following arguments:
 <ul>
+<li> <b>id</b>: group id
 <li> <b>im</b>: the image handle for the currently displayed image
 <li> <b>xreg</b>: an array of shape objects within the group
-<li> <b>evt</b>: the original event object
 </ul>
 Note that an array of xreg objects is passed in this case instead of
 the single "current" object passed in the other event callbacks.
 For example:
 <pre>
-    opts.ongroupcreate = function(im, xreg, evt){
+    opts.ongroupcreate = function(id, im, xreg){
         var i, nshape, xcen, ycen;
         var xtot=0, ytot=0;
         nshape = xreg.length;
+        console.log("group: %s", id);
         for(i=0; i&lt;nshape; i++){
           xtot += xreg[i].x; ytot += xreg[i].y;
         }
@@ -6258,6 +6259,23 @@ that we can gain a better understanding of what is required in these cases.
 <p>
 The JS9 Public API is meant to be stable and well-documented. If we are
 forced to make an incompatible change to the API, it will be documented here.
+
+<p>
+<h5>20220408: Change the calling sequence to global ongroupcreate callback</h5>
+The global JS9.Regions.opts.ongroupcreate callback has the calling sequence:
+<pre>
+<li><b>ongroupcreate</b>: ongroupcreate(id, im, xreg);
+</ul>
+where:
+<ul>
+<li> <b>id</b>: group id
+<li> <b>im</b>: the image handle for the currently displayed image
+<li> <b>xreg</b>: an array of shape objects within the group
+</ul>
+</pre>
+The old calling sequence did not pass the group id, but instead passed
+the event which triggered the group creation in the last argument ...
+which doesn't make sense for an API call.
 
 <p>
 <h5>20200815: ChangeRegions, CopyRegions, GetRegions, RemoveRegions, SelectRegions, : default region changed</h5>
