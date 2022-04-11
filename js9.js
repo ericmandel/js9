@@ -14092,7 +14092,7 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 	}
 	return groups;
     };
-    const lookupgroup = (obj) => {
+    const lookupgroup = (obj, objects) => {
 	let i, tobj;
 	for(i=0; i<objects.length; i++){
 	    tobj = objects[i];
@@ -14174,7 +14174,7 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 	groups = getgroups(canvas, objects);
 	// this selection
 	id = selection[j];
-	// if id is a positive int in string format, convert it to it now
+	// if id is a positive int in string format, convert it to int
 	// so we can process it as a region id coming from the command line
 	if( (typeof id === "string") && /^[1-9]\d*$/.test(id) ){
 	    id = parseInt(id, 10);
@@ -14184,27 +14184,33 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 	// select on the id
 	switch( typeof id ){
 	case "object":
-	    while( olen-- ){
-		obj = objects[olen];
-		if( obj === id ){
-		    ginfo.group = groups[olen];
+	    // explicit object could be a shape or a shape in a group
+	    aobjects = getshapes(objects);
+	    alen = aobjects.length;
+	    while( alen-- ){
+		obj = aobjects[alen];
+		if( obj && obj.params && (obj === id) ){
+		    ginfo.group = lookupgroup(obj, objects);
 		    xcb(obj, ginfo);
 		    break;
 		}
 	    }
 	    break;
 	case "number":
-	    while( olen-- ){
-		obj = objects[olen];
-		if( obj.params && (id === obj.params.id) ){
-		    ginfo.group = groups[olen];
+	    // explicit shape id could be a shape or a shape in a group
+	    aobjects = getshapes(objects);
+	    alen = aobjects.length;
+	    while( alen-- ){
+		obj = aobjects[alen];
+		if( obj && obj.params && (obj.params.id === id) ){
+		    ginfo.group = lookupgroup(obj, objects);
 		    xcb(obj, ginfo);
 		    break;
 		}
 	    }
 	    break;
 	case "string":
-	    // string id can be a region tag, color, shape, or tag
+	    // string id can be a color, shape, tag, etc.
 	    // look for id in various ways
             if( id === "selected" ){
 		// list of active objects
@@ -14214,7 +14220,7 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 		while( alen-- ){
 		    obj = aobjects[alen];
 		    // find the group for this object
-		    ginfo.group = lookupgroup(obj);
+		    ginfo.group = lookupgroup(obj, objects);
 		    // don't process shapes with parents in a group
 		    if( obj.params && !obj.params.parent ){
 			xcb(obj, ginfo);
