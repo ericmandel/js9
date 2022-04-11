@@ -15033,10 +15033,10 @@ JS9.Fabric.groupShapes = function(layerName, shape, opts){
     };
     // get layer
     layer = this.getShapeLayer(layerName);
-    // dlayer
-    dlayer = layer.dlayer;
     // sanity check
     if( !layer ){ return 0; }
+    // dlayer
+    dlayer = layer.dlayer;
     // opts is optional
     opts = opts || {};
     // opts can be an object or json
