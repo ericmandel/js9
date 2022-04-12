@@ -12481,8 +12481,8 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    }
 	} else if( opts.selected && opts.selected.length ){
 	    // fabric v5
-	    obj = opts.selected[0];
 	    if( opts.selected.length === 1 ){
+		obj = opts.selected[0];
 		selon(dlayer, obj);
 	    } else {
 		selmultion(dlayer, opts);
@@ -12505,8 +12505,8 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    }
 	} else if( opts.selected && opts.selected.length ){
 	    // fabric v5
-	    obj = opts.selected[0];
 	    if( opts.selected.length === 1 ){
+		obj = opts.selected[0];
 		selon(dlayer, obj);
 	    } else {
 		selmultion(dlayer, opts);
