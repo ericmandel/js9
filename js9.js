@@ -23090,8 +23090,8 @@ CanvasRenderingContext2D.prototype.clear =
     }
 };
 
-    // create a searchbar on a div using: https://markjs.io/
-    // routine adapted from: https://jsfiddle.net/julmot/973gdh8g/
+// create a searchbar on a div using: https://markjs.io/
+// routine adapted from: https://jsfiddle.net/julmot/973gdh8g/
 JS9.searchbar = function(el, textid){
     let div, text, bar;
     let srch, next, prev, close;
@@ -23102,13 +23102,13 @@ JS9.searchbar = function(el, textid){
     const search = (value) => {
 	let searchVal = value;
 	text.unmark({
-	    done: function(){
+	    done: () => {
 		text.mark(searchVal, {
 		    caseSensitive: bar.opts.matchcase,
 		    diacritics: bar.opts.diacritics,
 		    accuracy: bar.opts.matchwords ? "exactly" : "partially",
 		    wildcards: bar.opts.matchwildcards ? "enabled" : "disabled",
-		    done: function(){
+		    done: () => {
 			bar.results = text.find("mark");
 			bar.currentIndex = 0;
 			jumpTo();
@@ -23181,8 +23181,8 @@ JS9.searchbar = function(el, textid){
 	.addClass("JS9SearchInput")
 	.appendTo(bar);
     // event fires with each keystroke
-    srch.on("input", function(){
-	search(this.value);
+    srch.on("input", () => {
+	search(srch.val());
     });
     // placeholder hints
     if( bar.opts.matchwildcards ){
@@ -23203,9 +23203,9 @@ JS9.searchbar = function(el, textid){
 	.html("&uarr;")
 	.appendTo(bar);
     // event callback for next and prev
-    next.add(prev).on("click", function() {
+    next.add(prev).on("click", (e) => {
 	if( bar.results && bar.results.length) {
-	    bar.currentIndex += $(this).is(prev) ? -1 : 1;
+	    bar.currentIndex += $(e.currentTarget).is(prev) ? -1 : 1;
 	    if( bar.currentIndex < 0 ){
 		bar.currentIndex = bar.results.length - 1;
 	    }
@@ -23220,7 +23220,7 @@ JS9.searchbar = function(el, textid){
 	.prop("data-btn", "matchcase")
 	.html("Match Case")
 	.appendTo(bar);
-    matchcase.on("click", function() {
+    matchcase.on("click", () => {
 	bar.opts.matchcase = !bar.opts.matchcase;
 	btnColor(matchcase);
 	search(srch.val());
@@ -23231,7 +23231,7 @@ JS9.searchbar = function(el, textid){
 	.prop("data-btn", "matchdiacritics")
 	.html("Match Diacritics")
 	.appendTo(bar);
-    matchdiacritics.on("click", function() {
+    matchdiacritics.on("click", () => {
 	bar.opts.matchdiacritics = !bar.opts.matchdiacritics;
 	btnColor(matchdiacritics);
 	search(srch.val());
@@ -23242,7 +23242,7 @@ JS9.searchbar = function(el, textid){
 	.prop("data-btn", "matchwords")
 	.html("Whole Words")
 	.appendTo(bar);
-    matchwords.on("click", function() {
+    matchwords.on("click", () => {
 	bar.opts.matchwords = !bar.opts.matchwords;
 	btnColor(matchwords);
 	search(srch.val());
@@ -23253,7 +23253,7 @@ JS9.searchbar = function(el, textid){
 	.prop("data-btn", "matchwildcards")
 	.html("Wildcards")
 	.appendTo(bar);
-    matchwildcards.on("click", function() {
+    matchwildcards.on("click", () => {
 	bar.opts.matchwildcards = !bar.opts.matchwildcards;
 	if( bar.opts.matchwildcards ){
 	    srch.prop("placeholder", "sea*rch template?");
@@ -23270,7 +23270,7 @@ JS9.searchbar = function(el, textid){
 	.prop("data-btn", "close")
 	.html("Close")
 	.appendTo(bar);
-    close.on("click", function() {
+    close.on("click", () => {
 	text.unmark();
 	srch.val("");
 	bar.css("display", "none");
