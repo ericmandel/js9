@@ -65,16 +65,16 @@ JS9.Color.xsetcolor = function(did, id, which, target){
 	switch(which){
 	case "top":
 	    if( typeof target === "string" ){
-		$(".JS9Cmaps1 option").filter((index, el) => {
-		    return $(el).text().trim() === target;
+		$(".JS9Cmaps1 option").filter((index, element) => {
+		    return $(element).text().trim() === target;
 		}).prop("selected", true);
 	    }
 	    $(".JS9Cmaps2").prop("selectedIndex", 0);
 	    break;
 	case "other":
 	    if( typeof target === "string" ){
-		$(".JS9Cmaps2 option").filter((index, el) => {
-		    return $(el).text().trim() === target;
+		$(".JS9Cmaps2 option").filter((index, element) => {
+		    return $(element).text().trim() === target;
 		}).prop("selected", true);
 	    }
 	    $(".JS9Cmaps1").prop("selectedIndex", 0);
