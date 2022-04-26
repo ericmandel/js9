@@ -21343,7 +21343,7 @@ JS9.progress = function(arg1, arg2){
 };
 
 // msg coming from socket.io or postMessage
-JS9.msgHandler =  function(msg, cb){
+JS9.msgHandler = function(msg, cb){
     let i, s, obj, tdisp, res, dobj;
     let args = [];
     const cmd = msg.cmd;
@@ -23300,7 +23300,7 @@ JS9.tooltip = function(x, y, fmt, im, xreg, evt){
     let tipstr, tx, ty, w, h;
     const fmt2str = (str) => {
 	// eslint-disable-next-line no-unused-vars
-	const cmd = str.replace(/\$([a-zA-Z0-9_./]+)/g, function(m, t, o){
+	const cmd = str.replace(/\$([a-zA-Z0-9_./]+)/g, (m, t, o) => {
             let i, v, val;
 	    const arr = t.split(".");
 	    switch(arr[0]){
@@ -23345,8 +23345,7 @@ JS9.tooltip = function(x, y, fmt, im, xreg, evt){
 	ty = Math.max(2, Math.min(y, im.display.height - (h + 10)));
 	im.display.tooltip.css({left:tx, top:ty, display: "inline-block"});
     } else {
-	im.display.tooltip
-	    .html("").css({left: -9999, display: "none"});
+	im.display.tooltip.html("").css({left: -9999, display: "none"});
     }
 };
 
