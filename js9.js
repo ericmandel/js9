@@ -828,7 +828,7 @@ JS9.Image = function(file, params, func){
 	    if( !waiting ){
 		// resort preloads into original order
 		if( JS9.globalOpts.sortPreloads ){
-		    JS9.images.sort( (a, b) => {
+		    JS9.images.sort((a, b) => {
 			let ai = 0, bi = 0;
 			for(i=0; i<plen; i++){
 			    pre = JS9.preloadwaiting[i];
@@ -10890,7 +10890,7 @@ JS9.Display.prototype.loadSession = function(file, opts){
 	if( JS9.notNull(left) ){
 	    left = left - 1;
 	    if( left === 0 ){
-		JS9.images.sort( (a, b) => {
+		JS9.images.sort((a, b) => {
 		    let ai = 0, bi = 0;
 		    if( objs[a.file] ){ ai = objs[a.file].i; }
 		    if( objs[b.file] ){ bi = objs[b.file].i; }
@@ -12426,7 +12426,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    // add current shape to array
 	    objs.push({obj: o, siz: myWidth * myHeight});
 	    // sort in order of increasing size
-	    objs.sort( (a, b) => {
+	    objs.sort((a, b) => {
 		// using <= instead of < preserves order for =
 		if( a.siz <= b.siz ){
 		    return -1;
@@ -15335,9 +15335,7 @@ JS9.Fabric.getShapes = function(layerName, shape, opts){
     });
     // sort shapes by id to maintain original order of creation
     if( opts.sortids !== false ){
-	shapes.sort((a, b) => {
-	    return (a.id||0) - (b.id||0);
-	});
+	shapes.sort((a, b) => { return (a.id||0) - (b.id||0); });
     }
     return shapes;
 };
@@ -16047,7 +16045,7 @@ JS9.Fabric._ungroupAnnulus = function(layerName, shape){
     // add circles so that smallest is on top
     objs = shape.getObjects();
     // largest to smallest so smallest ends up on top of the shape stack
-    objs.sort((a, b) => {return b.radius - a.radius;});
+    objs.sort((a, b) => { return b.radius - a.radius; });
     // add circle for edit
     for(i=0; i<objs.length; i++){
 	opts.radius = objs[i].radius;
@@ -16122,7 +16120,7 @@ JS9.Fabric._regroupAnnulus = function(layerName, e){
 		break;
 	    }
 	}
-	opts.radii.sort((a, b) => {return a - b;});
+	opts.radii.sort((a, b) => { return a - b; });
     }
     // change the annulus
     this.changeShapes(layerName, this.editAnnulus.annulus, opts);
@@ -23652,7 +23650,7 @@ JS9.parseStaticColors = function(arr){
 	staticColors.push(sobj);
     }
     // optimize lookup: sort so that first min is global min
-    staticColors.sort(function(a, b){ return a.min - b.min; });
+    staticColors.sort((a, b) => { return a.min - b.min; });
     // return array of color objects
     return staticColors;
 };
@@ -28393,7 +28391,7 @@ JS9.init = function(){
     // find divs associated with each plugin and run the constructor
     JS9.instantiatePlugins();
     // sort plugins
-    JS9.plugins.sort( (a,b) => {
+    JS9.plugins.sort((a,b) => {
 	const t1 = a.opts.menuItem;
 	const t2 = b.opts.menuItem;
 	if( !t1 ){
