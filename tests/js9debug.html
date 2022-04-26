@@ -237,6 +237,12 @@
         JS9.DEBUG = 2;
         JS9.AddColormap("cyan", [[0,0],[0,0]], [[0,0],[1,1]], [[0,0],[1,1]]);
 	JS9.LoadColormap("data/cmaps/multi.cmap", {toplevel: false});
+	JS9.AddColormap("static",
+                  [["red", 1, 5],
+		   ["green", 5, 10],
+		   ["rgba(0,0,255,0.5)", 11, 15],
+		   ["violet", 16, 20],
+		   ["cyan", 21, Infinity]]);
         JS9.Preload("data/fits/casa.fits[events][energy=3000:7000]",
                     {colormap: "cool", contrast: 5.9, bias: 0.66, scale: "log",
                      xdim: 8192, ydim: 8192, bin: 4,
