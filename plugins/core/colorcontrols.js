@@ -65,6 +65,7 @@ JS9.Color.xsetcolor = function(did, id, which, target){
 	switch(which){
 	case "top":
 	    if( typeof target === "string" ){
+		// don't use arrow function, jquery filter() utilizes 'this'
 		$(".JS9Cmaps1 option").filter(function(){
 		    return $(this).text().trim() === target;
 		}).prop("selected", true);
@@ -73,6 +74,7 @@ JS9.Color.xsetcolor = function(did, id, which, target){
 	    break;
 	case "other":
 	    if( typeof target === "string" ){
+		// don't use arrow function, jquery filter() utilizes 'this'
 		$(".JS9Cmaps2 option").filter(function(){
 		    return $(this).text().trim() === target;
 		}).prop("selected", true);
