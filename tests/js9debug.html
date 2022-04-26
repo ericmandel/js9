@@ -440,16 +440,16 @@
             }
             break;
           case "up":
-            JS9.ChangeShapes("circle", "all", {dx: 0, dy: inc});
+            JS9.ChangeShapes("circle", "all", {deltax: 0, deltay: inc});
             break;
           case "down":
-            JS9.ChangeShapes("circle", "all", {dx: 0, dy: -inc});
+            JS9.ChangeShapes("circle", "all", {deltax: 0, deltay: -inc});
             break;
           case "left":
-            JS9.ChangeShapes("circle", "all", {dx: -inc, dy: 0});
+            JS9.ChangeShapes("circle", "all", {deltax: -inc, deltay: 0});
             break;
           case "right":
-            JS9.ChangeShapes("circle", "all", {dx: inc, dy: 0});
+            JS9.ChangeShapes("circle", "all", {deltax: inc, deltay: 0});
             break;
         }
     }
