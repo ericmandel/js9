@@ -7,7 +7,7 @@
 "use strict";
 
 // To specify the JS9 display instance to link to a given PREFS div,
-// use the HTML5 dataset syntax: 
+// use the HTML5 dataset syntax:
 //    <div class="JS9Prefs" data-js9id="JS9"></div>
 
 // create our namespace, and specify some meta-information and params
@@ -115,7 +115,7 @@ JS9.Prefs.imagesSchema = {
 	}
     }
 };
-    
+
 JS9.Prefs.regionsSchema = {
     "title": "Region Preferences",
     "description": "Preferences for each displayed region",
@@ -728,46 +728,44 @@ JS9.Prefs.init = function(){
 	html += `<form id='${id}Form' class='js9AnalysisForm' style='overflow: hidden'>`;
 	html += `<center><b>${source.schema.description}</b></center><p>`;
 	props = source.schema.properties;
-	for( key in props ){
-	    if( Object.prototype.hasOwnProperty.call(props, key) ){
-		obj = props[key];
-		prompt = obj.prompt || `${key}:`;
-		switch(obj.type){
-		case "boolean":
-		    if( source.data[key] ){
-			s = "checked";
-		    } else {
-			s = "";
-		    }
-		    html += `<div class='linegroup'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2'><input type='checkbox' name='${key}' value='true' ${s}></span><span class='column_R4L'>${obj.helper}</span></div>`;
-		    break;
-		default:
-		    if( typeof source.data[key] === "object" ){
-			if( obj.type === "mobject" ){
-			    s = JSON.stringify(source.data[key], null, 2);
-			} else {
-			    s = JSON.stringify(source.data[key]);
-			}
-		    } else if( JS9.isNull(source.data[key]) ){
-			s = "";
-		    } else {
-			s = source.data[key];
-		    }
-		    if( obj.type === "mobject" ){
-			html += `<div class='linegroup' style='height:64px'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2l'><textarea name='${key}' class='text_R' rows='5' style='overflow-x: hidden; resize: none'>${s}</textarea></span><span class='column_R4L'>${obj.helper}</span></div>`;
-		    } else {
-			html += `<div class='linegroup'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2l'><input type='text' name='${key}' class='text_R' value='${s}'></span><span class='column_R4L'>${obj.helper}</span></div>`;
-		    }
-		    break;
+	for( key of Object.keys(props) ){
+	    obj = props[key];
+	    prompt = obj.prompt || `${key}:`;
+	    switch(obj.type){
+	    case "boolean":
+		if( source.data[key] ){
+		    s = "checked";
+		} else {
+		    s = "";
 		}
+		html += `<div class='linegroup'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2'><input type='checkbox' name='${key}' value='true' ${s}></span><span class='column_R4L'>${obj.helper}</span></div>`;
+		break;
+	    default:
+		if( typeof source.data[key] === "object" ){
+		    if( obj.type === "mobject" ){
+			s = JSON.stringify(source.data[key], null, 2);
+		    } else {
+			s = JSON.stringify(source.data[key]);
+		    }
+		} else if( JS9.isNull(source.data[key]) ){
+		    s = "";
+		} else {
+		    s = source.data[key];
+		}
+		if( obj.type === "mobject" ){
+		    html += `<div class='linegroup' style='height:64px'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2l'><textarea name='${key}' class='text_R' rows='5' style='overflow-x: hidden; resize: none'>${s}</textarea></span><span class='column_R4L'>${obj.helper}</span></div>`;
+		} else {
+		    html += `<div class='linegroup'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2l'><input type='text' name='${key}' class='text_R' value='${s}'></span><span class='column_R4L'>${obj.helper}</span></div>`;
+		}
+		break;
 	    }
 	}
 	if( !JS9.cmdlineOpts ){
 	    html += `<input id='${this.id}_applyPrefs' name='Apply' type='button' class='button' value='Apply' onclick='JS9.Prefs.applyForm.call(this);' style='margin: 8px'>`;
 	}
 	// manage stored preferences
-	if( Object.prototype.hasOwnProperty.call(window, "localStorage") &&
-	    JS9.globalOpts.localStorage                                  ){
+	if( {}.hasOwnProperty.call(window, "localStorage") &&
+	    JS9.globalOpts.localStorage                    ){
 	    html += `<input id='${this.id}_savePrefs' name='Save' type='button' class='button' value='Save' onclick='JS9.Prefs.saveForm.call(this)' style='margin: 8px'>`;
 	    html += `<input id='${this.id}_showPrefs' name='Show' type='button' class='button' value='Show Saved' onclick='JS9.Prefs.showForm.call(this)' style='margin: 8px'>`;
 	    html += "<input id='delete' name='Delete' type='button' class='button' value='Delete Saved' onclick='JS9.Prefs.deleteForm.call(this)' style='margin: 8px'>";
@@ -839,10 +837,8 @@ JS9.Prefs.saveForm = function(){
     try{
 	// only save props in the schema: e.g., don't save all of globalOpts
 	props = source.schema.properties;
-	for( key in props ){
-	    if( Object.prototype.hasOwnProperty.call(props, key) ){
-		saveobj[key] = source.data[key];
-	    }
+	for( key of Object.keys(props) ){
+	    saveobj[key] = source.data[key];
 	}
 	localStorage.setItem(source.name, JSON.stringify(saveobj, null, 2));
 	JS9.userOpts[source.name] = localStorage.getItem(source.name);
@@ -873,8 +869,8 @@ JS9.Prefs.showForm = function(){
 	    t = `<p><center>No saved prefs: ${source.name}</center>`;
 	}
     }
-    JS9.lightWin(`savedPrefs${JS9.uniqueID()}`, "inline", t, 
-		 `Saved prefs: ${source.name}`, 
+    JS9.lightWin(`savedPrefs${JS9.uniqueID()}`, "inline", t,
+		 `Saved prefs: ${source.name}`,
 		 JS9.lightOpts[JS9.LIGHTWIN].textWin);
     return false;
 };

@@ -168,17 +168,17 @@ JS9.Blend.addImage = function(im){
     dispid = im.display.id;
     // unique id
     id = JS9.Blend.imid(im);
-    // get class for this layer 
+    // get class for this layer
     dcls = `${JS9.Blend.dispclass(im)}_Image`;
     // value to pass to the macro expander
     opts.push({name: "imid", value: imid});
-    opts.push({name: "active", value: sprintf(JS9.Blend.activeHTML, 
+    opts.push({name: "active", value: sprintf(JS9.Blend.activeHTML,
 					      dispid, imid)});
-    opts.push({name: "opacity", value: sprintf(JS9.Blend.opacityHTML, 
+    opts.push({name: "opacity", value: sprintf(JS9.Blend.opacityHTML,
 					       dispid,  imid)});
-    opts.push({name: "blend", value: sprintf(JS9.Blend.blendHTML, 
+    opts.push({name: "blend", value: sprintf(JS9.Blend.blendHTML,
 					     dispid,  imid)});
-    opts.push({name: "imfile", value: sprintf(JS9.Blend.imfileHTML, 
+    opts.push({name: "imfile", value: sprintf(JS9.Blend.imfileHTML,
 					      imid)});
     // remove initial message
     if( !this.blendDivs ){

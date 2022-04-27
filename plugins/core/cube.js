@@ -208,7 +208,7 @@ JS9.Cube.blink = function(did, id, target, niter){
 	JS9.Cube.xnext(did, id, target);
 	if( JS9.isNull(plugin.blinkMode) ){
 	    plugin.blinkMode = true;
-	} 
+	}
 	JS9.Cube.tid = window.setTimeout(() => {
 	    if( !niter || im.status.displaySection !== "error" ){
 		JS9.Cube.blink(did, id, target, ++niter);
@@ -393,7 +393,7 @@ JS9.Cube.init = function(opts){
 	    mopts.push({name: "rate",
 		       value: sprintf(JS9.Cube.rateHTML, dispid, imid)});
 	    mopts.push({name: "extname",
-		       value: sprintf(JS9.Cube.extnameHTML, 
+		       value: sprintf(JS9.Cube.extnameHTML,
 				      header.EXTNAME || "")});
 	    mopts.push({name: "header2",  value: JS9.Cube.header2HTML});
 	    mopts.push({name: "load",

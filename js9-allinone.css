@@ -1463,6 +1463,10 @@ span.JS9NoDivs {
     left:  250px;
     width: 40px;
 }
+
+.JS9FiltersRange {
+    width: 130px;
+}
 div.JS9ImarithLinegroup {
     float: left;
     position: relative;

@@ -161,30 +161,28 @@ JS9.Sync.unsync = function(ops, ims, opts){
 	return;
     }
     // for each op in this image ...
-    for( op in this.syncs ){
-	if( Object.prototype.hasOwnProperty.call(this.syncs, op) ){
-	    // skip this op if its not in the specified op list
-	    if( xops && $.inArray(op, xops) < 0 ){
-		continue;
+    for( op of Object.keys(this.syncs) ){
+	// skip this op if its not in the specified op list
+	if( xops && $.inArray(op, xops) < 0 ){
+	    continue;
+	}
+	// if no target images specified, delete the whole thing
+	if( !xims ){
+	    delete this.syncs[op];
+	} else {
+	    // get target image array for this image
+	    tims = this.syncs[op];
+	    // for each target image ...
+	    for(i=tims.length-1; i>=0; i--){
+		// remove if it was specified for removal
+		if( $.inArray(tims[i], xims) >= 0 ){
+		    tims.splice(i, 1);
+		}
 	    }
-	    // if no target images specified, delete the whole thing
-	    if( !xims ){
+	    // remove empty target image array
+	    if( !tims.length ){
 		delete this.syncs[op];
-	    } else {
-		// get target image array for this image
-		tims = this.syncs[op];
-		// for each target image ...
-		for(i=tims.length-1; i>=0; i--){
-		    // remove if it was specified for removal
-		    if( $.inArray(tims[i], xims) >= 0 ){
-			tims.splice(i, 1);
-		    }
-		}
-		// remove empty target image array
-		if( !tims.length ){
-		    delete this.syncs[op];
 		
-		}
 	    }
 	}
     }
@@ -454,10 +452,8 @@ JS9.Sync.xeqSync = function(arr){
 	    }
 	}
 	// revert to display of orginal image where necessary
-	for( key in displays ){
-	    if( Object.prototype.hasOwnProperty.call(displays, key) ){
-		displays[key].displayImage();
-	    }
+	for( key of Object.keys(displays) ){
+	    displays[key].displayImage();
 	}
     }
     catch(e){ /* empty */ }

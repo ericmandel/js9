@@ -140,13 +140,13 @@ JS9.Separate.addImage = function(im){
     imid = im.id;
     // unique id
     id = JS9.Separate.imid(im);
-    // get class for this layer 
+    // get class for this layer
     dcls = `${JS9.Separate.dispclass(im)}_Image`;
     // value to pass to the macro expander
     opts.push({name: "imid",   value: im.id});
-    opts.push({name: "active", value: sprintf(JS9.Separate.activeHTML, 
+    opts.push({name: "active", value: sprintf(JS9.Separate.activeHTML,
 					      imid)});
-    opts.push({name: "imfile", value: sprintf(JS9.Separate.imfileHTML, 
+    opts.push({name: "imfile", value: sprintf(JS9.Separate.imfileHTML,
 					      imid)});
     // remove initial message
     if( !this.separateDivs ){
@@ -216,11 +216,11 @@ JS9.Separate.init = function(){
         .css("overflow", "auto")
 	.appendTo(this.divjq);
     dispid = this.display.id;
-    opts.push({name: "separate", value: sprintf(JS9.Separate.separateHTML, 
+    opts.push({name: "separate", value: sprintf(JS9.Separate.separateHTML,
 						dispid, dispid, dispid)});
-    opts.push({name: "gather",   value: sprintf(JS9.Separate.gatherHTML, 
+    opts.push({name: "gather",   value: sprintf(JS9.Separate.gatherHTML,
 						dispid, dispid)});
-    s = JS9.Image.prototype.expandMacro.call(null, JS9.Separate.topHTML, 
+    s = JS9.Image.prototype.expandMacro.call(null, JS9.Separate.topHTML,
 					     opts);
     // header
     this.separateHeader = $("<div>")

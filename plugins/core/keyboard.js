@@ -49,15 +49,15 @@ JS9.Keyboard.arrowKey = function(im, evt, inc, active){
     im.pos.x += inc.x;
     im.pos.y += inc.y;
     im.ipos = im.displayToImagePos(im.pos);
-    if( Object.prototype.hasOwnProperty.call(JS9, "MouseTouch") ){
+    if( {}.hasOwnProperty.call(JS9, "MouseTouch") ){
 	im.valpos = null;
 	JS9.MouseTouch.Actions["display value/position"](im, im.ipos, evt);
     }
-    if( Object.prototype.hasOwnProperty.call(JS9, "Magnifier") && !active ){
+    if( {}.hasOwnProperty.call(JS9, "Magnifier") && !active ){
 	JS9.Magnifier.display(im, im.ipos);
     }
     if( JS9.globalOpts.regArrowCrosshair                       &&
-	Object.prototype.hasOwnProperty.call(JS9, "Crosshair") ){
+	{}.hasOwnProperty.call(JS9, "Crosshair") ){
 	im.tmp.arrowCrosshair = true;
 	im.tmp.arrowCrosshairVisible = true;
 	if( active ){
@@ -847,11 +847,8 @@ JS9.Keyboard.init = function(){
 	.appendTo(this.keyboardContainer);
     // add actions
     for(key in JS9.globalOpts.keyboardActions ){
-	if( Object.prototype.hasOwnProperty.call(JS9.globalOpts.keyboardActions, key) ){
-	    s = JS9.globalOpts.keyboardActions[key];
-	    JS9.Keyboard.addAction.call(this, this.keyboardActionContainer,
-					key, s);
-	}
+	s = JS9.globalOpts.keyboardActions[key];
+	JS9.Keyboard.addAction.call(this, this.keyboardActionContainer, key, s);
     }
  };
 

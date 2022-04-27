@@ -22,7 +22,7 @@ JS9.ScaleLimits.YSCALE="log";
 JS9.ScaleLimits.NDIST=512;
 // timeout hack for cleaning up flot
 JS9.ScaleLimits.TIMEOUT=250;
-// size of limits marker for annotation 
+// size of limits marker for annotation
 JS9.ScaleLimits.CARET=4;
 // size of xval text in pixels
 JS9.ScaleLimits.XTEXTHEIGHT=14;
@@ -254,7 +254,7 @@ JS9.ScaleLimits.doplot = function(im){
     // convert to flot data
     for(i=0; i<this.ndist; i++){
         pobj.data[i] = [i, dist[i]];
-    }      
+    }
     // xaxis
     popts.xaxis = popts.xaxis || {};
     popts.xaxis.font = JS9.ScaleLimits.AXISFONT;
@@ -299,7 +299,7 @@ JS9.ScaleLimits.doplot = function(im){
             if( distmax === undefined || dist[i] > distmax ){
 		distmax = dist[i];
             }
-	}      
+	}
 	ntick = JS9.ScaleLimits.log10(distmax - distmin + 1);
 	for(i=0; i<ntick; i++){
             popts.yaxis.ticks[i] = [Math.pow(10, i), JS9.ScaleLimits.to10E(i)];
@@ -330,7 +330,7 @@ JS9.ScaleLimits.doplot = function(im){
 	let ctx, text, s, x, y, w, h, xval;
 	let px = pos.x;
 	// sanity checks
-	if( !this.plot || !this.plotComplete ){ 
+	if( !this.plot || !this.plotComplete ){
 	    return;
 	}
 	if( this.xscale === "log" ){
@@ -353,7 +353,7 @@ JS9.ScaleLimits.doplot = function(im){
 	x = this.plotWidth  * JS9.ScaleLimits.XTEXTFRAC;
 	y = this.plotHeight * JS9.ScaleLimits.YTEXTFRAC;
 	ctx.clearRect(x, y, w, h);
-	ctx.fillText(s, x, y); 
+	ctx.fillText(s, x, y);
 	ctx.restore();
 	this.lastTextWidth = w;
     });

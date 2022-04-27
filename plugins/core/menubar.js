@@ -175,7 +175,7 @@ JS9.Menubar.createMenus = function(){
     // eslint-disable-next-line no-unused-vars
     const mypos = (opt,  x,  y) => {
 	let pos;
-	if( !Object.prototype.hasOwnProperty.call(window, "Jupyter") ){
+	if( !{}.hasOwnProperty.call(window, "Jupyter") ){
 	    opt.$menu.position({
 		my:  'left top',
 		at:  JS9.globalOpts.menuPosition || "left bottom",
@@ -201,10 +201,8 @@ JS9.Menubar.createMenus = function(){
 	const act = JS9.Menubar.keyMap[name];
 	if( !JS9.Menubar.rkeyMap ){
 	    JS9.Menubar.rkeyMap = {};
-	    for( key in gkeyActions ){
-		if( Object.prototype.hasOwnProperty.call(gkeyActions, key) ){
-		    JS9.Menubar.rkeyMap[gkeyActions[key]] = key;
-		}
+	    for( key of Object.keys(gkeyActions) ){
+		JS9.Menubar.rkeyMap[gkeyActions[key]] = key;
 	    }
 	    JS9.Menubar.keyActions = $.extend(true, {}, gkeyActions);
 	}
@@ -215,8 +213,8 @@ JS9.Menubar.createMenus = function(){
 		obj = {name: hstr, isHtmlName: true};
 	    }
 	} else if( xact && JS9.Menubar.rkeyMap ){
-	    for( tact in JS9.Menubar.rkeyMap ){
-		if( Object.prototype.hasOwnProperty.call(JS9.Menubar.rkeyMap, tact) && tact === xact ){
+	    for( tact of Object.keys(JS9.Menubar.rkeyMap) ){
+		if( tact === xact ){
 		    key = JS9.Menubar.rkeyMap[tact];
 		    if( key ){
 			hstr = `<span>${name}<span class="JS9MenubarKeyAction">&nbsp;&nbsp;&nbsp;&nbsp;${key}</span></span>`;
@@ -417,7 +415,7 @@ JS9.Menubar.createMenus = function(){
 	    } else {
 		items.openlocal = xname("open local ...");
 		items.openremote = xname("open remote ...");
-		if( !Object.prototype.hasOwnProperty.call(window, "Jupyter") ){
+		if( !{}.hasOwnProperty.call(window, "Jupyter") ){
 		    items.openremote.disabled = false;
 		} else {
 		    items.openremote.disabled = true;
@@ -796,7 +794,6 @@ JS9.Menubar.createMenus = function(){
 			    break;
 			case "pageid":
 			    s = `<center><p>pageid: ${JS9.helper.pageid||"none"}</center>`;
-					
 			    t = "JS9 page id";
 			    // add display to title
 			    t += sprintf(JS9.IDFMT, udisp.id);
@@ -1030,12 +1027,12 @@ JS9.Menubar.createMenus = function(){
 			    }
 			    break;
 			case "copyWCSPos":
-			    if( Object.prototype.hasOwnProperty.call(JS9, "Keyboard") ){
+			    if( {}.hasOwnProperty.call(JS9, "Keyboard") ){
 				JS9.Keyboard.Actions["copy wcs position to clipboard"](uim, uim.ipos);
 			    }
 			    break;
 			case "copyValPos":
-			    if( Object.prototype.hasOwnProperty.call(JS9, "Keyboard") ){
+			    if( {}.hasOwnProperty.call(JS9, "Keyboard") ){
 				JS9.Keyboard.Actions["copy value and position to clipboard"](uim, uim.ipos);
 			    }
 			    break;
@@ -1154,7 +1151,7 @@ JS9.Menubar.createMenus = function(){
 			    v1 = tim.wcs2imlen(arr[0]);
 			    v2 = tim.wcs2imlen(arr[1]);
 			    disp.resize(v1, v2);
-			} else if( JS9.isNumber(arr[0]) && 
+			} else if( JS9.isNumber(arr[0]) &&
 				   JS9.isNumber(arr[1]) ){
 			    v1 = parseInt(arr[0], 10);
 			    v2 = parseInt(arr[1], 10);
@@ -1236,7 +1233,7 @@ JS9.Menubar.createMenus = function(){
 		}
 	    };
 	    // disable if we don't have info plugin
-	    if( !Object.prototype.hasOwnProperty.call(JS9, "Info") ){
+	    if( !{}.hasOwnProperty.call(JS9, "Info") ){
 		items.vdisps.items.valpos.disabled = true;
 	    } else if( tdisp.image ){
 		if( tdisp.image.params.valpos ){
@@ -1253,21 +1250,21 @@ JS9.Menubar.createMenus = function(){
 	    }
 	    items.vdisps.items.xhair = xname("crosshair for this image");
 	    // disable if we don't have info plugin
-	    if( !Object.prototype.hasOwnProperty.call(JS9, "Crosshair") || !tim ){
+	    if( !{}.hasOwnProperty.call(JS9, "Crosshair") || !tim ){
 		items.vdisps.items.xhair.disabled = true;
 	    } else if( tim && tim.params.crosshair ){
 		items.vdisps.items.xhair.icon = JS9.globalOpts.menuSelected;
 	    }
 	    items.vdisps.items.xhairwcs = xname("match wcs crosshairs");
 	    // disable if we don't have info plugin
-	    if( !Object.prototype.hasOwnProperty.call(JS9, "Crosshair") ){
+	    if( !{}.hasOwnProperty.call(JS9, "Crosshair") ){
 		items.vdisps.items.xhairwcs.disabled = true;
 	    } else if( JS9.globalOpts.wcsCrosshair ){
 		items.vdisps.items.xhairwcs.icon = JS9.globalOpts.menuSelected;
 	    }
 	    items.vdisps.items.toolbar = xname("toolbar tooltips");
 	    // disable if we don't have toolbar plugin
-	    if( !Object.prototype.hasOwnProperty.call(JS9, "Toolbar") ){
+	    if( !{}.hasOwnProperty.call(JS9, "Toolbar") ){
 		items.vdisps.items.toolbar.disabled = true;
 	    } else if( JS9.GetToolbar("showTooltips") ){
 		items.vdisps.items.toolbar.icon = JS9.globalOpts.menuSelected;
@@ -2258,16 +2255,14 @@ JS9.Menubar.createMenus = function(){
 			}
 		    }
 		} else {
-		    for( which in obj ){
-			if( Object.prototype.hasOwnProperty.call(obj, which) ){
-			    key = which.substring(3);
-			    val = obj[which];
-			    if( key && val && im.tmp[`editingReg${which}`] ){
-				delete im.tmp[`editingReg${which}`];
-				val = getregval(key, val);
-				if( val ){
-				    opts[key] = val;
-				}
+		    for( which of Object.keys(obj) ){
+			key = which.substring(3);
+			val = obj[which];
+			if( key && val && im.tmp[`editingReg${which}`] ){
+			    delete im.tmp[`editingReg${which}`];
+			    val = getregval(key, val);
+			    if( val ){
+				opts[key] = val;
 			    }
 			}
 		    }
@@ -2298,18 +2293,15 @@ JS9.Menubar.createMenus = function(){
 	    if( JS9.globalOpts.regMenuCreate ){
 		items.createRegions.icon = JS9.globalOpts.menuSelected;
 	    }
-	    for( key in JS9.globalOpts.keyboardActions ){
-		if( Object.prototype.hasOwnProperty.call(JS9.globalOpts.keyboardActions, key) ){
-		    if( JS9.globalOpts.keyboardActions[key] ===
-			"add last region selected in regions menu" ){
-			items.notCreateRegions = {
-			    name: `('${key}' adds region @ mouse)`,
-			    disabled: true,
-			};
-		    }
+	    for( key of Object.keys(JS9.globalOpts.keyboardActions) ){
+		if( JS9.globalOpts.keyboardActions[key] ===
+		    "add last region selected in regions menu" ){
+		    items.notCreateRegions = {
+			name: `('${key}' adds region @ mouse)`,
+			disabled: true,
+		    };
 		}
 	    }
-	    
 	    items.sep1a = "------";
 	    items.listRegions  = xname("list");
 	    items.loadRegions  = xname("load ...");
@@ -2355,7 +2347,7 @@ JS9.Menubar.createMenus = function(){
 		items.copyto.disabled = true;
 	    }
 	    // disable if we don't have info plugin
-	    if( !Object.prototype.hasOwnProperty.call(JS9, "Info") ){
+	    if( !{}.hasOwnProperty.call(JS9, "Info") ){
 		items.listRegions.disabled = true;
 	    }
 	    return {
@@ -2397,12 +2389,12 @@ JS9.Menubar.createMenus = function(){
 				}
 				break;
 			    case "selectRegions":
-				if( Object.prototype.hasOwnProperty.call(JS9, "Keyboard") ){
+				if( {}.hasOwnProperty.call(JS9, "Keyboard") ){
 				    JS9.Keyboard.Actions["select all regions"](uim, uim.ipos);
 				}
 				break;
 			    case "unselectRegions":
-				if( Object.prototype.hasOwnProperty.call(JS9, "Keyboard") ){
+				if( {}.hasOwnProperty.call(JS9, "Keyboard") ){
 				    JS9.Keyboard.Actions["unselect all regions"](uim, uim.ipos);
 				}
 				break;
@@ -2569,21 +2561,18 @@ JS9.Menubar.createMenus = function(){
 		items.altwcs.disabled = true;
 	    } else {
 		altwcs = tim.raw.altwcs;
-		for( key in altwcs ){
-		    if( Object.prototype.hasOwnProperty.call(altwcs, key) ){
-			s1 = `altwcs_${key}`;
-			if( altwcs[key].header.WCSNAME ){
-			    s2 = `${altwcs[key].header.WCSNAME  
-				}    (${key})`;
-			} else {
-			    s2 = key;
-			}
-			items.altwcs.items[s1] = xname(s2);
-			if( tim.raw.wcs === altwcs[key].wcs ){
-			    items.altwcs.items[s1].icon = JS9.globalOpts.menuSelected;
-			}
-			nwcs++;
+		for( key of Object.keys(altwcs) ){
+		    s1 = `altwcs_${key}`;
+		    if( altwcs[key].header.WCSNAME ){
+			s2 = `${altwcs[key].header.WCSNAME}    (${key})`;
+		    } else {
+			s2 = key;
 		    }
+		    items.altwcs.items[s1] = xname(s2);
+		    if( tim.raw.wcs === altwcs[key].wcs ){
+			items.altwcs.items[s1].icon = JS9.globalOpts.menuSelected;
+		    }
+		    nwcs++;
 		}
 		// disable if we only have the default wcs
 		if( nwcs < 2 ){
@@ -3069,7 +3058,7 @@ JS9.Menubar.createMenus = function(){
 	    let last = "";
 	    const items = {};
 	    items.js9help = {
-		name: "General help ...", 
+		name: "General help ...",
 		items: {
 		    helptitle: {
 			name: "General help:",
@@ -3078,20 +3067,18 @@ JS9.Menubar.createMenus = function(){
 		}
 	    };
 	    // first, internal js9 pages
-	    for( key in JS9.helpOpts ){
-		if( Object.prototype.hasOwnProperty.call(JS9.helpOpts, key) ){
-		    val = JS9.helpOpts[key];
-		    if( val.heading === "JS9Help" ){
-			last = val.type;
-			items.js9help.items[key] = {
-			    name: val.title
-			};
-		    }
+	    for( key of Object.keys(JS9.helpOpts) ){
+		val = JS9.helpOpts[key];
+		if( val.heading === "JS9Help" ){
+		    last = val.type;
+		    items.js9help.items[key] = {
+			name: val.title
+		    };
 		}
 	    }
 	    items[`sep${n++}`] = "------";
 	    items.pluginhelp = {
-		name: "JS9 plugins ...", 
+		name: "JS9 plugins ...",
 		items: {
 		    helptitle: {
 			name: "JS9 plugins:",
@@ -3100,43 +3087,38 @@ JS9.Menubar.createMenus = function(){
 		}
 	    };
 	    // second, the JS9 core plugins
-	    for( key in JS9.helpOpts ){
-		if( Object.prototype.hasOwnProperty.call(JS9.helpOpts, key) ){
-		    val = JS9.helpOpts[key];
-		    if( val.heading === "JS9" ){
-			last = val.type;
-			items.pluginhelp.items[key] = {
-			    name: val.title.replace(/ \.\.\./, "")
-			};
-		    }
+	    for( key of Object.keys(JS9.helpOpts) ){
+		val = JS9.helpOpts[key];
+		if( val.heading === "JS9" ){
+		    last = val.type;
+		    items.pluginhelp.items[key] = {
+			name: val.title.replace(/ \.\.\./, "")
+		    };
 		}
 	    }
 	    // last, the others
-	    for( key in JS9.helpOpts ){
-		if( Object.prototype.hasOwnProperty.call(JS9.helpOpts, key) ){
-		    val = JS9.helpOpts[key];
-		    if( val.heading === "JS9Help" || 
-			val.heading === "JS9" ){
-			continue;
-		    }
-		    if( (last !== "") && (val.type !== last) ){
-			items[`sep${n++}`] = "------";
-			if( val.heading ){
-			    t = `${val.heading  } plugins`;
-			    items[`sep${n++}`] = {
-				name: `${t} ...`,
-				items: {
-				    title: {
-					name: `${t}:`,
-					disabled: true
-				    }
-				}
-			    };
-			}
-		    }
-		    last = val.type;
-		    items[`sep${n-1}`].items[key] = {name: val.title};
+	    for( key of Object.keys(JS9.helpOpts) ){
+		val = JS9.helpOpts[key];
+		if( val.heading === "JS9Help" || val.heading === "JS9" ){
+		    continue;
 		}
+		if( (last !== "") && (val.type !== last) ){
+		    items[`sep${n++}`] = "------";
+		    if( val.heading ){
+			t = `${val.heading  } plugins`;
+			items[`sep${n++}`] = {
+			    name: `${t} ...`,
+			    items: {
+				title: {
+				    name: `${t}:`,
+				    disabled: true
+				}
+			    }
+			};
+		    }
+		}
+		last = val.type;
+		items[`sep${n-1}`].items[key] = {name: val.title};
 	    }
 	    items[`sep${n++}`] = "------";
 	    items.about = xname("About");

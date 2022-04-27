@@ -244,7 +244,7 @@ JS9.Cmaps.mkCmapsFromColor = function(display, cname, nmap, nslice, opts){
     if( diff < tol ){
 	return 0;
     }
-    if( display.cmaps.timeOutID ){ 
+    if( display.cmaps.timeOutID ){
 	return 0;
     }
     // use timeout to ensure redisplay gets into the event loop
@@ -419,13 +419,13 @@ JS9.Cmaps.addImage = function(im){
     dispid = this.display.id;
     // unique id
     id = JS9.Cmaps.imid.call(this, im);
-    // get class for this layer 
+    // get class for this layer
     dcls = `${JS9.Cmaps.dispclass.call(this)}_Image`;
     // value to pass to the macro expander
     opts.push({name: "imid", value: imid});
-    opts.push({name: "active", value: sprintf(JS9.Cmaps.activeHTML, 
+    opts.push({name: "active", value: sprintf(JS9.Cmaps.activeHTML,
 					      dispid, imid)});
-    opts.push({name: "imfile", value: sprintf(JS9.Cmaps.imfileHTML, 
+    opts.push({name: "imfile", value: sprintf(JS9.Cmaps.imfileHTML,
 					      imid)});
     // create the html for this image
     s = JS9.Image.prototype.expandMacro.call(im, JS9.Cmaps.imageHTML, opts);

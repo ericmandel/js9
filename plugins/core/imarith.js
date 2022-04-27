@@ -179,7 +179,7 @@ JS9.Imarith.init = function(opts){
 	mopts = [];
 	mopts.push({name: "images", value: images});
 	mopts.push({name: "imid", value: imid});
-	mopts.push({name: "op", value: sprintf(JS9.Imarith.opHTML, 
+	mopts.push({name: "op", value: sprintf(JS9.Imarith.opHTML,
 					       dispid, imid)});
 	mopts.push({name: "arg1", value: sprintf(JS9.Imarith.arg1HTML,
 						 dispid, imid, images)});

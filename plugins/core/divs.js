@@ -57,9 +57,9 @@ JS9.Divs.addDiv = function(plugin){
 	this.divsDivContainer.html("");
     }
     // value to pass to the macro expander
-    opts.push({name: "visible", value: sprintf(JS9.Divs.visibleHTML, 
+    opts.push({name: "visible", value: sprintf(JS9.Divs.visibleHTML,
 					       this.display.id, plugin)});
-    opts.push({name: "div", value: sprintf(JS9.Divs.divNameHTML, 
+    opts.push({name: "div", value: sprintf(JS9.Divs.divNameHTML,
 					   plugin)});
     // create the html for this div
     s = JS9.Image.prototype.expandMacro.call(null, JS9.Divs.divHTML, opts);
@@ -69,7 +69,7 @@ JS9.Divs.addDiv = function(plugin){
         .html(s)
 	.appendTo(this.divsDivContainer);
     // set or unset visibility buton
-    divjq.find(".JS9DivsVisibleCheck").prop("checked", 
+    divjq.find(".JS9DivsVisibleCheck").prop("checked",
     this.display.pluginInstances[plugin].divjq.css("visibility") === "visible");
     // another div was added
     this.ndiv++;
@@ -118,11 +118,9 @@ JS9.Divs.init = function(opts){
     }
     // add current in-page plugin divs
     instances = this.display.pluginInstances;
-    for( key in instances ){
-	if( Object.prototype.hasOwnProperty.call(instances, key) ){
-	    if( instances[key].winType === "div" ){
-		JS9.Divs.addDiv.call(this, key);
-	    }
+    for( key of Object.keys(instances) ){
+	if( instances[key].winType === "div" ){
+	    JS9.Divs.addDiv.call(this, key);
 	}
     }
 };

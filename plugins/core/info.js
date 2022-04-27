@@ -191,23 +191,21 @@ JS9.Info.display = function(type, message, target, force){
 	    break;
 	case "object":
 	    // process all key in the object
-	    for( key in message ){
-		if( Object.prototype.hasOwnProperty.call(message, key) ){
-		    // set value, if possible
-		    jel = info.jq.find(`[name='${key}']`);
-		    if( jel.length > 0 ){
-			// key-specific processing
-			switch(key){
-			case "val":
-			    v = message.val3;
-			    break;
-			default:
-			    v = message[key];
-			    break;
-			}
-			// set the value
-			jel.val(v);
+	    for( key of Object.keys(message) ){
+		// set value, if possible
+		jel = info.jq.find(`[name='${key}']`);
+		if( jel.length > 0 ){
+		    // key-specific processing
+		    switch(key){
+		    case "val":
+			v = message.val3;
+			break;
+		    default:
+			v = message[key];
+			break;
 		    }
+		    // set the value
+		    jel.val(v);
 		}
 	    }
 	    break;

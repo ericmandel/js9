@@ -276,38 +276,34 @@ JS9.Filters.init = function(opts){
 	// add space before the filters
 	html += `<div class='JS9FiltersLinegroup'>&nbsp;</div>`;
 	// add the arg filters
-	for( key in JS9.Filters.argfilters ){
-	    if( Object.prototype.hasOwnProperty.call(JS9.Filters.argfilters, key) ){
-		obj = JS9.Filters.argfilters[key];
-		mopts.push({name: key, 
-			    value: sprintf(JS9.Filters.argfilterHTML,
-					   key,
-					   key,
-					   dispid, imid, key, obj.def,
-					   obj.min, obj.max, obj.step, obj.init,
-					   key,
-					   dispid, imid, key,
-					   key, 
-					   dispid, imid, key)});
-		// add this line to the main html spec
-		html += `<div class='JS9FiltersLinegroup'>$${key}</div>`;
-	    }
+	for( key of Object.keys(JS9.Filters.argfilters) ){
+	    obj = JS9.Filters.argfilters[key];
+	    mopts.push({name: key,
+			value: sprintf(JS9.Filters.argfilterHTML,
+				       key,
+				       key,
+				       dispid, imid, key, obj.def,
+				       obj.min, obj.max, obj.step, obj.init,
+				       key,
+				       dispid, imid, key,
+				       key,
+				       dispid, imid, key)});
+	    // add this line to the main html spec
+	    html += `<div class='JS9FiltersLinegroup'>$${key}</div>`;
 	}
 	// add the noarg filterfs
-	for( key in JS9.Filters.noargfilters ){
-	    if( Object.prototype.hasOwnProperty.call(JS9.Filters.noargfilters, key) ){
-		mopts.push({name: key, 
-			    value: sprintf(JS9.Filters.noargfilterHTML,
-					   key,
-					   key,
-					   dispid, imid, key, null,
-					   key,
-					   dispid, imid, key,
-					   key, 
-					   dispid, imid, key)});
-		// add this line to the main html spec
-		html += `<div class='JS9FiltersLinegroup'>$${key}</div>`;
-	    }
+	for( key of Object.keys(JS9.Filters.noargfilters) ){
+	    mopts.push({name: key,
+			value: sprintf(JS9.Filters.noargfilterHTML,
+				       key,
+				       key,
+				       dispid, imid, key, null,
+				       key,
+				       dispid, imid, key,
+				       key,
+				       dispid, imid, key)});
+	    // add this line to the main html spec
+	    html += `<div class='JS9FiltersLinegroup'>$${key}</div>`;
 	}
 	// add space before the undo
 	html += `<div class='JS9FiltersLinegroup'>&nbsp;</div>`;

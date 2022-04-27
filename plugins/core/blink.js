@@ -175,13 +175,13 @@ JS9.Blink.addImage = function(im){
     dispid = im.display.id;
     // unique id
     id = JS9.Blink.imid(im);
-    // get class for this layer 
+    // get class for this layer
     dcls = `${JS9.Blink.dispclass(im)}_Image`;
     // value to pass to the macro expander
     opts.push({name: "imid", value: im.id});
-    opts.push({name: "active", value: sprintf(JS9.Blink.activeHTML, 
+    opts.push({name: "active", value: sprintf(JS9.Blink.activeHTML,
 					      dispid, imid)});
-    opts.push({name: "imfile", value: sprintf(JS9.Blink.imfileHTML, 
+    opts.push({name: "imfile", value: sprintf(JS9.Blink.imfileHTML,
 					      imid)});
     // remove initial message
     if( !this.blinkDivs ){
@@ -257,13 +257,13 @@ JS9.Blink.init = function(){
         .css("overflow", "auto")
 	.appendTo(this.divjq);
     dispid = this.display.id;
-    opts.push({name: "mode", value: sprintf(JS9.Blink.modeHTML, 
+    opts.push({name: "mode", value: sprintf(JS9.Blink.modeHTML,
 					    dispid)});
-    opts.push({name: "manual", value: sprintf(JS9.Blink.manualHTML, 
+    opts.push({name: "manual", value: sprintf(JS9.Blink.manualHTML,
 					      dispid)});
-    opts.push({name: "rate", value: sprintf(JS9.Blink.rateHTML, 
+    opts.push({name: "rate", value: sprintf(JS9.Blink.rateHTML,
 					    dispid)});
-    s = JS9.Image.prototype.expandMacro.call(null, JS9.Blink.blinkModeHTML, 
+    s = JS9.Image.prototype.expandMacro.call(null, JS9.Blink.blinkModeHTML,
 					     opts);
     // header
     this.blinkHeader = $("<div>")

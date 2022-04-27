@@ -119,11 +119,11 @@ JS9.Layers.addLayer = function(im, layer){
     zindex = parseInt(im.display.layers[layer].divjq.css("z-index"), 10);
     // get unique id for this layer
     id = JS9.Layers.imid(im, layer);
-    // get class for this layer 
+    // get class for this layer
     dcls = `${JS9.Layers.dispclass(im)}_Layer`;
     // value to pass to the macro expander
     opts.push({name: "imid", value: imid});
-    opts.push({name: "visible", value: sprintf(JS9.Layers.visibleHTML, 
+    opts.push({name: "visible", value: sprintf(JS9.Layers.visibleHTML,
 					       dispid, imid, layer)});
     if( im.layers[layer].catalog ){
 	opts.push({name: "save", value: sprintf(JS9.Layers.saveBothHTML,
@@ -233,13 +233,11 @@ JS9.Layers.init = function(opts){
     // add current shape layers
     if( this.display.image ){
 	im = this.display.image;
-	for( key in im.layers ){
+	for( key of Object.keys(im.layers) ){
 	    if( key === "crosshair" ){
 		continue;
 	    }
-	    if( Object.prototype.hasOwnProperty.call(im.layers, key) ){
-		JS9.Layers.addLayer.call(this, im, key);
-	    }
+	    JS9.Layers.addLayer.call(this, im, key);
 	}
 	this.lastimage = im;
     }

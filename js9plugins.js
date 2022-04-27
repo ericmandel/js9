@@ -1417,17 +1417,17 @@ JS9.Blend.addImage = function(im){
     dispid = im.display.id;
     // unique id
     id = JS9.Blend.imid(im);
-    // get class for this layer 
+    // get class for this layer
     dcls = `${JS9.Blend.dispclass(im)}_Image`;
     // value to pass to the macro expander
     opts.push({name: "imid", value: imid});
-    opts.push({name: "active", value: sprintf(JS9.Blend.activeHTML, 
+    opts.push({name: "active", value: sprintf(JS9.Blend.activeHTML,
 					      dispid, imid)});
-    opts.push({name: "opacity", value: sprintf(JS9.Blend.opacityHTML, 
+    opts.push({name: "opacity", value: sprintf(JS9.Blend.opacityHTML,
 					       dispid,  imid)});
-    opts.push({name: "blend", value: sprintf(JS9.Blend.blendHTML, 
+    opts.push({name: "blend", value: sprintf(JS9.Blend.blendHTML,
 					     dispid,  imid)});
-    opts.push({name: "imfile", value: sprintf(JS9.Blend.imfileHTML, 
+    opts.push({name: "imfile", value: sprintf(JS9.Blend.imfileHTML,
 					      imid)});
     // remove initial message
     if( !this.blendDivs ){
@@ -1813,13 +1813,13 @@ JS9.Blink.addImage = function(im){
     dispid = im.display.id;
     // unique id
     id = JS9.Blink.imid(im);
-    // get class for this layer 
+    // get class for this layer
     dcls = `${JS9.Blink.dispclass(im)}_Image`;
     // value to pass to the macro expander
     opts.push({name: "imid", value: im.id});
-    opts.push({name: "active", value: sprintf(JS9.Blink.activeHTML, 
+    opts.push({name: "active", value: sprintf(JS9.Blink.activeHTML,
 					      dispid, imid)});
-    opts.push({name: "imfile", value: sprintf(JS9.Blink.imfileHTML, 
+    opts.push({name: "imfile", value: sprintf(JS9.Blink.imfileHTML,
 					      imid)});
     // remove initial message
     if( !this.blinkDivs ){
@@ -1895,13 +1895,13 @@ JS9.Blink.init = function(){
         .css("overflow", "auto")
 	.appendTo(this.divjq);
     dispid = this.display.id;
-    opts.push({name: "mode", value: sprintf(JS9.Blink.modeHTML, 
+    opts.push({name: "mode", value: sprintf(JS9.Blink.modeHTML,
 					    dispid)});
-    opts.push({name: "manual", value: sprintf(JS9.Blink.manualHTML, 
+    opts.push({name: "manual", value: sprintf(JS9.Blink.manualHTML,
 					      dispid)});
-    opts.push({name: "rate", value: sprintf(JS9.Blink.rateHTML, 
+    opts.push({name: "rate", value: sprintf(JS9.Blink.rateHTML,
 					    dispid)});
-    s = JS9.Image.prototype.expandMacro.call(null, JS9.Blink.blinkModeHTML, 
+    s = JS9.Image.prototype.expandMacro.call(null, JS9.Blink.blinkModeHTML,
 					     opts);
     // header
     this.blinkHeader = $("<div>")
@@ -2232,7 +2232,7 @@ JS9.Cmaps.mkCmapsFromColor = function(display, cname, nmap, nslice, opts){
     if( diff < tol ){
 	return 0;
     }
-    if( display.cmaps.timeOutID ){ 
+    if( display.cmaps.timeOutID ){
 	return 0;
     }
     // use timeout to ensure redisplay gets into the event loop
@@ -2407,13 +2407,13 @@ JS9.Cmaps.addImage = function(im){
     dispid = this.display.id;
     // unique id
     id = JS9.Cmaps.imid.call(this, im);
-    // get class for this layer 
+    // get class for this layer
     dcls = `${JS9.Cmaps.dispclass.call(this)}_Image`;
     // value to pass to the macro expander
     opts.push({name: "imid", value: imid});
-    opts.push({name: "active", value: sprintf(JS9.Cmaps.activeHTML, 
+    opts.push({name: "active", value: sprintf(JS9.Cmaps.activeHTML,
 					      dispid, imid)});
-    opts.push({name: "imfile", value: sprintf(JS9.Cmaps.imfileHTML, 
+    opts.push({name: "imfile", value: sprintf(JS9.Cmaps.imfileHTML,
 					      imid)});
     // create the html for this image
     s = JS9.Image.prototype.expandMacro.call(im, JS9.Cmaps.imageHTML, opts);
@@ -3976,7 +3976,7 @@ JS9.Cube.blink = function(did, id, target, niter){
 	JS9.Cube.xnext(did, id, target);
 	if( JS9.isNull(plugin.blinkMode) ){
 	    plugin.blinkMode = true;
-	} 
+	}
 	JS9.Cube.tid = window.setTimeout(() => {
 	    if( !niter || im.status.displaySection !== "error" ){
 		JS9.Cube.blink(did, id, target, ++niter);
@@ -4161,7 +4161,7 @@ JS9.Cube.init = function(opts){
 	    mopts.push({name: "rate",
 		       value: sprintf(JS9.Cube.rateHTML, dispid, imid)});
 	    mopts.push({name: "extname",
-		       value: sprintf(JS9.Cube.extnameHTML, 
+		       value: sprintf(JS9.Cube.extnameHTML,
 				      header.EXTNAME || "")});
 	    mopts.push({name: "header2",  value: JS9.Cube.header2HTML});
 	    mopts.push({name: "load",
@@ -4265,9 +4265,9 @@ JS9.Divs.addDiv = function(plugin){
 	this.divsDivContainer.html("");
     }
     // value to pass to the macro expander
-    opts.push({name: "visible", value: sprintf(JS9.Divs.visibleHTML, 
+    opts.push({name: "visible", value: sprintf(JS9.Divs.visibleHTML,
 					       this.display.id, plugin)});
-    opts.push({name: "div", value: sprintf(JS9.Divs.divNameHTML, 
+    opts.push({name: "div", value: sprintf(JS9.Divs.divNameHTML,
 					   plugin)});
     // create the html for this div
     s = JS9.Image.prototype.expandMacro.call(null, JS9.Divs.divHTML, opts);
@@ -4277,7 +4277,7 @@ JS9.Divs.addDiv = function(plugin){
         .html(s)
 	.appendTo(this.divsDivContainer);
     // set or unset visibility buton
-    divjq.find(".JS9DivsVisibleCheck").prop("checked", 
+    divjq.find(".JS9DivsVisibleCheck").prop("checked",
     this.display.pluginInstances[plugin].divjq.css("visibility") === "visible");
     // another div was added
     this.ndiv++;
@@ -4326,11 +4326,9 @@ JS9.Divs.init = function(opts){
     }
     // add current in-page plugin divs
     instances = this.display.pluginInstances;
-    for( key in instances ){
-	if( Object.prototype.hasOwnProperty.call(instances, key) ){
-	    if( instances[key].winType === "div" ){
-		JS9.Divs.addDiv.call(this, key);
-	    }
+    for( key of Object.keys(instances) ){
+	if( instances[key].winType === "div" ){
+	    JS9.Divs.addDiv.call(this, key);
 	}
     }
 };
@@ -4621,38 +4619,34 @@ JS9.Filters.init = function(opts){
 	// add space before the filters
 	html += `<div class='JS9FiltersLinegroup'>&nbsp;</div>`;
 	// add the arg filters
-	for( key in JS9.Filters.argfilters ){
-	    if( Object.prototype.hasOwnProperty.call(JS9.Filters.argfilters, key) ){
-		obj = JS9.Filters.argfilters[key];
-		mopts.push({name: key, 
-			    value: sprintf(JS9.Filters.argfilterHTML,
-					   key,
-					   key,
-					   dispid, imid, key, obj.def,
-					   obj.min, obj.max, obj.step, obj.init,
-					   key,
-					   dispid, imid, key,
-					   key, 
-					   dispid, imid, key)});
-		// add this line to the main html spec
-		html += `<div class='JS9FiltersLinegroup'>$${key}</div>`;
-	    }
+	for( key of Object.keys(JS9.Filters.argfilters) ){
+	    obj = JS9.Filters.argfilters[key];
+	    mopts.push({name: key,
+			value: sprintf(JS9.Filters.argfilterHTML,
+				       key,
+				       key,
+				       dispid, imid, key, obj.def,
+				       obj.min, obj.max, obj.step, obj.init,
+				       key,
+				       dispid, imid, key,
+				       key,
+				       dispid, imid, key)});
+	    // add this line to the main html spec
+	    html += `<div class='JS9FiltersLinegroup'>$${key}</div>`;
 	}
 	// add the noarg filterfs
-	for( key in JS9.Filters.noargfilters ){
-	    if( Object.prototype.hasOwnProperty.call(JS9.Filters.noargfilters, key) ){
-		mopts.push({name: key, 
-			    value: sprintf(JS9.Filters.noargfilterHTML,
-					   key,
-					   key,
-					   dispid, imid, key, null,
-					   key,
-					   dispid, imid, key,
-					   key, 
-					   dispid, imid, key)});
-		// add this line to the main html spec
-		html += `<div class='JS9FiltersLinegroup'>$${key}</div>`;
-	    }
+	for( key of Object.keys(JS9.Filters.noargfilters) ){
+	    mopts.push({name: key,
+			value: sprintf(JS9.Filters.noargfilterHTML,
+				       key,
+				       key,
+				       dispid, imid, key, null,
+				       key,
+				       dispid, imid, key,
+				       key,
+				       dispid, imid, key)});
+	    // add this line to the main html spec
+	    html += `<div class='JS9FiltersLinegroup'>$${key}</div>`;
 	}
 	// add space before the undo
 	html += `<div class='JS9FiltersLinegroup'>&nbsp;</div>`;
@@ -4865,7 +4859,7 @@ JS9.Imarith.init = function(opts){
 	mopts = [];
 	mopts.push({name: "images", value: images});
 	mopts.push({name: "imid", value: imid});
-	mopts.push({name: "op", value: sprintf(JS9.Imarith.opHTML, 
+	mopts.push({name: "op", value: sprintf(JS9.Imarith.opHTML,
 					       dispid, imid)});
 	mopts.push({name: "arg1", value: sprintf(JS9.Imarith.arg1HTML,
 						 dispid, imid, images)});
@@ -5099,23 +5093,21 @@ JS9.Info.display = function(type, message, target, force){
 	    break;
 	case "object":
 	    // process all key in the object
-	    for( key in message ){
-		if( Object.prototype.hasOwnProperty.call(message, key) ){
-		    // set value, if possible
-		    jel = info.jq.find(`[name='${key}']`);
-		    if( jel.length > 0 ){
-			// key-specific processing
-			switch(key){
-			case "val":
-			    v = message.val3;
-			    break;
-			default:
-			    v = message[key];
-			    break;
-			}
-			// set the value
-			jel.val(v);
+	    for( key of Object.keys(message) ){
+		// set value, if possible
+		jel = info.jq.find(`[name='${key}']`);
+		if( jel.length > 0 ){
+		    // key-specific processing
+		    switch(key){
+		    case "val":
+			v = message.val3;
+			break;
+		    default:
+			v = message[key];
+			break;
 		    }
+		    // set the value
+		    jel.val(v);
 		}
 	    }
 	    break;
@@ -5349,15 +5341,15 @@ JS9.Keyboard.arrowKey = function(im, evt, inc, active){
     im.pos.x += inc.x;
     im.pos.y += inc.y;
     im.ipos = im.displayToImagePos(im.pos);
-    if( Object.prototype.hasOwnProperty.call(JS9, "MouseTouch") ){
+    if( {}.hasOwnProperty.call(JS9, "MouseTouch") ){
 	im.valpos = null;
 	JS9.MouseTouch.Actions["display value/position"](im, im.ipos, evt);
     }
-    if( Object.prototype.hasOwnProperty.call(JS9, "Magnifier") && !active ){
+    if( {}.hasOwnProperty.call(JS9, "Magnifier") && !active ){
 	JS9.Magnifier.display(im, im.ipos);
     }
     if( JS9.globalOpts.regArrowCrosshair                       &&
-	Object.prototype.hasOwnProperty.call(JS9, "Crosshair") ){
+	{}.hasOwnProperty.call(JS9, "Crosshair") ){
 	im.tmp.arrowCrosshair = true;
 	im.tmp.arrowCrosshairVisible = true;
 	if( active ){
@@ -6147,11 +6139,8 @@ JS9.Keyboard.init = function(){
 	.appendTo(this.keyboardContainer);
     // add actions
     for(key in JS9.globalOpts.keyboardActions ){
-	if( Object.prototype.hasOwnProperty.call(JS9.globalOpts.keyboardActions, key) ){
-	    s = JS9.globalOpts.keyboardActions[key];
-	    JS9.Keyboard.addAction.call(this, this.keyboardActionContainer,
-					key, s);
-	}
+	s = JS9.globalOpts.keyboardActions[key];
+	JS9.Keyboard.addAction.call(this, this.keyboardActionContainer, key, s);
     }
  };
 
@@ -6284,11 +6273,11 @@ JS9.Layers.addLayer = function(im, layer){
     zindex = parseInt(im.display.layers[layer].divjq.css("z-index"), 10);
     // get unique id for this layer
     id = JS9.Layers.imid(im, layer);
-    // get class for this layer 
+    // get class for this layer
     dcls = `${JS9.Layers.dispclass(im)}_Layer`;
     // value to pass to the macro expander
     opts.push({name: "imid", value: imid});
-    opts.push({name: "visible", value: sprintf(JS9.Layers.visibleHTML, 
+    opts.push({name: "visible", value: sprintf(JS9.Layers.visibleHTML,
 					       dispid, imid, layer)});
     if( im.layers[layer].catalog ){
 	opts.push({name: "save", value: sprintf(JS9.Layers.saveBothHTML,
@@ -6398,13 +6387,11 @@ JS9.Layers.init = function(opts){
     // add current shape layers
     if( this.display.image ){
 	im = this.display.image;
-	for( key in im.layers ){
+	for( key of Object.keys(im.layers) ){
 	    if( key === "crosshair" ){
 		continue;
 	    }
-	    if( Object.prototype.hasOwnProperty.call(im.layers, key) ){
-		JS9.Layers.addLayer.call(this, im, key);
-	    }
+	    JS9.Layers.addLayer.call(this, im, key);
 	}
 	this.lastimage = im;
     }
@@ -6648,7 +6635,7 @@ JS9.Magnifier.display = function(im, ipos){
     // (subtract 1 to center the box on the pixel 2/4/2020)
     if( im.magnifier.ozoom !== zoom ){
 	im.changeShapes("magnifier", im.magnifier.boxid,
-			{left: magDisp.width/2-1, top:  magDisp.height/2-1, 
+			{left: magDisp.width/2-1, top:  magDisp.height/2-1,
 			 width: zoom, height: zoom});
 	im.magnifier.ozoom = im.magnifier.zoom;
     }
@@ -7102,7 +7089,7 @@ JS9.Menubar.createMenus = function(){
     // eslint-disable-next-line no-unused-vars
     const mypos = (opt,  x,  y) => {
 	let pos;
-	if( !Object.prototype.hasOwnProperty.call(window, "Jupyter") ){
+	if( !{}.hasOwnProperty.call(window, "Jupyter") ){
 	    opt.$menu.position({
 		my:  'left top',
 		at:  JS9.globalOpts.menuPosition || "left bottom",
@@ -7128,10 +7115,8 @@ JS9.Menubar.createMenus = function(){
 	const act = JS9.Menubar.keyMap[name];
 	if( !JS9.Menubar.rkeyMap ){
 	    JS9.Menubar.rkeyMap = {};
-	    for( key in gkeyActions ){
-		if( Object.prototype.hasOwnProperty.call(gkeyActions, key) ){
-		    JS9.Menubar.rkeyMap[gkeyActions[key]] = key;
-		}
+	    for( key of Object.keys(gkeyActions) ){
+		JS9.Menubar.rkeyMap[gkeyActions[key]] = key;
 	    }
 	    JS9.Menubar.keyActions = $.extend(true, {}, gkeyActions);
 	}
@@ -7142,8 +7127,8 @@ JS9.Menubar.createMenus = function(){
 		obj = {name: hstr, isHtmlName: true};
 	    }
 	} else if( xact && JS9.Menubar.rkeyMap ){
-	    for( tact in JS9.Menubar.rkeyMap ){
-		if( Object.prototype.hasOwnProperty.call(JS9.Menubar.rkeyMap, tact) && tact === xact ){
+	    for( tact of Object.keys(JS9.Menubar.rkeyMap) ){
+		if( tact === xact ){
 		    key = JS9.Menubar.rkeyMap[tact];
 		    if( key ){
 			hstr = `<span>${name}<span class="JS9MenubarKeyAction">&nbsp;&nbsp;&nbsp;&nbsp;${key}</span></span>`;
@@ -7344,7 +7329,7 @@ JS9.Menubar.createMenus = function(){
 	    } else {
 		items.openlocal = xname("open local ...");
 		items.openremote = xname("open remote ...");
-		if( !Object.prototype.hasOwnProperty.call(window, "Jupyter") ){
+		if( !{}.hasOwnProperty.call(window, "Jupyter") ){
 		    items.openremote.disabled = false;
 		} else {
 		    items.openremote.disabled = true;
@@ -7723,7 +7708,6 @@ JS9.Menubar.createMenus = function(){
 			    break;
 			case "pageid":
 			    s = `<center><p>pageid: ${JS9.helper.pageid||"none"}</center>`;
-					
 			    t = "JS9 page id";
 			    // add display to title
 			    t += sprintf(JS9.IDFMT, udisp.id);
@@ -7957,12 +7941,12 @@ JS9.Menubar.createMenus = function(){
 			    }
 			    break;
 			case "copyWCSPos":
-			    if( Object.prototype.hasOwnProperty.call(JS9, "Keyboard") ){
+			    if( {}.hasOwnProperty.call(JS9, "Keyboard") ){
 				JS9.Keyboard.Actions["copy wcs position to clipboard"](uim, uim.ipos);
 			    }
 			    break;
 			case "copyValPos":
-			    if( Object.prototype.hasOwnProperty.call(JS9, "Keyboard") ){
+			    if( {}.hasOwnProperty.call(JS9, "Keyboard") ){
 				JS9.Keyboard.Actions["copy value and position to clipboard"](uim, uim.ipos);
 			    }
 			    break;
@@ -8081,7 +8065,7 @@ JS9.Menubar.createMenus = function(){
 			    v1 = tim.wcs2imlen(arr[0]);
 			    v2 = tim.wcs2imlen(arr[1]);
 			    disp.resize(v1, v2);
-			} else if( JS9.isNumber(arr[0]) && 
+			} else if( JS9.isNumber(arr[0]) &&
 				   JS9.isNumber(arr[1]) ){
 			    v1 = parseInt(arr[0], 10);
 			    v2 = parseInt(arr[1], 10);
@@ -8163,7 +8147,7 @@ JS9.Menubar.createMenus = function(){
 		}
 	    };
 	    // disable if we don't have info plugin
-	    if( !Object.prototype.hasOwnProperty.call(JS9, "Info") ){
+	    if( !{}.hasOwnProperty.call(JS9, "Info") ){
 		items.vdisps.items.valpos.disabled = true;
 	    } else if( tdisp.image ){
 		if( tdisp.image.params.valpos ){
@@ -8180,21 +8164,21 @@ JS9.Menubar.createMenus = function(){
 	    }
 	    items.vdisps.items.xhair = xname("crosshair for this image");
 	    // disable if we don't have info plugin
-	    if( !Object.prototype.hasOwnProperty.call(JS9, "Crosshair") || !tim ){
+	    if( !{}.hasOwnProperty.call(JS9, "Crosshair") || !tim ){
 		items.vdisps.items.xhair.disabled = true;
 	    } else if( tim && tim.params.crosshair ){
 		items.vdisps.items.xhair.icon = JS9.globalOpts.menuSelected;
 	    }
 	    items.vdisps.items.xhairwcs = xname("match wcs crosshairs");
 	    // disable if we don't have info plugin
-	    if( !Object.prototype.hasOwnProperty.call(JS9, "Crosshair") ){
+	    if( !{}.hasOwnProperty.call(JS9, "Crosshair") ){
 		items.vdisps.items.xhairwcs.disabled = true;
 	    } else if( JS9.globalOpts.wcsCrosshair ){
 		items.vdisps.items.xhairwcs.icon = JS9.globalOpts.menuSelected;
 	    }
 	    items.vdisps.items.toolbar = xname("toolbar tooltips");
 	    // disable if we don't have toolbar plugin
-	    if( !Object.prototype.hasOwnProperty.call(JS9, "Toolbar") ){
+	    if( !{}.hasOwnProperty.call(JS9, "Toolbar") ){
 		items.vdisps.items.toolbar.disabled = true;
 	    } else if( JS9.GetToolbar("showTooltips") ){
 		items.vdisps.items.toolbar.icon = JS9.globalOpts.menuSelected;
@@ -9185,16 +9169,14 @@ JS9.Menubar.createMenus = function(){
 			}
 		    }
 		} else {
-		    for( which in obj ){
-			if( Object.prototype.hasOwnProperty.call(obj, which) ){
-			    key = which.substring(3);
-			    val = obj[which];
-			    if( key && val && im.tmp[`editingReg${which}`] ){
-				delete im.tmp[`editingReg${which}`];
-				val = getregval(key, val);
-				if( val ){
-				    opts[key] = val;
-				}
+		    for( which of Object.keys(obj) ){
+			key = which.substring(3);
+			val = obj[which];
+			if( key && val && im.tmp[`editingReg${which}`] ){
+			    delete im.tmp[`editingReg${which}`];
+			    val = getregval(key, val);
+			    if( val ){
+				opts[key] = val;
 			    }
 			}
 		    }
@@ -9225,18 +9207,15 @@ JS9.Menubar.createMenus = function(){
 	    if( JS9.globalOpts.regMenuCreate ){
 		items.createRegions.icon = JS9.globalOpts.menuSelected;
 	    }
-	    for( key in JS9.globalOpts.keyboardActions ){
-		if( Object.prototype.hasOwnProperty.call(JS9.globalOpts.keyboardActions, key) ){
-		    if( JS9.globalOpts.keyboardActions[key] ===
-			"add last region selected in regions menu" ){
-			items.notCreateRegions = {
-			    name: `('${key}' adds region @ mouse)`,
-			    disabled: true,
-			};
-		    }
+	    for( key of Object.keys(JS9.globalOpts.keyboardActions) ){
+		if( JS9.globalOpts.keyboardActions[key] ===
+		    "add last region selected in regions menu" ){
+		    items.notCreateRegions = {
+			name: `('${key}' adds region @ mouse)`,
+			disabled: true,
+		    };
 		}
 	    }
-	    
 	    items.sep1a = "------";
 	    items.listRegions  = xname("list");
 	    items.loadRegions  = xname("load ...");
@@ -9282,7 +9261,7 @@ JS9.Menubar.createMenus = function(){
 		items.copyto.disabled = true;
 	    }
 	    // disable if we don't have info plugin
-	    if( !Object.prototype.hasOwnProperty.call(JS9, "Info") ){
+	    if( !{}.hasOwnProperty.call(JS9, "Info") ){
 		items.listRegions.disabled = true;
 	    }
 	    return {
@@ -9324,12 +9303,12 @@ JS9.Menubar.createMenus = function(){
 				}
 				break;
 			    case "selectRegions":
-				if( Object.prototype.hasOwnProperty.call(JS9, "Keyboard") ){
+				if( {}.hasOwnProperty.call(JS9, "Keyboard") ){
 				    JS9.Keyboard.Actions["select all regions"](uim, uim.ipos);
 				}
 				break;
 			    case "unselectRegions":
-				if( Object.prototype.hasOwnProperty.call(JS9, "Keyboard") ){
+				if( {}.hasOwnProperty.call(JS9, "Keyboard") ){
 				    JS9.Keyboard.Actions["unselect all regions"](uim, uim.ipos);
 				}
 				break;
@@ -9496,21 +9475,18 @@ JS9.Menubar.createMenus = function(){
 		items.altwcs.disabled = true;
 	    } else {
 		altwcs = tim.raw.altwcs;
-		for( key in altwcs ){
-		    if( Object.prototype.hasOwnProperty.call(altwcs, key) ){
-			s1 = `altwcs_${key}`;
-			if( altwcs[key].header.WCSNAME ){
-			    s2 = `${altwcs[key].header.WCSNAME  
-				}    (${key})`;
-			} else {
-			    s2 = key;
-			}
-			items.altwcs.items[s1] = xname(s2);
-			if( tim.raw.wcs === altwcs[key].wcs ){
-			    items.altwcs.items[s1].icon = JS9.globalOpts.menuSelected;
-			}
-			nwcs++;
+		for( key of Object.keys(altwcs) ){
+		    s1 = `altwcs_${key}`;
+		    if( altwcs[key].header.WCSNAME ){
+			s2 = `${altwcs[key].header.WCSNAME}    (${key})`;
+		    } else {
+			s2 = key;
 		    }
+		    items.altwcs.items[s1] = xname(s2);
+		    if( tim.raw.wcs === altwcs[key].wcs ){
+			items.altwcs.items[s1].icon = JS9.globalOpts.menuSelected;
+		    }
+		    nwcs++;
 		}
 		// disable if we only have the default wcs
 		if( nwcs < 2 ){
@@ -9996,7 +9972,7 @@ JS9.Menubar.createMenus = function(){
 	    let last = "";
 	    const items = {};
 	    items.js9help = {
-		name: "General help ...", 
+		name: "General help ...",
 		items: {
 		    helptitle: {
 			name: "General help:",
@@ -10005,20 +9981,18 @@ JS9.Menubar.createMenus = function(){
 		}
 	    };
 	    // first, internal js9 pages
-	    for( key in JS9.helpOpts ){
-		if( Object.prototype.hasOwnProperty.call(JS9.helpOpts, key) ){
-		    val = JS9.helpOpts[key];
-		    if( val.heading === "JS9Help" ){
-			last = val.type;
-			items.js9help.items[key] = {
-			    name: val.title
-			};
-		    }
+	    for( key of Object.keys(JS9.helpOpts) ){
+		val = JS9.helpOpts[key];
+		if( val.heading === "JS9Help" ){
+		    last = val.type;
+		    items.js9help.items[key] = {
+			name: val.title
+		    };
 		}
 	    }
 	    items[`sep${n++}`] = "------";
 	    items.pluginhelp = {
-		name: "JS9 plugins ...", 
+		name: "JS9 plugins ...",
 		items: {
 		    helptitle: {
 			name: "JS9 plugins:",
@@ -10027,43 +10001,38 @@ JS9.Menubar.createMenus = function(){
 		}
 	    };
 	    // second, the JS9 core plugins
-	    for( key in JS9.helpOpts ){
-		if( Object.prototype.hasOwnProperty.call(JS9.helpOpts, key) ){
-		    val = JS9.helpOpts[key];
-		    if( val.heading === "JS9" ){
-			last = val.type;
-			items.pluginhelp.items[key] = {
-			    name: val.title.replace(/ \.\.\./, "")
-			};
-		    }
+	    for( key of Object.keys(JS9.helpOpts) ){
+		val = JS9.helpOpts[key];
+		if( val.heading === "JS9" ){
+		    last = val.type;
+		    items.pluginhelp.items[key] = {
+			name: val.title.replace(/ \.\.\./, "")
+		    };
 		}
 	    }
 	    // last, the others
-	    for( key in JS9.helpOpts ){
-		if( Object.prototype.hasOwnProperty.call(JS9.helpOpts, key) ){
-		    val = JS9.helpOpts[key];
-		    if( val.heading === "JS9Help" || 
-			val.heading === "JS9" ){
-			continue;
-		    }
-		    if( (last !== "") && (val.type !== last) ){
-			items[`sep${n++}`] = "------";
-			if( val.heading ){
-			    t = `${val.heading  } plugins`;
-			    items[`sep${n++}`] = {
-				name: `${t} ...`,
-				items: {
-				    title: {
-					name: `${t}:`,
-					disabled: true
-				    }
-				}
-			    };
-			}
-		    }
-		    last = val.type;
-		    items[`sep${n-1}`].items[key] = {name: val.title};
+	    for( key of Object.keys(JS9.helpOpts) ){
+		val = JS9.helpOpts[key];
+		if( val.heading === "JS9Help" || val.heading === "JS9" ){
+		    continue;
 		}
+		if( (last !== "") && (val.type !== last) ){
+		    items[`sep${n++}`] = "------";
+		    if( val.heading ){
+			t = `${val.heading  } plugins`;
+			items[`sep${n++}`] = {
+			    name: `${t} ...`,
+			    items: {
+				title: {
+				    name: `${t}:`,
+				    disabled: true
+				}
+			    }
+			};
+		    }
+		}
+		last = val.type;
+		items[`sep${n-1}`].items[key] = {name: val.title};
 	    }
 	    items[`sep${n++}`] = "------";
 	    items.about = xname("About");
@@ -11346,7 +11315,7 @@ JS9.RegisterPlugin(JS9.PanZoom.CLASS, JS9.PanZoom.NAME,
 "use strict";
 
 // To specify the JS9 display instance to link to a given PREFS div,
-// use the HTML5 dataset syntax: 
+// use the HTML5 dataset syntax:
 //    <div class="JS9Prefs" data-js9id="JS9"></div>
 
 // create our namespace, and specify some meta-information and params
@@ -11454,7 +11423,7 @@ JS9.Prefs.imagesSchema = {
 	}
     }
 };
-    
+
 JS9.Prefs.regionsSchema = {
     "title": "Region Preferences",
     "description": "Preferences for each displayed region",
@@ -12067,46 +12036,44 @@ JS9.Prefs.init = function(){
 	html += `<form id='${id}Form' class='js9AnalysisForm' style='overflow: hidden'>`;
 	html += `<center><b>${source.schema.description}</b></center><p>`;
 	props = source.schema.properties;
-	for( key in props ){
-	    if( Object.prototype.hasOwnProperty.call(props, key) ){
-		obj = props[key];
-		prompt = obj.prompt || `${key}:`;
-		switch(obj.type){
-		case "boolean":
-		    if( source.data[key] ){
-			s = "checked";
-		    } else {
-			s = "";
-		    }
-		    html += `<div class='linegroup'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2'><input type='checkbox' name='${key}' value='true' ${s}></span><span class='column_R4L'>${obj.helper}</span></div>`;
-		    break;
-		default:
-		    if( typeof source.data[key] === "object" ){
-			if( obj.type === "mobject" ){
-			    s = JSON.stringify(source.data[key], null, 2);
-			} else {
-			    s = JSON.stringify(source.data[key]);
-			}
-		    } else if( JS9.isNull(source.data[key]) ){
-			s = "";
-		    } else {
-			s = source.data[key];
-		    }
-		    if( obj.type === "mobject" ){
-			html += `<div class='linegroup' style='height:64px'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2l'><textarea name='${key}' class='text_R' rows='5' style='overflow-x: hidden; resize: none'>${s}</textarea></span><span class='column_R4L'>${obj.helper}</span></div>`;
-		    } else {
-			html += `<div class='linegroup'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2l'><input type='text' name='${key}' class='text_R' value='${s}'></span><span class='column_R4L'>${obj.helper}</span></div>`;
-		    }
-		    break;
+	for( key of Object.keys(props) ){
+	    obj = props[key];
+	    prompt = obj.prompt || `${key}:`;
+	    switch(obj.type){
+	    case "boolean":
+		if( source.data[key] ){
+		    s = "checked";
+		} else {
+		    s = "";
 		}
+		html += `<div class='linegroup'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2'><input type='checkbox' name='${key}' value='true' ${s}></span><span class='column_R4L'>${obj.helper}</span></div>`;
+		break;
+	    default:
+		if( typeof source.data[key] === "object" ){
+		    if( obj.type === "mobject" ){
+			s = JSON.stringify(source.data[key], null, 2);
+		    } else {
+			s = JSON.stringify(source.data[key]);
+		    }
+		} else if( JS9.isNull(source.data[key]) ){
+		    s = "";
+		} else {
+		    s = source.data[key];
+		}
+		if( obj.type === "mobject" ){
+		    html += `<div class='linegroup' style='height:64px'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2l'><textarea name='${key}' class='text_R' rows='5' style='overflow-x: hidden; resize: none'>${s}</textarea></span><span class='column_R4L'>${obj.helper}</span></div>`;
+		} else {
+		    html += `<div class='linegroup'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2l'><input type='text' name='${key}' class='text_R' value='${s}'></span><span class='column_R4L'>${obj.helper}</span></div>`;
+		}
+		break;
 	    }
 	}
 	if( !JS9.cmdlineOpts ){
 	    html += `<input id='${this.id}_applyPrefs' name='Apply' type='button' class='button' value='Apply' onclick='JS9.Prefs.applyForm.call(this);' style='margin: 8px'>`;
 	}
 	// manage stored preferences
-	if( Object.prototype.hasOwnProperty.call(window, "localStorage") &&
-	    JS9.globalOpts.localStorage                                  ){
+	if( {}.hasOwnProperty.call(window, "localStorage") &&
+	    JS9.globalOpts.localStorage                    ){
 	    html += `<input id='${this.id}_savePrefs' name='Save' type='button' class='button' value='Save' onclick='JS9.Prefs.saveForm.call(this)' style='margin: 8px'>`;
 	    html += `<input id='${this.id}_showPrefs' name='Show' type='button' class='button' value='Show Saved' onclick='JS9.Prefs.showForm.call(this)' style='margin: 8px'>`;
 	    html += "<input id='delete' name='Delete' type='button' class='button' value='Delete Saved' onclick='JS9.Prefs.deleteForm.call(this)' style='margin: 8px'>";
@@ -12178,10 +12145,8 @@ JS9.Prefs.saveForm = function(){
     try{
 	// only save props in the schema: e.g., don't save all of globalOpts
 	props = source.schema.properties;
-	for( key in props ){
-	    if( Object.prototype.hasOwnProperty.call(props, key) ){
-		saveobj[key] = source.data[key];
-	    }
+	for( key of Object.keys(props) ){
+	    saveobj[key] = source.data[key];
 	}
 	localStorage.setItem(source.name, JSON.stringify(saveobj, null, 2));
 	JS9.userOpts[source.name] = localStorage.getItem(source.name);
@@ -12212,8 +12177,8 @@ JS9.Prefs.showForm = function(){
 	    t = `<p><center>No saved prefs: ${source.name}</center>`;
 	}
     }
-    JS9.lightWin(`savedPrefs${JS9.uniqueID()}`, "inline", t, 
-		 `Saved prefs: ${source.name}`, 
+    JS9.lightWin(`savedPrefs${JS9.uniqueID()}`, "inline", t,
+		 `Saved prefs: ${source.name}`,
 		 JS9.lightOpts[JS9.LIGHTWIN].textWin);
     return false;
 };
@@ -12459,7 +12424,7 @@ JS9.ScaleLimits.YSCALE="log";
 JS9.ScaleLimits.NDIST=512;
 // timeout hack for cleaning up flot
 JS9.ScaleLimits.TIMEOUT=250;
-// size of limits marker for annotation 
+// size of limits marker for annotation
 JS9.ScaleLimits.CARET=4;
 // size of xval text in pixels
 JS9.ScaleLimits.XTEXTHEIGHT=14;
@@ -12691,7 +12656,7 @@ JS9.ScaleLimits.doplot = function(im){
     // convert to flot data
     for(i=0; i<this.ndist; i++){
         pobj.data[i] = [i, dist[i]];
-    }      
+    }
     // xaxis
     popts.xaxis = popts.xaxis || {};
     popts.xaxis.font = JS9.ScaleLimits.AXISFONT;
@@ -12736,7 +12701,7 @@ JS9.ScaleLimits.doplot = function(im){
             if( distmax === undefined || dist[i] > distmax ){
 		distmax = dist[i];
             }
-	}      
+	}
 	ntick = JS9.ScaleLimits.log10(distmax - distmin + 1);
 	for(i=0; i<ntick; i++){
             popts.yaxis.ticks[i] = [Math.pow(10, i), JS9.ScaleLimits.to10E(i)];
@@ -12767,7 +12732,7 @@ JS9.ScaleLimits.doplot = function(im){
 	let ctx, text, s, x, y, w, h, xval;
 	let px = pos.x;
 	// sanity checks
-	if( !this.plot || !this.plotComplete ){ 
+	if( !this.plot || !this.plotComplete ){
 	    return;
 	}
 	if( this.xscale === "log" ){
@@ -12790,7 +12755,7 @@ JS9.ScaleLimits.doplot = function(im){
 	x = this.plotWidth  * JS9.ScaleLimits.XTEXTFRAC;
 	y = this.plotHeight * JS9.ScaleLimits.YTEXTFRAC;
 	ctx.clearRect(x, y, w, h);
-	ctx.fillText(s, x, y); 
+	ctx.fillText(s, x, y);
 	ctx.restore();
 	this.lastTextWidth = w;
     });
@@ -13092,13 +13057,13 @@ JS9.Separate.addImage = function(im){
     imid = im.id;
     // unique id
     id = JS9.Separate.imid(im);
-    // get class for this layer 
+    // get class for this layer
     dcls = `${JS9.Separate.dispclass(im)}_Image`;
     // value to pass to the macro expander
     opts.push({name: "imid",   value: im.id});
-    opts.push({name: "active", value: sprintf(JS9.Separate.activeHTML, 
+    opts.push({name: "active", value: sprintf(JS9.Separate.activeHTML,
 					      imid)});
-    opts.push({name: "imfile", value: sprintf(JS9.Separate.imfileHTML, 
+    opts.push({name: "imfile", value: sprintf(JS9.Separate.imfileHTML,
 					      imid)});
     // remove initial message
     if( !this.separateDivs ){
@@ -13168,11 +13133,11 @@ JS9.Separate.init = function(){
         .css("overflow", "auto")
 	.appendTo(this.divjq);
     dispid = this.display.id;
-    opts.push({name: "separate", value: sprintf(JS9.Separate.separateHTML, 
+    opts.push({name: "separate", value: sprintf(JS9.Separate.separateHTML,
 						dispid, dispid, dispid)});
-    opts.push({name: "gather",   value: sprintf(JS9.Separate.gatherHTML, 
+    opts.push({name: "gather",   value: sprintf(JS9.Separate.gatherHTML,
 						dispid, dispid)});
-    s = JS9.Image.prototype.expandMacro.call(null, JS9.Separate.topHTML, 
+    s = JS9.Image.prototype.expandMacro.call(null, JS9.Separate.topHTML,
 					     opts);
     // header
     this.separateHeader = $("<div>")
@@ -13667,30 +13632,28 @@ JS9.Sync.unsync = function(ops, ims, opts){
 	return;
     }
     // for each op in this image ...
-    for( op in this.syncs ){
-	if( Object.prototype.hasOwnProperty.call(this.syncs, op) ){
-	    // skip this op if its not in the specified op list
-	    if( xops && $.inArray(op, xops) < 0 ){
-		continue;
+    for( op of Object.keys(this.syncs) ){
+	// skip this op if its not in the specified op list
+	if( xops && $.inArray(op, xops) < 0 ){
+	    continue;
+	}
+	// if no target images specified, delete the whole thing
+	if( !xims ){
+	    delete this.syncs[op];
+	} else {
+	    // get target image array for this image
+	    tims = this.syncs[op];
+	    // for each target image ...
+	    for(i=tims.length-1; i>=0; i--){
+		// remove if it was specified for removal
+		if( $.inArray(tims[i], xims) >= 0 ){
+		    tims.splice(i, 1);
+		}
 	    }
-	    // if no target images specified, delete the whole thing
-	    if( !xims ){
+	    // remove empty target image array
+	    if( !tims.length ){
 		delete this.syncs[op];
-	    } else {
-		// get target image array for this image
-		tims = this.syncs[op];
-		// for each target image ...
-		for(i=tims.length-1; i>=0; i--){
-		    // remove if it was specified for removal
-		    if( $.inArray(tims[i], xims) >= 0 ){
-			tims.splice(i, 1);
-		    }
-		}
-		// remove empty target image array
-		if( !tims.length ){
-		    delete this.syncs[op];
 		
-		}
 	    }
 	}
     }
@@ -13960,10 +13923,8 @@ JS9.Sync.xeqSync = function(arr){
 	    }
 	}
 	// revert to display of orginal image where necessary
-	for( key in displays ){
-	    if( Object.prototype.hasOwnProperty.call(displays, key) ){
-		displays[key].displayImage();
-	    }
+	for( key of Object.keys(displays) ){
+	    displays[key].displayImage();
 	}
     }
     catch(e){ /* empty */ }
