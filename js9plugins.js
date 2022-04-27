@@ -6138,7 +6138,7 @@ JS9.Keyboard.init = function(){
         .html("")
 	.appendTo(this.keyboardContainer);
     // add actions
-    for(key in JS9.globalOpts.keyboardActions ){
+    for( key of Object.keys(JS9.globalOpts.keyboardActions) ){
 	s = JS9.globalOpts.keyboardActions[key];
 	JS9.Keyboard.addAction.call(this, this.keyboardActionContainer, key, s);
     }
