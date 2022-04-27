@@ -125,7 +125,7 @@ const getClients = function(){
 		res.push(v2[id]);
 	    }
         }
-    } else if( Array.isArray(v3) ){
+    } else if( typeof v3 === "object" ){
 	// v3 protocol
 	v3.forEach((value) => {
 	    if( !value.js9worker ){
