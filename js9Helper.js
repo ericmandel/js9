@@ -120,11 +120,9 @@ const getClients = function(){
     const v3 = io.of("/").sockets;
     if( v2 ){
 	// v2 protocol
-        for( id in v2 ){
-	    if( Object.prototype.hasOwnProperty.call(v2, id) ){
-		if( !v2[id].js9worker ){
-		    res.push(v2[id]);
-		}
+        for( id of Object.keys(v2) ){
+	    if( !v2[id].js9worker ){
+		res.push(v2[id]);
 	    }
         }
     } else if( v3 ){
@@ -304,22 +302,20 @@ const loadSecurePreferences = function(securefile){
 	    try{ obj = JSON.parse(s.toString()); }
 	    catch(e){ cerr("can't parse: ", securefile, e); }
 	    // merge opts into secureOpts
-	    for( opt in obj ){
-		if( Object.prototype.hasOwnProperty.call(obj, opt) ){
-		    switch(opt){
-		    case "key":
-			secureOpts.key = fs.readFileSync(obj[opt]);
-			break;
-		    case "cert":
-			secureOpts.cert = fs.readFileSync(obj[opt]);
-			break;
-		    case "ca":
-			secureOpts.ca = fs.readFileSync(obj[opt]);
-			break;
-		    default:
-			cerr("unknown secure option: ", opt);
-			break;
-		    }
+	    for( opt of Object.keys(obj) ){
+		switch(opt){
+		case "key":
+		    secureOpts.key = fs.readFileSync(obj[opt]);
+		    break;
+		case "cert":
+		    secureOpts.cert = fs.readFileSync(obj[opt]);
+		    break;
+		case "ca":
+		    secureOpts.ca = fs.readFileSync(obj[opt]);
+		    break;
+		default:
+		    cerr("unknown secure option: ", opt);
+		    break;
 		}
 	    }
 	    // if we have a prefs file, we need to have defined required props
@@ -346,31 +342,29 @@ const loadPreferences = function(prefs){
 	catch(e){ cerr("can't parse: ", prefsfile, e); }
 	// look for globalOpts and merge
 	if( obj && obj.globalOpts ){
-	    for( opt in obj.globalOpts ){
-		if( Object.prototype.hasOwnProperty.call(obj.globalOpts, opt) ){
-		    otype = typeof obj.globalOpts[opt];
-		    jtype = typeof globalOpts[opt];
-		    if( (jtype === otype) || (jtype === "undefined") ){
-			switch(otype){
-			case "number":
+	    for( opt of Object.keys(obj.globalOpts) ){
+		otype = typeof obj.globalOpts[opt];
+		jtype = typeof globalOpts[opt];
+		if( (jtype === otype) || (jtype === "undefined") ){
+		    switch(otype){
+		    case "number":
+			globalOpts[opt] = obj.globalOpts[opt];
+			break;
+		    case "boolean":
+			globalOpts[opt] = obj.globalOpts[opt];
+			break;
+		    case "string":
+			globalOpts[opt] = obj.globalOpts[opt];
+			break;
+		    case "object":
+			if( jtype === "undefined" ){
 			    globalOpts[opt] = obj.globalOpts[opt];
-			    break;
-			case "boolean":
-			    globalOpts[opt] = obj.globalOpts[opt];
-			    break;
-			case "string":
-			    globalOpts[opt] = obj.globalOpts[opt];
-			    break;
-			case "object":
-			    if( jtype === "undefined" ){
-				globalOpts[opt] = obj.globalOpts[opt];
-			    } else {
-				Object.assign(globalOpts[opt], obj.globalOpts[opt]);
-			    }
-			    break;
-			default:
-			    break;
+			} else {
+			    Object.assign(globalOpts[opt], obj.globalOpts[opt]);
 			}
+			break;
+		    default:
+			break;
 		    }
 		}
 	    }

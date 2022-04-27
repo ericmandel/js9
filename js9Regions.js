@@ -43,7 +43,7 @@ const addComment = function(comment, key, val){
 
 // parse region, convert from js9 to ds9
 const parseRegion = function(s){
-    let cmd;
+    let cmd, key;
     let json=null;
     let highlite="";
     let comment="";
@@ -85,67 +85,65 @@ const parseRegion = function(s){
 	}
     }
     // convert js9 json to ds9 comments
-    for(const key in json){
-	if( Object.prototype.hasOwnProperty.call(json, key) ){
-	    switch(key){
-	    case "color":
-		if( json[key]
-		    .match(/black|white|red|green|blue|cyan|magenta|yellow/) ){
-		    comment = addComment(comment, "color", json[key]);
-		}
-		break;
-	    case "strokeDashArray":
-		comment = addComment(comment, "dash", 1);
-		comment = addComment(comment, "dashlist", json[key].join(" "));
-		break;
-	    case "strokeWidth":
-		comment = addComment(comment, "width", Math.floor(json[key]));
-		break;
-	    case "removable":
-		comment = addComment(comment, "delete", !!json[key]);
-		break;
-	    case "selectable":
-		comment = addComment(comment, "edit", !!json[key]);
-		break;
-	    case "rotatable":
-		comment = addComment(comment, "rotate", !!json[key]);
-		break;
-	    case "resizable":
-		comment = addComment(comment, "resize", !!json[key]);
-		break;
-	    case "zoomable":
-		comment = addComment(comment, "fixed", !!json[key]);
-		break;
-	    case "fontFamily":
-		fontarr[0] = json[key];
-		break;
-	    case "fontSize":
-		fontarr[1] = json[key];
-		break;
-	    case "fontWeight":
-		fontarr[2] = json[key];
-		break;
-	    case "fontStyle":
-		fontarr[3] = json[key];
-		break;
-	    case "hasControls":
-	    case "hasBorders":
-	    case "hasRotatingPoint":
-		if( !highlite ){
-		    highlite = !!json[key];
-		}
-		break;
-	    case "text":
-		comment = addComment(comment, "text", json[key]);
-		break;
-	    case "tags": {
-		const tarr = json[key].split(",");
-		for(let i=0; i<tarr.length; i++){
-		    comment = addComment(comment, "tag", tarr[i].trim());
-		}
-		break;
+    for( key of Object.keys(json) ){
+	switch(key){
+	case "color":
+	    if( json[key]
+		.match(/black|white|red|green|blue|cyan|magenta|yellow/) ){
+		comment = addComment(comment, "color", json[key]);
 	    }
+	    break;
+	case "strokeDashArray":
+	    comment = addComment(comment, "dash", 1);
+	    comment = addComment(comment, "dashlist", json[key].join(" "));
+	    break;
+	case "strokeWidth":
+	    comment = addComment(comment, "width", Math.floor(json[key]));
+	    break;
+	case "removable":
+	    comment = addComment(comment, "delete", !!json[key]);
+	    break;
+	case "selectable":
+	    comment = addComment(comment, "edit", !!json[key]);
+	    break;
+	case "rotatable":
+	    comment = addComment(comment, "rotate", !!json[key]);
+	    break;
+	case "resizable":
+	    comment = addComment(comment, "resize", !!json[key]);
+	    break;
+	case "zoomable":
+	    comment = addComment(comment, "fixed", !!json[key]);
+	    break;
+	case "fontFamily":
+	    fontarr[0] = json[key];
+	    break;
+	case "fontSize":
+	    fontarr[1] = json[key];
+	    break;
+	case "fontWeight":
+	    fontarr[2] = json[key];
+	    break;
+	case "fontStyle":
+	    fontarr[3] = json[key];
+	    break;
+	case "hasControls":
+	case "hasBorders":
+	case "hasRotatingPoint":
+	    if( !highlite ){
+		highlite = !!json[key];
 	    }
+	    break;
+	case "text":
+	    comment = addComment(comment, "text", json[key]);
+	    break;
+	case "tags": {
+	    const tarr = json[key].split(",");
+	    for(let i=0; i<tarr.length; i++){
+		comment = addComment(comment, "tag", tarr[i].trim());
+	    }
+	    break;
+	}
 	}
     }
     if( cmd ){

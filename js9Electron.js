@@ -66,34 +66,30 @@ function loadPreferences(prefs){
 	// save prefs in file before merge
 	js9Electron.prefs = obj;
 	// look for top-level objects
-	for( tobj in obj ){
-	    if( Object.prototype.hasOwnProperty.call(obj, tobj)         &&
-		typeof obj[tobj] === "object"                           &&
-		Object.prototype.hasOwnProperty.call(js9Electron, tobj) &&
-		typeof js9Electron[tobj] === "object"                   ){
+	for( tobj of Object.keys(obj) ){
+	    if( typeof obj[tobj] === "object"          &&
+		typeof js9Electron[tobj] === "object"  ){
 		// process each property of this object
-		for( opt in obj[tobj] ){
-		    if( Object.prototype.hasOwnProperty.call(obj[tobj], opt) ){
-			val = obj[tobj][opt];
-			otype = typeof val;
-			jtype = typeof js9Electron[tobj][opt];
-			if( (jtype === otype) || (jtype === "undefined") ){
-			    switch(otype){
-			    case "number":
-				js9Electron[tobj][opt] = val;
-				break;
-			    case "boolean":
-				js9Electron[tobj][opt] = val;
-				break;
-			    case "string":
-				js9Electron[tobj][opt] = val;
-				break;
-			    case "object":
-				js9Electron[tobj][opt] = val;
-				break;
-			    default:
-				break;
-			    }
+		for( opt of Object.keys(obj[tobj]) ){
+		    val = obj[tobj][opt];
+		    otype = typeof val;
+		    jtype = typeof js9Electron[tobj][opt];
+		    if( (jtype === otype) || (jtype === "undefined") ){
+			switch(otype){
+			case "number":
+			    js9Electron[tobj][opt] = val;
+			    break;
+			case "boolean":
+			    js9Electron[tobj][opt] = val;
+			    break;
+			case "string":
+			    js9Electron[tobj][opt] = val;
+			    break;
+			case "object":
+			    js9Electron[tobj][opt] = val;
+			    break;
+			default:
+			    break;
 			}
 		    }
 		}
@@ -111,9 +107,8 @@ function savePreferences(obj){
 	// deep copy of prefs object
 	s = JSON.parse(JSON.stringify(js9Electron.prefs));
 	// overwrite cmdline object properties
-	for( key in obj ){
-	    if( Object.prototype.hasOwnProperty.call(obj, key)           &&
-		Object.prototype.hasOwnProperty.call(s.cmdlineOpts, key) ){
+	for( key of Object.keys(obj) ){
+	    if( {}.hasOwnProperty.call(s.cmdlineOpts, key) ){
 		s.cmdlineOpts[key] = obj[key];
 	    }
 	}
