@@ -118,14 +118,14 @@ const getClients = function(){
     // check for conected targets connected (default: using v2 or v3)
     const v2 = io.of("/").connected;
     const v3 = io.of("/").sockets;
-    if( v2 ){
+    if( typeof v2 === "object" ){
 	// v2 protocol
         for( id of Object.keys(v2) ){
 	    if( !v2[id].js9worker ){
 		res.push(v2[id]);
 	    }
         }
-    } else if( v3 ){
+    } else if( Array.isArray(v3) ){
 	// v3 protocol
 	v3.forEach((value) => {
 	    if( !value.js9worker ){
@@ -340,8 +340,8 @@ const loadPreferences = function(prefs){
     if( s ){
 	try{ obj = JSON.parse(s.toString()); }
 	catch(e){ cerr("can't parse: ", prefsfile, e); }
-	// look for globalOpts and merge
-	if( obj && obj.globalOpts ){
+	// look for globalOpts object and merge
+	if( obj && typeof obj.globalOpts === "object" ){
 	    for( opt of Object.keys(obj.globalOpts) ){
 		otype = typeof obj.globalOpts[opt];
 		jtype = typeof globalOpts[opt];

@@ -103,6 +103,7 @@ function savePreferences(obj){
     let s, key;
     const { width, height } = screen.getPrimaryDisplay().workAreaSize;
     // merge pref object with Electron prefs from json file, if necessary
+    obj = obj || {};
     if( js9Electron.prefs ){
 	// deep copy of prefs object
 	s = JSON.parse(JSON.stringify(js9Electron.prefs));
