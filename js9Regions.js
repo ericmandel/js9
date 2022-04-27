@@ -44,7 +44,7 @@ const addComment = function(comment, key, val){
 // parse region, convert from js9 to ds9
 const parseRegion = function(s){
     let cmd, key;
-    let json=null;
+    let json={};
     let highlite="";
     let comment="";
     const fontarr = [];
@@ -64,7 +64,7 @@ const parseRegion = function(s){
     if( jarr && jarr[0] ){
 	// convert to object
 	try{ json = JSON.parse(jarr[0].trim()); }
-	catch(e){ json = null; }
+	catch(e){ json = {}; }
     }
     // look for comments
     if( sarr[1] ){
