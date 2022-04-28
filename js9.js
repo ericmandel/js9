@@ -9064,7 +9064,7 @@ JS9.Image.prototype.xeqPlugins = function(xtype, xname, xval){
     // sanity check
     if( !xtype || !xname || !JS9.globalOpts.xeqPlugins ){ return; }
     // array of plugin instances
-    parr = this.display.pluginInstances;
+    parr = this.display.pluginInstances || {};
     // look for plugin callbacks to execute
     for( pname of Object.keys(parr) ){
 	pinst = parr[pname];
@@ -11334,6 +11334,7 @@ JS9.Display.prototype.moveImageInStack = function(from, to){
 JS9.Command = function(obj){
     let p;
     // copy properties to new object
+    obj = obj || {};
     for( p of Object.keys(obj) ){
 	this[p] = obj[p];
     }
@@ -12835,6 +12836,8 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	        tagcolors.defcolor || JS9.globalOpts.defcolor || "#000000";
 	return color;
     };
+    // opts is optional
+    opts = opts || {};
     // remove means nothing else matters
     if( opts.remove ){
 	return {remove: opts.remove};
@@ -19222,7 +19225,7 @@ JS9.Regions.parseRegions = function(s, opts){
 	    val = xarr[2].replace(/^['"{]|['"}]$/g, "");
 	    if( {}.hasOwnProperty.call(ds9opts, key) &&
 		typeof ds9opts[key] === "function"   ){
-		nobj = ds9opts[key](val);
+		nobj = ds9opts[key](val) || {};
 		for( key2 of Object.keys(nobj) ){
 		    if( key2 === "tags" && {}.hasOwnProperty.call(xobj, key2) ){
 			xobj[key2] += `,${nobj[key2]}`;
@@ -23295,6 +23298,7 @@ JS9.mergePrefs = function(obj){
     let otype, jtype, name;
     let domerge = false;
     // merge preferences with js9 objects and data
+    obj = obj || {};
     for( name of Object.keys(obj) ){
 	// handle config specially
 	if( name === "config" ){

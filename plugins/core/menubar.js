@@ -197,7 +197,7 @@ JS9.Menubar.createMenus = function(){
     const xname = (name, xact) => {
 	let key, hstr, tact;
 	let obj = {name: name};
-	const gkeyActions = JS9.globalOpts.keyboardActions;
+	const gkeyActions = JS9.globalOpts.keyboardActions || {};
 	const act = JS9.Menubar.keyMap[name];
 	if( !JS9.Menubar.rkeyMap ){
 	    JS9.Menubar.rkeyMap = {};
@@ -2243,6 +2243,7 @@ JS9.Menubar.createMenus = function(){
 	    const editRegions = (im, obj, which) => {
 		let key, val;
 		const opts = {};
+		obj = obj || {};
 		if( which ){
 		    key = which.substring(3);
 		    val = obj[which];

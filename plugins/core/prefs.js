@@ -727,7 +727,7 @@ JS9.Prefs.init = function(){
 	html += `<div id='${id}Div' class='tabcontent'>`;
 	html += `<form id='${id}Form' class='js9AnalysisForm' style='overflow: hidden'>`;
 	html += `<center><b>${source.schema.description}</b></center><p>`;
-	props = source.schema.properties;
+	props = source.schema.properties || {};
 	for( key of Object.keys(props) ){
 	    obj = props[key];
 	    prompt = obj.prompt || `${key}:`;
@@ -836,7 +836,7 @@ JS9.Prefs.saveForm = function(){
     }
     try{
 	// only save props in the schema: e.g., don't save all of globalOpts
-	props = source.schema.properties;
+	props = source.schema.properties || {};
 	for( key of Object.keys(props) ){
 	    saveobj[key] = source.data[key];
 	}

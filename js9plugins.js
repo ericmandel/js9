@@ -4325,7 +4325,7 @@ JS9.Divs.init = function(opts){
 	return;
     }
     // add current in-page plugin divs
-    instances = this.display.pluginInstances;
+    instances = this.display.pluginInstances || {};
     for( key of Object.keys(instances) ){
 	if( instances[key].winType === "div" ){
 	    JS9.Divs.addDiv.call(this, key);
@@ -7111,7 +7111,7 @@ JS9.Menubar.createMenus = function(){
     const xname = (name, xact) => {
 	let key, hstr, tact;
 	let obj = {name: name};
-	const gkeyActions = JS9.globalOpts.keyboardActions;
+	const gkeyActions = JS9.globalOpts.keyboardActions || {};
 	const act = JS9.Menubar.keyMap[name];
 	if( !JS9.Menubar.rkeyMap ){
 	    JS9.Menubar.rkeyMap = {};
@@ -9157,6 +9157,7 @@ JS9.Menubar.createMenus = function(){
 	    const editRegions = (im, obj, which) => {
 		let key, val;
 		const opts = {};
+		obj = obj || {};
 		if( which ){
 		    key = which.substring(3);
 		    val = obj[which];
@@ -12035,7 +12036,7 @@ JS9.Prefs.init = function(){
 	html += `<div id='${id}Div' class='tabcontent'>`;
 	html += `<form id='${id}Form' class='js9AnalysisForm' style='overflow: hidden'>`;
 	html += `<center><b>${source.schema.description}</b></center><p>`;
-	props = source.schema.properties;
+	props = source.schema.properties || {};
 	for( key of Object.keys(props) ){
 	    obj = props[key];
 	    prompt = obj.prompt || `${key}:`;
@@ -12144,7 +12145,7 @@ JS9.Prefs.saveForm = function(){
     }
     try{
 	// only save props in the schema: e.g., don't save all of globalOpts
-	props = source.schema.properties;
+	props = source.schema.properties || {};
 	for( key of Object.keys(props) ){
 	    saveobj[key] = source.data[key];
 	}

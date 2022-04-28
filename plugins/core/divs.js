@@ -117,7 +117,7 @@ JS9.Divs.init = function(opts){
 	return;
     }
     // add current in-page plugin divs
-    instances = this.display.pluginInstances;
+    instances = this.display.pluginInstances || {};
     for( key of Object.keys(instances) ){
 	if( instances[key].winType === "div" ){
 	    JS9.Divs.addDiv.call(this, key);
