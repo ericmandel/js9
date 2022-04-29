@@ -13960,7 +13960,7 @@ JS9.Fabric._selectShapes = function(layerName, selection, opts, cb){
 	// can be within groups ... (hence the do/while loop)
 	olen = objects.length;
 	do{
-	    got = 0
+	    got = 0;
 	    while( olen-- ){
 		obj = objects[olen];
 		// replace group with objects inside the group
@@ -16054,16 +16054,31 @@ JS9.Fabric._regroupAnnulus = function(layerName, e){
 // update child regions
 // don't need to call using image context
 JS9.Fabric.updateChildren = function(dlayer, shape, type){
-    let i, p, x, child, nangle, npos, pangle;
+    let i, o, p, child, nangle, npos, pangle, objects, olen, got;
+    let x = {};
     // region layer only, for now
     if( dlayer.layerName !== "regions" ){
 	return;
     }
     // re-init objects within for parents and children
     if( type === "objects" ){
-	x = {};
+	// get list of top-level objects, replacing groups with their objects
+	objects = dlayer.canvas.getObjects().reverse();
+	olen = objects.length;
+	do{
+	    got = 0;
+	    while( olen-- ){
+		o = objects[olen];
+		// replace group with objects inside the group
+		if( o.type === "group" && !o.params ){
+		    objects.splice(olen, 1, ...o.getObjects());
+		    got++;
+		}
+	    }
+	    olen = objects.length;
+	} while( got );
 	// first get a list of parents and children
-	dlayer.canvas.getObjects().forEach( (o) => {
+	objects.forEach( (o) => {
 	    if( o.params ){
 		if( o.params.parent || o.params.children.length ){
 		    x[o.params.id] = o;
@@ -16071,7 +16086,7 @@ JS9.Fabric.updateChildren = function(dlayer, shape, type){
 	    }
 	});
 	// then re-assign obj pointers to parents and children
-	dlayer.canvas.getObjects().forEach( (o) => {
+	objects.forEach( (o) => {
 	    if( o.params ){
 		if( o.params.parent ){
 		    o.params.parent.obj = x[o.params.parent.id];
