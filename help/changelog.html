@@ -11,24 +11,27 @@
 <div class="helpContainer">
 <center><h3>JS9 ChangeLog</h3></center>
 
-<h3> Patch Release 3.6.3 (TBD)</h3>
+<h3> Public Release 3.7 (TBD)</h3>
 <ul>
 <li> ?renamedisplay=[old:]new will rename a display when loading the web page
 <li> add experimental support for getting remote FITS URLs via CGI-based proxy
 <li> add cgi proxy support to 'load remote ...' dialog box
 <li> drag/drop url will try cgi proxy if proxy server is not available
-<li> fix regions bug where stack order (send to back) was reset after pan/zoom
-<li> fix bug changing position of a selected region after pan/zoom/flip
 <li> js9.js: private sockopts to JS9.socketioOpts to support user configuration
 <li> js9Helper: helperOpts to socketioOpts, use Object.assign to merge obj prefs
 <li> make cubecol's id more akin to a filename (i.e., without parens)
 <li> remove gz:: and bz:: from saved virtual filename
+<li> evcube: generated cube file cannot be a gzip'ed file (re: cfitsio)
+<li> when saving a section, use the real section instead of recalculating it
+<li> fix bug changing position of a selected region after pan/zoom/flip
+<li> fix regions bug where stack order (send to back) was reset after pan/zoom
+<li> fix bug changing position of a selected region after pan/zoom/flip
 <li> fix bugs in handling text children of grouped regions
 <li> fix bug when saving one slice of a cube, naxis was not always set to 2
-<li> when saving a section, use the real section instead of recalculating it
-<li> evcube: generated cube file cannot be a gzip'ed file (re: cfitsio)
-<li> add Quit() public access routine (Desktop app only)
 <li> astroem: rearrange a few source files
+<li> add Quit() public access routine (Desktop app only)
+<li> es6: use for( key of Object.keys(opts) ){ ... where possible
+<li> es6: change a few functions to arrow functions
 <li> update astroem/post.js to es6 to match emscripten v3.1.x
 <li> update emscripten to v3.1.8
 <li> update socket.io to v4.5.0
