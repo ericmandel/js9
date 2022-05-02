@@ -612,6 +612,7 @@ if( (JS9.BROWSER[0] === "Firefox") && JS9.BROWSER[2].search(/Linux/) >=0 ){
 if( (JS9.BROWSER[0] === "Safari") ){
     JS9.bugs.webkit_resize = true;
 }
+
 // wasm broken in ios 11.2.2, 11.2.5 and on, fixed in 11.3beta1 (1/22/2018)
 // see: https://github.com/kripken/emscripten/issues/6042
 if( /iPad|iPhone|iPod/.test(navigator.platform) &&
@@ -10751,7 +10752,8 @@ JS9.Display.prototype.nextImage = function(inc){
 	// display image, 2D graphics, etc.
 	im = ims[nidx];
 	im.displayImage("all");
-	im.refreshLayers();
+// already done in displayImage()
+//	im.refreshLayers();
 	im.display.clearMessage();
 	if( dpos ){
 	    npos = im.displayToImagePos(dpos);
@@ -12545,17 +12547,6 @@ JS9.Fabric.showShapeLayer = function(layerName, mode, opts){
 		    });
 		    canvas.calcOffset();
 		}
-// this breaks the ability to copy regions to an image not currently displayed
-// it delays adding the regions during refresh, so that no regions exist when
-// the copy goes to process its delayed regions (4/10/2020)
-//		// refresh and redisplay this layer
-//		if( this.layers[layerName].opts.panzoom ){
-//		    this.binning.obin = this.binning.bin;
-//		    this.rgb.sect.ozoom = this.rgb.sect.zoom;
-//		    this.refreshShapes(layerName);
-//		} else {
-//		    canvas.renderAll();
-//		}
 		layer.zindex = Math.abs(layer.zindex);
 		dlayer.divjq.css("z-index", layer.zindex);
 		// unselect selected objects in lower-zindex groups
@@ -16213,50 +16204,50 @@ JS9.resetPolygonCenter = function(poly){
 // save selection for later restore
 // call using image context
 JS9.Fabric.saveSelection = function(layerName){
-    let i, layer, canvas, obj, ao;
-    let savesel = [];
+    let s, layer, canvas, obj, objs, olen;
     layer = this.getShapeLayer(layerName);
     if( !layer ){ return; }
     canvas = layer.canvas;
-    ao = canvas.getActiveObjects();
-    for(i=0; i<ao.length; i++){
-	obj = ao[i];
-	if( obj.params && obj.params.changeable !== false ){
-	    savesel.push(obj.params.id);
+    objs = canvas.getActiveObjects();
+    olen = objs.length;
+    // only save selections for one region or group
+    if( olen !== 1 ){ return; }
+    obj = objs[0];
+    if( obj.params ){
+	if( obj.params.changeable !== false ){
+	    layer.savesel = obj.params.id;
 	}
-    }
-    if( savesel.length ){
-	layer.savesel = savesel;
+    } else if( obj.type === "group" ){
+	s = this.lookupGroup(obj);
+	if( s ){
+	    layer.savesel = s;
+	}
     }
 };
 
 // restore previously saved selection
 // call using image context
 JS9.Fabric.restoreSelection = function(layerName){
-    let i, id, layer, canvas, nsel;
-    let nselarr = [];
+    let i, o, id, layer, savesel, canvas, objs, olen;
     layer = this.getShapeLayer(layerName);
-    if( !layer || !layer.savesel || !layer.savesel.length ){ return; }
+    if( !layer || !layer.savesel ){ return; }
     canvas = layer.canvas;
-    canvas.getObjects().forEach( (o) => {
-	for(i=0; i<layer.savesel.length; i++){
-	    id = layer.savesel[i];
-	    if( o.params && o.params.id === id ){
-		nselarr.push(o);
-		break;
-	    }
+    savesel = layer.savesel;
+    objs = canvas.getObjects();
+    olen = objs.length;
+    for(i=0; i<olen; i++){
+	o = objs[i];
+	if( o.params && o.params.id === savesel ){
+	    id = o.params.id;
+	    break;
+	} else if( o.type === "group" && this.lookupGroup(o) === savesel ){
+	    id = savesel;
+	    break;
 	}
-    });
-    if( nselarr.length ){
-	nsel = new fabric.ActiveSelection(nselarr, {
-	    canvas: canvas
-	});
-	canvas.setActiveObject(nsel);
-	if( layerName === "regions" ){
-	    this.clickInRegion = true;
-	    this.clickInLayer = "regions";
-	}
-	this.updateShapes(layerName, nselarr, "restore");
+    }
+    if( id ){
+	this.selectShapes(layerName, id, {saveselection: false});
+	this.updateShapes(layerName, id, "restore");
     }
     delete layer.savesel;
 };
