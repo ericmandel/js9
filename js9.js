@@ -13455,6 +13455,7 @@ JS9.Fabric._exportShapeOptions = function(opts){
 	case "saveformat":
 	case "saveselection":
 	case "savewcs":
+	case "sortids":
 	case "send":
 	case "listonchange":
 	case "multitext":
@@ -16046,6 +16047,7 @@ JS9.Fabric._regroupAnnulus = function(layerName, e){
 // don't need to call using image context
 JS9.Fabric.updateChildren = function(dlayer, shape, type){
     let i, o, p, child, nangle, npos, pangle, objects, olen, got;
+    let tdleft, tdtop;
     let x = {};
     // region layer only, for now
     if( dlayer.layerName !== "regions" ){
@@ -16097,9 +16099,15 @@ JS9.Fabric.updateChildren = function(dlayer, shape, type){
     if( type === "deltas" ){
 	if( shape.params.parent ){
 	    p = shape.params.parent;
-	    p.dleft = p.obj.left - shape.left;
-	    p.dtop = p.obj.top - shape.top;
-	    p.moved = true;
+	    tdleft = p.obj.left - shape.left;
+	    tdtop = p.obj.top - shape.top;
+	    if( tdleft !== p.dleft || tdtop !== p.dtop ){
+		p.dleft = tdleft;
+		p.dtop = tdtop;
+		p.moved = true;
+	    } else {
+		delete p.moved;
+	    }
 	}
 	return;
     }
