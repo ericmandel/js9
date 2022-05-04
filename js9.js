@@ -12401,6 +12401,9 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	o.rescaleEvenly();
 	o.rescaleBorder();
 	JS9.Fabric.updateChildren(dlayer, o, "scaling");
+	if( (o.type === "activeSelection") || (o.type === "group") ){
+	    shupdate(o, "scaling");
+	}
     });
     dlayer.canvas.on("object:moving", (opts) => {
 	let o;
@@ -12408,6 +12411,9 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	if( !opts.target ){ return; }
 	o = opts.target;
 	JS9.Fabric.updateChildren(dlayer, o, "moving");
+	if( (o.type === "activeSelection") || (o.type === "group") ){
+	    shupdate(o, "moving");
+	}
     });
     dlayer.canvas.on("object:rotating", (opts) => {
 	let o;
@@ -12415,6 +12421,9 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	if( !opts.target ){ return; }
 	o = opts.target;
 	JS9.Fabric.updateChildren(dlayer, o, "rotating");
+	if( (o.type === "activeSelection") || (o.type === "group") ){
+	    shupdate(o, "rotating");
+	}
     });
     // selection created: add anchors to polygon
     dlayer.canvas.on("selection:created", (opts) => {
@@ -18317,13 +18326,7 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 		break;
 	    default:
 		nval = JS9.strtoscaled(val);
-		if( nval.dtype === "."    &&
-		    wcssys !== "galactic" &&
-		    wcssys !== "ecliptic" ){
-		    val = nval.dval;
-		} else {
-		    val = Math.abs(nval.dval / wcsinfo.cdelt1);
-		}
+		val = Math.abs(nval.dval / wcsinfo.cdelt1);
 		nkey = key.replace("wcs", "");
 		if( newval(obj, nkey, val) ){
 		    opts[nkey] = getval(val);
@@ -18346,13 +18349,7 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 		break;
 	    default:
 		nval = JS9.strtoscaled(val);
-		if( nval.dtype === "."    &&
-		    wcssys !== "galactic" &&
-		    wcssys !== "ecliptic" ){
-		    val = nval.dval;
-		} else {
-		    val = Math.abs(nval.dval / wcsinfo.cdelt2);
-		}
+		val = Math.abs(nval.dval / wcsinfo.cdelt2);
 		nkey = key.replace("wcs", "");
 		if( newval(obj, nkey, val) ){
 		    opts[nkey] = getval(val);
