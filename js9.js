@@ -16254,7 +16254,10 @@ JS9.Fabric.restoreSelection = function(layerName){
 	}
     }
     if( id ){
+	// turn off selection processing to avoid side-effects
+	JS9.globalOpts.skipSelectionProcessing = true;
 	this.selectShapes(layerName, id, {saveselection: false});
+	delete JS9.globalOpts.skipSelectionProcessing;
 	this.updateShapes(layerName, id, "restore");
     }
     delete layer.savesel;
