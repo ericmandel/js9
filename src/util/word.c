@@ -869,14 +869,7 @@ int istrue (char *s){
  *
  *----------------------------------------------------------------------------
  */
-#ifdef ANSI_FUNC
-int 
-isfalse (char *s)
-#else
-int isfalse(s)
-     char *s;
-#endif
-{
+int  isfalse (char *s){
   char *t;
   int result;
 

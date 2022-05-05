@@ -27,7 +27,8 @@ EMFS =		-lnodefs.js
 # debugging with symbols
 # EMFLAGS	= -O0 --memory-init-file 0  -s ASSERTIONS=1 -s SAFE_HEAP=1
 # production
-EMFLAGS		= -O3
+# (no-deprecated switch to suppress scores of warnings in wcslib 5/5/2022)
+EMFLAGS		= -O3 -Wno-deprecated-non-prototype
 
 # initial memory: support zscale up to 4096 * 4096 * 4-byte images
 # EMOPTS =	-s TOTAL_MEMORY=67108864
