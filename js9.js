@@ -23271,8 +23271,10 @@ JS9.tooltip = function(x, y, fmt, im, xreg, evt){
 
 // http://stackoverflow.com/questions/359788/how-to-execute-a-javascript-function-when-i-have-its-name-as-a-string
 // our modification will execute a real func or a funcName
+// for argument parsing:
+// https://stackoverflow.com/questions/13952870/regular-expression-to-get-parameter-list-from-function-definition
 JS9.xeqByName = function(...args){
-    let i, namespaces, func;
+    let i, namespaces, func, targs;
     let [funcName, context] = args;
     let xargs = args.slice(2);
     let type = typeof funcName;
@@ -23280,10 +23282,22 @@ JS9.xeqByName = function(...args){
     case "function":
 	return funcName.apply(context, xargs);
     case "string":
+	// see if args are attached, i.e. ...func(arg1,arg2,...)
+	targs = /\(\s*([^)]+?)\s*\)/.exec(funcName);
+	if( targs && targs[1] ){
+	    funcName = funcName.slice(0,targs.index);
+	    xargs = targs[1].split(/\s*,\s*/);
+	}
 	namespaces = funcName.split(".");
 	func = namespaces.pop();
 	for(i = 0; i < namespaces.length; i++){
             context = context[namespaces[i]];
+	}
+	// see if a JS9 public function was implicitly specified
+	if( typeof context[func] === "undefined" ){
+	    if( typeof JS9.publics[func] === "function" ){
+		context = JS9.publics;
+	    }
 	}
 	return context[func](...xargs);
     default:

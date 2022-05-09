@@ -208,11 +208,42 @@ or a pan position:
 </pre>
 <p>
 If an onload callback function is specified in opts, it will be called
-after the image is loaded:
+after the image is loaded. By default, the image handle is passed as
+the first argument to the callback:
 <pre>
     JS9.Load("data/fits/3c273.fits", {scale: "linear", onload: func});
+#    function func(im){
+#        JS9.SetColormap("rainbow", {display: im});
+#        JS9.SetScale("log", {display: im});
+#    }
 </pre>
-The image handle is passed as the first argument to the callback.
+<p>
+You can specify the name of a routine as a string (instead of the function
+itself):
+<pre>
+    JS9.Load("data/fits/3c273.fits", {scale: "linear", onload: "myfunc"});'
+</pre>
+Assuming the function "myfunc" is defined in the window context, it will be
+called with the image handle as the first argument.
+<p>
+Note that you can supply arguments along with a string-name function:
+<pre>
+    JS9.Load("data/fits/3c273.fits", {scale: "linear", onload: "docmap('viridis')"});'
+</pre>
+As a convenience, you can also pass a JS9 public routine name:
+<pre>
+    JS9.Load("data/fits/3c273.fits", {scale: "linear", onload: "SetColormap('viridis')"});'
+</pre>
+<p>
+The string-name capability is especially valuable when calling Load()
+from the shell or Python using <a href="./extmsg.html">External Messaging</a>:
+<pre>
+    js9 Load ~/data/coma.fits '{"onload":"SetColormap(viridis,4.5,0.35)"}'
+</pre>
+Note that you don't need to quote the string arguments ('viridis' in
+the example above), but also note that all arguments are passed as
+strings and must be converted to the correct data type in your own
+bespoke functions (as is done in JS9 public routines).
 <p>
 If your url is a function returning a FITS file (e.g. CGI or PHP
 script accessing an archive), the filename will end up being the name
