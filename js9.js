@@ -27335,7 +27335,10 @@ JS9.mkPublic("LoadRegions", function(...args){
 	// set status
 	im.setStatus("loadRegions", "complete");
 	// onload callback, if necessary
-	if( opts && opts.onload ){ opts.onload(im); }
+	if( opts && opts.onload ){
+	    try{ JS9.xeqByName(opts.onload, window, im); }
+	    catch(e){ JS9.error("in regions onload callback", e, false); }
+	}
     };
     file = obj.argv[0];
     opts = obj.argv[1];
@@ -27772,7 +27775,10 @@ JS9.mkPublic("LoadCatalog", function(...args){
 	    // set status
 	    im.setStatus("loadCatalog", "complete");
 	    // onload callback
-	    if( opts && opts.onload ){ opts.onload(im); }
+	    if( opts && opts.onload ){
+		try{ JS9.xeqByName(opts.onload, window, im); }
+		catch(e){ JS9.error("in catalog onload callback", e, false); }
+	    }
 	};
 	reader.readAsText(file);
     } else if( typeof file === "string" ){
@@ -27782,7 +27788,10 @@ JS9.mkPublic("LoadCatalog", function(...args){
 	    // set status
 	    im.setStatus("loadCatalog", "complete");
 	    // onload callback
-	    if( opts && opts.onload ){ opts.onload(im); }
+	    if( opts && opts.onload ){
+		try{ JS9.xeqByName(opts.onload, window, im); }
+		catch(e){ JS9.error("in catalog onload callback", e, false); }
+	    }
 	} else {
 	    // its a file: retrieve and load the catalog
 	    opts.responseType = "text";
@@ -27793,7 +27802,10 @@ JS9.mkPublic("LoadCatalog", function(...args){
 		// set status
 		im.setStatus("loadCatalog", "complete");
 		// onload callback
-		if( opts && opts.onload ){ opts.onload(im); }
+		if( opts && opts.onload ){
+		    try{ JS9.xeqByName(opts.onload, window, im); }
+		    catch(e){ JS9.error("in catalog onload callback", e, false); }
+		}
 	    });
 	}
     } else {

@@ -248,7 +248,10 @@
                      xdim: 8192, ydim: 8192, bin: 4,
                      onload: function(im){
                        JS9.SetZoom(2);
-                       JS9.LoadRegions("data/casa/casa.reg");
+                       JS9.LoadRegions("data/casa/casa.reg",
+				      {onload: "SelectRegions(ellipse)"});
+                       JS9.LoadCatalog("casa", "data/casa/casa.cat",
+				      {onload: "ActiveShapeLayer(regions)"});
                        JS9.Load("data/fits/ngc1316.fits",
                            {colormap: "viridis", scale: "linear",
                            onload: function(im2){
