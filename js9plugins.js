@@ -6178,7 +6178,7 @@ JS9.Layers.visibleHTML='<input class="JS9LayersVisibleCheck" type="checkbox" id=
 
 JS9.Layers.saveBothHTML='<select class="JS9Select JS9LayersSaveBothSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Layers.xsave(\'%s\', \'%s\', \'%s\', this)"><option selected disabled>save as ...</option><option value="catalog">catalog</option><option value="regions">regions</option><option value="svg">svg</option></select>';
 
-JS9.Layers.saveRegionsHTML='<select class="JS9LayersSaveSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Layers.xsave(\'%s\', \'%s\', \'%s\', this)"><option selected disabled>save as ...</option><option value="regions">regions</option><option value="svg">svg</option></select>';
+JS9.Layers.saveRegionsHTML='<select class="JS9Select JS9LayersSaveSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Layers.xsave(\'%s\', \'%s\', \'%s\', this)"><option selected disabled>save as ...</option><option value="regions">regions</option><option value="svg">svg</option></select>';
 
 JS9.Layers.layerNameHTML='<b>%s</b>';
 
