@@ -234,7 +234,7 @@ JS9.Layers.init = function(opts){
     if( this.display.image ){
 	im = this.display.image;
 	for( key of Object.keys(im.layers) ){
-	    if( key === "crosshair" ){
+	    if( key === "crosshair" || key === "grid" ){
 		continue;
 	    }
 	    JS9.Layers.addLayer.call(this, im, key);
