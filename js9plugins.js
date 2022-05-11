@@ -6170,7 +6170,7 @@ JS9.Layers.BASE = JS9.Layers.CLASS + JS9.Layers.NAME;  // CSS base class name
 
 JS9.Layers.headerHTML='Shape layers can be hidden or made visible below. The topmost visible layer in the stack is <b>active</b>: it responds to mouse and touch events. Move a layer to the top of the stack to make it active.';
 
-JS9.Layers.layerHTML="<span style='float: left'>$visible&nbsp;&nbsp;$save&nbsp;&nbsp;</span>&nbsp;&nbsp; <span class='JS9LayersSpan'>$layer&nbsp;&nbsp</span>";
+JS9.Layers.layerHTML="<span style='float: left'>$visible&nbsp;&nbsp;$save&nbsp;&nbsp;$color</span>&nbsp;&nbsp; <span class='JS9LayersSpan'>$layer&nbsp;&nbsp</span>";
 
 JS9.Layers.nolayersHTML='<p><span class="JS9NoLayers">[Layers will appear here as they are created]</span>';
 
@@ -6179,6 +6179,8 @@ JS9.Layers.visibleHTML='<input class="JS9LayersVisibleCheck" type="checkbox" id=
 JS9.Layers.saveBothHTML='<select class="JS9Select JS9LayersSaveBothSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Layers.xsave(\'%s\', \'%s\', \'%s\', this)"><option selected disabled>save as ...</option><option value="catalog">catalog</option><option value="regions">regions</option><option value="svg">svg</option></select>';
 
 JS9.Layers.saveRegionsHTML='<select class="JS9Select JS9LayersSaveSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Layers.xsave(\'%s\', \'%s\', \'%s\', this)"><option selected disabled>save as ...</option><option value="regions">regions</option><option value="svg">svg</option></select>';
+
+JS9.Layers.colorHTML='<select class="JS9Select JS9LayersColorSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Layers.xcolor(\'%s\', \'%s\', \'%s\', this)"><option selected disabled>color ...</option><option value="black">black</option><option value="white">white</option><option value="red">red</option><option value="magenta">magenta</option><option value="orange">orange</option><option value="yellow">yellow</option><option value="blue">blue</option><option value="cyan">cyan</option><option value="green">green</option><option value="lime">lime</option><option value="indigo">indigo</option><option value="violet">violet</option></select>';
 
 JS9.Layers.layerNameHTML='<b>%s</b>';
 
@@ -6252,6 +6254,17 @@ JS9.Layers.xsave = function(did, id, layer, target){
     }
 };
 
+// change color
+// eslint-disable-next-line no-unused-vars
+JS9.Layers.xcolor = function(did, id, layer, target){
+    const im = JS9.lookupImage(id, did);
+    const color = target.options[target.selectedIndex].value;
+    if( im && color ){
+	im.changeShapes(layer, "all", {color: color});
+	target.selectedIndex = 0;
+    }
+};
+
 // add a layer to the list
 JS9.Layers.addLayer = function(im, layer){
     let l, s, id, divjq, zindex, added, dcls, imid, dispid;
@@ -6286,6 +6299,8 @@ JS9.Layers.addLayer = function(im, layer){
 	opts.push({name: "save", value: sprintf(JS9.Layers.saveRegionsHTML,
 						dispid, imid, layer)});
     }
+    opts.push({name: "color", value: sprintf(JS9.Layers.colorHTML,
+					     dispid, imid, layer)});
     if( JS9.DEBUG > 1 ){
 	l = `${layer} layer [zindex: ${zindex}]`;
     } else {
