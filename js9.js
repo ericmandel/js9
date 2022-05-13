@@ -29,7 +29,7 @@ const JS9 = {};
 JS9.NAME = "JS9";		// The name of this namespace
 JS9.VERSION = "3.6.2";		// The version of this namespace
 JS9.COPYRIGHT = "Copyright (c) 2012-2022 Smithsonian Institution";
-JS9.ABOUT = `JS9 ${JS9.VERSION}: astronomical image display everywhere\nEric Mandel, Alexey Vikhlinin\ncontact: emandel@cfa.harvard.edu\n${JS9.COPYRIGHT}`;
+JS9.ABOUT = `JS9 ${JS9.VERSION}: astronomical image display everywhere\nEric Mandel, Alexey Vikhlinin\n${JS9.COPYRIGHT}`;
 
 // internal defaults (not usually changed by users)
 JS9.DEFID = "JS9";		// default JS9 display id
