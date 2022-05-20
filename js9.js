@@ -706,6 +706,14 @@ JS9.Image = function(file, params, func){
 	JS9.images.push(this);
 	// clear previous messages
 	this.display.clearMessage();
+	// if flip, rotate, rot90 opts were supplied, set transform
+	if( localOpts ){
+	    if( JS9.notNull(localOpts.flip)   ||
+		JS9.notNull(localOpts.rotate) ||
+		JS9.notNull(localOpts.rot90)  ){
+		this.setTransform();
+	    }
+	}
 	// display image, 2D graphics, etc.
 	this.displayImage("all", localOpts);
 	// notify the helper
