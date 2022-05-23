@@ -53,6 +53,11 @@
 		Jacek Holeczek and Rene Brun for these suggestions. (KMCCARTY)
       Dec 2008  Added typedef for LONGLONG to support Borland compiler (WDP)
       Jan 2020  Added __attribute__((unused)) for GCC to prevent warnings (C. Markwardt)
+      Jan 2022  Changed H_CF_SPECIAL definition from 'unsigned' to 'size_t'.
+                This determines the type of the hidden length argument which
+                gets added to functions passing strings from Fortran to C.
+                This change was first required when testing Homebrew
+                compilers native to Mac/ARM Silicon. (C. Gordon)
  *******/
 
 #ifndef __CFORTRAN__PCTYPE__UNUSED__
@@ -1701,7 +1706,12 @@ do{VVCF(T1,A1,B1)  VVCF(T2,A2,B2)  VVCF(T3,A3,B3)  VVCF(T4,A4,B4)  VVCF(T5,A5,B5
 #define   HCF(TN,I)         _(TN,_cfSTR)(3,H,cfCOMMA, H,_(C,I),0,0)
 #define  HHCF(TN,I)         _(TN,_cfSTR)(3,H,cfCOMMA,HH,_(C,I),0,0)
 #define HHHCF(TN,I)         _(TN,_cfSTR)(3,H,cfCOLON, H,_(C,I),0,0)
+/* Use H_CF_SPECIAL = size_t for GNU compilers newer than version 7.x: */
+#if (defined(__GNUC__) && __GNUC__ > 7)
+#define  H_CF_SPECIAL       size_t
+#else
 #define  H_CF_SPECIAL       unsigned
+#endif
 #define HH_CF_SPECIAL
 #define  DEFAULT_cfH(M,I,A)
 #define  LOGICAL_cfH(S,U,B)
