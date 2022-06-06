@@ -11,10 +11,25 @@
 <div class="helpContainer">
 <center><h3>Creating a JS9 Web Page</h3></center>
 
+<h3>Intro to JS9-enabled Web Pages</h3>
+<p>
+A JS9-enabled web page contains JS9 header directives to load JS9
+Javascript and CSS files, and at least one HTML "div" element of class
+JS9 in the body to provide a JS9 display. Other div elements can be
+supplied to define additional displays, menubars, statusbars, and
+various other plugins.
+
+<p>
+When a JS9-enabled web page is loaded, a routine is called to
+initialize the JS9-class divs and their underlying support
+routines. You can arrange to load one or more images automatically
+when JS9 is fully initialized. You can even specify an image to load
+as part of the web page query parameters.
+
 <h3>Adding JS9 to Your Web Page</h3>
 <p>
 The sample js9basics.html file shows how to add JS9 to a web page by
-assigning JS9 CSS classes to "div" elements.  The js9multi.html web
+assigning JS9 CSS classes to div elements.  The js9multi.html web
 page goes further by showing how multiple instances of JS9 can be
 added using unique IDs.
 
@@ -101,19 +116,23 @@ file in order to create a worker process. It also will load either
 the <b>astroem.js</b> file or the <b>astroemw.js</b>
 and <b>astroemw.wasm</b> files, depending on whether
 <a href="http://webassembly.org/">WebAssembly</a> is supported on your browser.
+Therefore, if you install JS9 manually (i.e., not using the standard configure,
+make, make install sequence), please ensure these files are installed as well.
 
 <p>
 The main JS9 display as well as JS9 plugins are placed on a web page
-by assigning JS9 classes to ordinary "div" elements. The two important
-JS9 classes are:
+by assigning JS9 classes to ordinary div elements. Important JS9 classes
+include:
 <ul>
 <li><b>JS9:</b> this class will display the main JS9 image window
 <li><b>JS9Menubar:</b> this class will display the JS9 menubar
+<li><b>JS9Statusbar:</b> this class will display a nice JS9 statusbar
 </ul>
 Thus, for example, to place a menubar on top of a JS9 display, use:
 <pre>
   &lt;div class="JS9Menubar"&gt;
   &lt;div class="JS9"&gt;
+  &lt;div class="JS9Statusbar"&gt;
 </pre>
 <p>
 Among the many JS9 plugins that you can add to your webpage are:
@@ -316,6 +335,35 @@ use this event to perform your own initialization:
 </pre>
 
 <p>
+<h3>JS9 Query Parameters</h3>
+You can supply a <b>url</b> query parameter to a JS9-enabled web page
+in order to load a FITS image:
+<pre>
+https://js9.si.edu/?url=https://hea-www.cfa.harvard.edu/~eric/coma.fits.gz
+</pre>
+Here, a remote FITS file is loaded using the
+<a href="publicapi.html#JS9.LoadProxy"><b>JS9.LoadProxy()</b></a> routine,
+(regardless of whether the remote server supports CORS.)
+<p>
+You can append query parameters to set various image options for the
+loaded image (these options are contained in the JS9.imageOpts object):
+<pre>
+https://js9.si.edu/js9/js9.html?url=https://hea-www.cfa.harvard.edu/~eric/coma.fits.gz&#38;flip=y&#38;rotate=90
+</pre>
+Here, the same remote FITS file is loaded and then flipped along the y axis and
+rotated by 90 degrees.
+<p>
+Finally, you can rename the JS9 display using the <b>display</b> query
+parameter:
+<pre>
+https://js9.si.edu/js9/js9.html?display=other
+</pre>
+Here, the display name of the standard JS9 web site is renamed to
+"other". This feature can be useful in cases where you are loading the
+same web page multiple times and want a different JS9 id for each so that
+they can be controlled separately.
+
+<p>
 <h3>Menubar Styles</h3> The default menubar has a style in which all
 of the major menus are shown at the top-level of the menubar. This is
 the <b>classic</b> style. JS9 also supports a <b>mac</b> style
@@ -418,7 +466,7 @@ See:
 <a href="yourdata.html">Adding Data Files To a Web Page</a> for more
 information.
 
-<h5>Last updated: June 5, 2019</h5>
+<h5>Last updated: June 6, 2022</h5>
 </div>
 
 </body>
