@@ -1,3 +1,6 @@
+**My software career comes to an end on July 1, 2022 and with it will end active development of JS9. Please plan accordingly. Eric**
+
+
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6554571.svg)](https://doi.org/10.5281/zenodo.6554571)
 
 [![DeepScan grade](https://deepscan.io/api/teams/12940/projects/15985/branches/329797/badge/grade.svg)](https://deepscan.io/dashboard#view=project&tid=12940&pid=15985&bid=329797)
