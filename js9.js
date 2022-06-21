@@ -27,7 +27,7 @@ var JS9 = (function(){
 // module header
 const JS9 = {};
 JS9.NAME = "JS9";		// The name of this namespace
-JS9.VERSION = "3.7";		// The version of this namespace
+JS9.VERSION = "3.8";		// The version of this namespace
 JS9.COPYRIGHT = "Copyright (c) 2012-2022 Smithsonian Institution";
 JS9.ABOUT = `JS9 ${JS9.VERSION}: astronomical image display everywhere\nEric Mandel, Alexey Vikhlinin\n${JS9.COPYRIGHT}`;
 
