@@ -1,7 +1,6 @@
 **My software career comes to an end on July 1, 2022 and with it will end active development of JS9. Please plan accordingly. Eric**
 
-
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6554571.svg)](https://doi.org/10.5281/zenodo.6554571)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6675771.svg)](https://doi.org/10.5281/zenodo.6675771)
 
 [![DeepScan grade](https://deepscan.io/api/teams/12940/projects/15985/branches/329797/badge/grade.svg)](https://deepscan.io/dashboard#view=project&tid=12940&pid=15985&bid=329797)
 
@@ -119,6 +118,8 @@ JS9 is distributed under the terms of The MIT License.
 
 What's the recent release history?
 ----------------------------------
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6675771.svg)](https://doi.org/10.5281/zenodo.6675771)  __v3.8.0__ &nbsp; (06/21/2022)
+
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6554571.svg)](https://doi.org/10.5281/zenodo.6554571)  __v3.7.0__ &nbsp; (05/16/2022)
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5815246.svg)](https://doi.org/10.5281/zenodo.5815246)  __v3.6.2__ &nbsp; (01/03/2022)
@@ -136,8 +137,6 @@ What's the recent release history?
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4320789.svg)](https://doi.org/10.5281/zenodo.4320789) __v3.3.0__ &nbsp; (12/14/2020)
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4252893.svg)](https://doi.org/10.5281/zenodo.4252893) __v3.2.0__ &nbsp; (11/06/2020)
-
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4019782.svg)](https://doi.org/10.5281/zenodo.4019782) __v3.1.0__ &nbsp; (09/08/2020)
 
 Who's responsible?
 ------------------
