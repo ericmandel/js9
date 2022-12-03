@@ -1,7 +1,16 @@
-import validate from './validate.js';
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _validate = _interopRequireDefault(require("./validate.js"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function parse(uuid) {
-  if (!validate(uuid)) {
+  if (!(0, _validate.default)(uuid)) {
     throw TypeError('Invalid UUID');
   }
 
@@ -32,4 +41,5 @@ function parse(uuid) {
   return arr;
 }
 
-export default parse;
+var _default = parse;
+exports.default = _default;

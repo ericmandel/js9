@@ -1,3 +1,10 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
 /*
  * Browser-compatible JavaScript MD5
  *
@@ -212,4 +219,5 @@ function md5ii(a, b, c, d, x, s, t) {
   return md5cmn(c ^ (b | ~d), a, b, x, s, t);
 }
 
-export default md5;
+var _default = md5;
+exports.default = _default;
