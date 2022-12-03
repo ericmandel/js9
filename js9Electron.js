@@ -503,7 +503,7 @@ js9Electron.defsave = "js9.save";
 
 // browser window defaults
 js9Electron.webOpts = {
-    sandbox: false, // v20: because js9ElectronPreload.js uses node
+    sandbox: false, // v20: needed because js9ElectronPreload.js uses node
     nodeIntegration: false,  // turn on for emscripten NODEFS support (hostfs)
     contextIsolation: true,  // but see below, v10.0.0 breaks wasm compilation
     enableRemoteModule: false,        // see security recommendations
