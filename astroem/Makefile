@@ -33,7 +33,7 @@ EMFLAGS		= -O3 -Wno-deprecated-non-prototype
 # initial memory: support zscale up to 4096 * 4096 * 4-byte images
 # EMOPTS =	-s TOTAL_MEMORY=67108864
 # cfitsio requires memory growth
-EMOPTS =	-s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1 $(EMPORTS) $(EMFS)
+EMOPTS =	-s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1 -sSTACK_SIZE=5MB $(EMPORTS) $(EMFS)
 # note to myself: in the event of a catastrophic drop in performance, see:
 # https://github.com/emscripten-core/emscripten/issues/13899
 # and try:
