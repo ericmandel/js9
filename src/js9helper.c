@@ -812,7 +812,6 @@ int main(int argc, char **argv)
   int c;
   int args;
   int ip=0;
-  int verbose=0;
   int node=0;
   int tty=0;
   char lbuf[SZ_LINE];
@@ -827,13 +826,10 @@ int main(int argc, char **argv)
   /* parse args from beginning */
   optind = 1;
   /* process switch arguments */
-  while ((c = getopt(argc, argv, "i:v")) != -1){
+  while ((c = getopt(argc, argv, "i:")) != -1){
     switch(c){
     case 'i':
       image = optarg;
-      break;
-    case 'v':
-      verbose++;
       break;
     }
   }
