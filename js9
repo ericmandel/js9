@@ -3,10 +3,10 @@
 
 # values will be filled in by mkjs9 during the build
 if [ x${JS9_SRCDIR} = x ]; then
-  JS9_SRCDIR=""
+export JS9_SRCDIR="/soft/js9/src/js9"
 fi
 if [ x${JS9_INSTALLDIR} = x ]; then
-  JS9_INSTALLDIR=""
+export JS9_INSTALLDIR=""
 fi
 
 # make sure js9Msg sees these, if possible
