@@ -43,6 +43,18 @@ const psList = require('ps-list');
 // js9Electron object contains everything specific to our server
 const js9Electron = {};
 
+
+function ChangeRootDir (options){
+    const slave = new BrowserWindow({show: false})
+    // slave.once('ready-to-show', () => {
+    //     slave.show();
+    // })
+    dialog.showOpenDialog(slave, options);
+    slave.close();
+}
+
+
+
 function isTrue(s, d){
     if( s === undefined ){
 	return d;
@@ -251,6 +263,11 @@ function createWindow() {
 	process.env.JS9_WIDTH = js9Electron.width;
 	process.env.JS9_HEIGHT = js9Electron.height;
     }
+
+    // Change working dir to process.cwd
+    // ChangeRootDir({defaultPath: "/Users/alexey/Desktop"});
+    ChangeRootDir({defaultPath: process.cwd()});
+
     // create the browser window
     js9Electron.win = new BrowserWindow({
 	webPreferences: js9Electron.webOpts,
