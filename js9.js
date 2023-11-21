@@ -13725,7 +13725,6 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	    opts.centeredScaling = false;
 	}
 	// create the shape
-        console.log("shape options:",opts);
 	switch(sobj.shape){
 	case "annulus":
 	    // save shape
@@ -13818,7 +13817,6 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	        // tangle = 0; see how it is set above
 	        w2 = opts.width/2;
 	        h2 = opts.width/2;
-                console.log("point parameters:",w2,h2);
 	        parr = [];
 	        opts.left = 0;
 	        opts.top = 0;
