@@ -11491,11 +11491,15 @@ JS9.Prefs.regionsSchema = {
 	},
 	"ptshape": {
 	    "type": "string",
-	    "helper": "point shape: box, circle, ellipse"
+	    "helper": "point shape: box, circle, ellipse, +, x"
 	},
 	"ptsize": {
 	    "type": "number",
 	    "helper": "point: size"
+	},
+	"PTstrokeWidth": {
+	    "type": "number",
+	    "helper": "point: stroke width"
 	},
 	"tags": {
 	    "type": "string",

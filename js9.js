@@ -11874,6 +11874,7 @@ JS9.Fabric.opts = {
     originX: "center",
     originY: "center",
     strokeWidth: 2,
+    PTstrokeWidth: 1,
     selectionLineWidth: 2,
     borderColor: "#00EEFF",
     cornerColor: "#00EEFF",
@@ -13139,6 +13140,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	}
 	break;
     case "point":
+	opts.strokeWidth = JS9.Fabric.opts.PTstrokeWidth;
 	switch(opts.ptshape){
 	case "box":
 	    opts.width = opts.ptsize * 2;
@@ -13150,6 +13152,11 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	case "ellipse":
 	    opts.rx = opts.ptsize;
 	    opts.ry = opts.ptsize / 2;
+	    break;
+	case "x":
+	case "+":
+	    opts.width = opts.ptsize * 4;
+	    opts.height = opts.ptsize * 4;
 	    break;
 	}
 	opts.lockRotation = true;
@@ -13718,6 +13725,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	    opts.centeredScaling = false;
 	}
 	// create the shape
+        console.log("shape options:",opts);
 	switch(sobj.shape){
 	case "annulus":
 	    // save shape
@@ -13785,6 +13793,14 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	case "point":
 	    // save shape
 	    params.shape = "point";
+            switch(params.ptshape){
+            case "x":
+                tangle=45;
+                break;
+            default:
+                tangle=0;
+                break;
+            }
 	    switch(params.ptshape){
 	    case "box":
 		s = new fabric.Rect(opts);
@@ -13795,6 +13811,28 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	    case "ellipse":
 		s = new fabric.Ellipse(opts);
 		break;
+	    case "+":
+	    case "x":
+	        ttop = opts.top;
+	        tleft = opts.left;
+	        // tangle = 0; see how it is set above
+	        w2 = opts.width/2;
+	        h2 = opts.width/2;
+                console.log("point parameters:",w2,h2);
+	        parr = [];
+	        opts.left = 0;
+	        opts.top = 0;
+	        opts.angle = 0;
+	        opts.points = [{x: -w2, y: 0}, {x:  w2, y: 0}]
+	        parr.push(new fabric.Polyline(opts.points, opts));
+	        opts.points = [{x: 0, y: -h2}, {x:  0, y: h2}]
+	        parr.push(new fabric.Polyline(opts.points, opts));
+	        // a cross is two lines at the specified position
+	        opts.top = ttop;
+	        opts.left = tleft;
+	        opts.angle = tangle;
+	        s = new fabric.Group(parr, opts);
+	        break;
 	    default:
 		s = new fabric.Rect(opts);
 		break;
@@ -16990,6 +17028,7 @@ JS9.Regions.opts = {
     panzoom: true,
     tags: "source,include",
     strokeWidth: 2,
+    PTstrokeWidth: 1,
     // annuli: inner and outer radius, number of annuli
     iradius: 15,
     oradius: 30,
