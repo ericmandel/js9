@@ -181,6 +181,10 @@ JS9.Prefs.regionsSchema = {
 	    "type": "number",
 	    "helper": "region stroke width"
 	},
+	"PTstrokeWidth": {
+	    "type": "number",
+	    "helper": "stroke width for points"
+	},
 	"fontFamily": {
 	    "type": "string",
 	    "helper": "region font"

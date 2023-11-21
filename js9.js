@@ -11874,7 +11874,6 @@ JS9.Fabric.opts = {
     originX: "center",
     originY: "center",
     strokeWidth: 2,
-    PTstrokeWidth: 1,
     selectionLineWidth: 2,
     borderColor: "#00EEFF",
     cornerColor: "#00EEFF",
@@ -11909,7 +11908,9 @@ JS9.Fabric.rescaleStrokeWidth = function(scale, sw1){
     // fabric 2+ supports strokeUniform, but not for groups
     // still, it fixes the different strokeWidth problem for rectangular boxes
     if( fabric.major_version >= 2 && this.params &&
-	this.params.shape !== "annulus" && this.params.shape !== "cross" ){
+	this.params.shape !== "annulus" && this.params.shape !== "cross" &&
+        !(this.params.shape == "point" && (this.params.ptshape == "x" || this.params.ptshape == "+")
+        ){
 	return;
     }
     scale = scale || 1;
@@ -13140,7 +13141,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	}
 	break;
     case "point":
-	opts.strokeWidth = JS9.Fabric.opts.PTstrokeWidth;
+	opts.strokeWidth = JS9.Regions.opts.PTstrokeWidth;
 	switch(opts.ptshape){
 	case "box":
 	    opts.width = opts.ptsize * 2;
