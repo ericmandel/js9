@@ -11984,6 +11984,14 @@ JS9.Prefs.sources = [
     {name: "desktop",  schema: JS9.Prefs.desktopSchema}
 ];
 
+// Init regions tab for preferences plugin
+JS9.Prefs.regions = function(){
+    let sources = JS9.Prefs.sources;
+    JS9.Prefs.sources=[{name: "regions",  schema: JS9.Prefs.regionsSchema}];
+    JS9.Prefs.init.call(this);
+    JS9.Prefs.sources=sources;
+};
+
 // init preference plugin
 JS9.Prefs.init = function(){
     let i, s, obj, key, props, sources, source, id, pid, html, prompt;
@@ -12138,6 +12146,8 @@ JS9.Prefs.applyForm = function(){
     JS9.Prefs.processForm(source, arr2, display, winid);
     return false;
 };
+
+
 
 // action for Save in Form
 JS9.Prefs.saveForm = function(){
@@ -12416,6 +12426,13 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 JS9.RegisterPlugin(JS9.Prefs.CLASS, JS9.Prefs.NAME, JS9.Prefs.init,
 		   {menu: "file",
 		    menuItem: "Preferences",
+		    help: "help/prefs.html",
+		    winTitle: "User Preferences",
+		    winResize: true,
+		    winDims: [JS9.Prefs.WIDTH, JS9.Prefs.HEIGHT]});
+JS9.RegisterPlugin(JS9.Prefs.CLASS, JS9.Prefs.NAME+"_reg", JS9.Prefs.regions,
+		   {menu: "regions",
+		    menuItem: "prefs...",
 		    help: "help/prefs.html",
 		    winTitle: "User Preferences",
 		    winResize: true,
