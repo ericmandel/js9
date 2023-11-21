@@ -11497,10 +11497,6 @@ JS9.Prefs.regionsSchema = {
 	    "type": "number",
 	    "helper": "point: size"
 	},
-	"PTstrokeWidth": {
-	    "type": "number",
-	    "helper": "point: stroke width"
-	},
 	"tags": {
 	    "type": "string",
 	    "helper": "initial tags for a region"
@@ -11508,6 +11504,10 @@ JS9.Prefs.regionsSchema = {
 	"strokeWidth": {
 	    "type": "number",
 	    "helper": "region stroke width"
+	},
+	"PTstrokeWidth": {
+	    "type": "number",
+	    "helper": "stroke width for points"
 	},
 	"fontFamily": {
 	    "type": "string",
@@ -11984,7 +11984,7 @@ JS9.Prefs.sources = [
     {name: "desktop",  schema: JS9.Prefs.desktopSchema}
 ];
 
-// Init regions tab for preferences plugin
+// preferences plugin with just a regions tab
 JS9.Prefs.regions = function(){
     let sources = JS9.Prefs.sources;
     JS9.Prefs.sources=[{name: "regions",  schema: JS9.Prefs.regionsSchema}];
@@ -12146,8 +12146,6 @@ JS9.Prefs.applyForm = function(){
     JS9.Prefs.processForm(source, arr2, display, winid);
     return false;
 };
-
-
 
 // action for Save in Form
 JS9.Prefs.saveForm = function(){
@@ -12422,7 +12420,7 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
     }
 };
 
-// add preference plugin into JS9
+// add preference and regionspref plugin into JS9
 JS9.RegisterPlugin(JS9.Prefs.CLASS, JS9.Prefs.NAME, JS9.Prefs.init,
 		   {menu: "file",
 		    menuItem: "Preferences",

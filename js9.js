@@ -13156,8 +13156,9 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    break;
 	case "x":
 	case "+":
-	    opts.width = opts.ptsize * 4;
-	    opts.height = opts.ptsize * 4;
+            opts.strokeWidth = 0;
+	    opts.width = opts.ptsize;
+	    opts.height = opts.width;
 	    break;
 	}
 	opts.lockRotation = true;
@@ -13802,6 +13803,14 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
                 break;
             }
 	    switch(params.ptshape){
+	    case "+":
+	    case "x":
+	        params.text = "+";
+	        opts.fill = opts.stroke;
+                opts.angle = tangle;
+                opts.fontSize = opts.width*7;
+	        s = new fabric.Text(params.text, opts);
+	        break;
 	    case "box":
 		s = new fabric.Rect(opts);
 		break;
@@ -13811,27 +13820,6 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	    case "ellipse":
 		s = new fabric.Ellipse(opts);
 		break;
-	    case "+":
-	    case "x":
-	        ttop = opts.top;
-	        tleft = opts.left;
-	        // tangle = 0; see how it is set above
-	        w2 = opts.width/2;
-	        h2 = opts.width/2;
-	        parr = [];
-	        opts.left = 0;
-	        opts.top = 0;
-	        opts.angle = 0;
-	        opts.points = [{x: -w2, y: 0}, {x:  w2, y: 0}]
-	        parr.push(new fabric.Polyline(opts.points, opts));
-	        opts.points = [{x: 0, y: -h2}, {x:  0, y: h2}]
-	        parr.push(new fabric.Polyline(opts.points, opts));
-	        // a cross is two lines at the specified position
-	        opts.top = ttop;
-	        opts.left = tleft;
-	        opts.angle = tangle;
-	        s = new fabric.Group(parr, opts);
-	        break;
 	    default:
 		s = new fabric.Rect(opts);
 		break;
@@ -13856,6 +13844,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	    // https://github.com/kangax/fabric.js/issues/2675
 	    opts.fill = opts.stroke;
 	    opts.strokeWidth = 0;
+            console.log("Text Options:",opts);
 	    s = new fabric.Text(params.text, opts);
 	    break;
 	default:
