@@ -11909,8 +11909,8 @@ JS9.Fabric.rescaleStrokeWidth = function(scale, sw1){
     // still, it fixes the different strokeWidth problem for rectangular boxes
     if( fabric.major_version >= 2 && this.params &&
 	this.params.shape !== "annulus" && this.params.shape !== "cross" &&
-        !(this.params.shape == "point" && (this.params.ptshape == "x" || this.params.ptshape == "+")
-        ){
+        !(this.params.shape == "point" && (this.params.ptshape == "x" || this.params.ptshape == "+"))
+         ){
 	return;
     }
     scale = scale || 1;
