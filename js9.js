@@ -13844,7 +13844,6 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	    // https://github.com/kangax/fabric.js/issues/2675
 	    opts.fill = opts.stroke;
 	    opts.strokeWidth = 0;
-            console.log("Text Options:",opts);
 	    s = new fabric.Text(params.text, opts);
 	    break;
 	default:
