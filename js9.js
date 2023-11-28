@@ -5517,6 +5517,56 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 		r = "?";
 	    }
 	    break;
+	case "bin":
+	    // binning factor for image/event file
+	    if( this.binning.bin ){
+		r = this.binning.bin;
+	    } else {
+		r = "?";
+	    }
+	    break;
+	case "flip":
+	    // flip info
+	    if( this.params.flip ){
+                r = "";
+                if (this.params.flip.match('y')) {
+                    r += "&darr;";
+                } else {
+                    r += "&uarr;";
+                }
+                if (this.params.flip.match('x')) {
+                    r += "&larr;";
+                } else {
+                    r += "&rarr;";
+                }
+	    } else {
+		r = "?";
+	    }
+	    break;
+	case "flipx":
+	    // flipx
+	    if( this.params.flip ){
+                if (this.params.flip.match('x')) {
+                    r = "&larr;";
+                } else {
+                    r = "&rarr;";
+                }
+	    } else {
+		r = "?";
+	    }
+	    break;
+	case "flipy":
+	    // flipy
+	    if( this.params.flip ){
+                if (this.params.flip.match('y')) {
+                    r = "&darr;";
+                } else {
+                    r = "&uarr;";
+                }
+	    } else {
+		r = "?";
+	    }
+	    break;
 	default:
 	    // look for keyword in the serialized opts array
 	    if( opts ){
