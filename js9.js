@@ -5528,17 +5528,7 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	case "flip":
 	    // flip info
 	    if( this.params.flip ){
-                r = "";
-                if (this.params.flip.match('y')) {
-                    r += "&darr;";
-                } else {
-                    r += "&uarr;";
-                }
-                if (this.params.flip.match('x')) {
-                    r += "&larr;";
-                } else {
-                    r += "&rarr;";
-                }
+                r = this.params.flip;
 	    } else {
 		r = "?";
 	    }
@@ -5547,9 +5537,9 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	    // flipx
 	    if( this.params.flip ){
                 if (this.params.flip.match('x')) {
-                    r = "&larr;";
+                    r = "x";
                 } else {
-                    r = "&rarr;";
+                    r = "x-none";
                 }
 	    } else {
 		r = "?";
@@ -5559,9 +5549,9 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	    // flipy
 	    if( this.params.flip ){
                 if (this.params.flip.match('y')) {
-                    r = "&darr;";
+                    r = "y";
                 } else {
-                    r = "&uarr;";
+                    r = "y-none";
                 }
 	    } else {
 		r = "?";
@@ -5628,6 +5618,11 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	    }
 	    break;
 	}
+        if (useStatusbarDictionary) { // Let user change output as they want
+            if (JS9.Statusbar.dictionary[r]) {
+                r = JS9.Statusbar.dictionary[r];
+            }
+        }
 	return r;
     });
     return cmd;
