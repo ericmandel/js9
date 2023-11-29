@@ -11953,8 +11953,7 @@ JS9.Fabric.rescaleStrokeWidth = function(scale, sw1){
     // fabric 2+ supports strokeUniform, but not for groups
     // still, it fixes the different strokeWidth problem for rectangular boxes
     if( fabric.major_version >= 2 && this.params &&
-	this.params.shape !== "annulus" && this.params.shape !== "cross")
-         ){
+	this.params.shape !== "annulus" && this.params.shape !== "cross") {
 	return;
     }
     scale = scale || 1;
@@ -13838,20 +13837,26 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	case "point":
 	    // save shape
 	    params.shape = "point";
-            switch(params.ptshape){
-            case "x":
-                tangle=45;
-                break;
-            default:
-                tangle=0;
-                break;
-            }
+            // switch(params.ptshape){
+            // case "x":
+            //     tangle=45;
+            //     break;
+            // default:
+            //     tangle=0;
+            //     break;
+            // }
 	    switch(params.ptshape){
-	    case "+":
 	    case "x":
-	        params.text = "+";
+	        params.text = '\u00D7';
 	        opts.fill = opts.stroke;
-                opts.angle = tangle;
+                // opts.angle = tangle;
+                opts.fontSize = opts.width*6;
+	        s = new fabric.Text(params.text, opts);
+	        break;
+	    case "+":
+	        params.text = "+";
+                opts.fill = opts.stroke;
+                // opts.angle = tangle;
                 opts.fontSize = opts.width*7;
 	        s = new fabric.Text(params.text, opts);
 	        break;
