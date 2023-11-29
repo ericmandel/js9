@@ -4956,8 +4956,8 @@ JS9.Info.init = function(){
     for(i=0; i<opts.length; i++){
 	key = opts[i];
 	// aesthetic condideration: skip wcs display if we have no wcs
-	if( key.match(/^wcs/)            &&
-	    JS9.globalOpts.infoBoxResize &&
+	if( key.match(/^wcspos/)         && // note that we skip only wcspos
+	    JS9.globalOpts.infoBoxResize && // because center and fov can still be reported in terms of pixels (see code added in js9.js near "Define FOV and center in terms of pixels"
 	    this.display.image && !(this.display.image.raw.wcs>0) ){
 	    continue;
 	}

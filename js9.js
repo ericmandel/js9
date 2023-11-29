@@ -6469,6 +6469,16 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	    }
 	    obj.object += ")";
 	}
+        // Define FOV and center in terms of pixels; will be redefined
+        // to WCS if WCS is available
+        sect = this.rgb.sect;
+	v1 = (sect.x1 - sect.x0).toFixed(0);
+	v2 = (sect.y1 - sect.y0).toFixed(0);
+	obj.wcsfovpix = `${v1} × ${v2} pix`;
+        obj.racen = (sect.x1 + sect.x0)/2;
+        obj.deccen = (sect.y1 + sect.y0)/2;
+	obj.wcscen = obj.racen + sep1 + obj.deccen;
+
 	// add wcs, if necessary
 	if( this.validWCS() && JS9.isWCSSys(this.params.wcssys) ){
 	    s = JS9.pix2wcs(this.raw.wcs, ipos.x, ipos.y).trim().split(/\s+/);
