@@ -251,7 +251,6 @@ function createWindow() {
 	process.env.JS9_WIDTH = js9Electron.width;
 	process.env.JS9_HEIGHT = js9Electron.height;
     }
-
     // create the browser window
     js9Electron.win = new BrowserWindow({
 	webPreferences: js9Electron.webOpts,
