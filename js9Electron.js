@@ -43,18 +43,6 @@ const psList = require('ps-list');
 // js9Electron object contains everything specific to our server
 const js9Electron = {};
 
-
-function ChangeRootDir (options){
-    const slave = new BrowserWindow({show: false})
-    // slave.once('ready-to-show', () => {
-    //     slave.show();
-    // })
-    dialog.showOpenDialog(slave, options);
-    slave.close();
-}
-
-
-
 function isTrue(s, d){
     if( s === undefined ){
 	return d;
@@ -263,10 +251,6 @@ function createWindow() {
 	process.env.JS9_WIDTH = js9Electron.width;
 	process.env.JS9_HEIGHT = js9Electron.height;
     }
-
-    // Change working dir to process.cwd
-    // ChangeRootDir({defaultPath: "/Users/alexey/Desktop"});
-    ChangeRootDir({defaultPath: process.cwd()});
 
     // create the browser window
     js9Electron.win = new BrowserWindow({
@@ -499,6 +483,16 @@ function createWindow() {
 	// when you should delete the corresponding element.
 	js9Electron.win = null;
     });
+    // Change working dir to process.cwd
+    if (js9Electron.localRootDir) {
+        const parentPos = js9Electron.win.getPosition();
+        const x = parentPos[0]+1;
+        const y = parentPos[1]+1;
+        const slave = new BrowserWindow({x: x, y: y, type: "desktop"});
+        // type=desktop hides the window and dialog behind main JS9
+        dialog.showOpenDialog(slave,{defaultPath: process.cwd()}); 
+        slave.close();
+    }
 }
 
 // Electron version in an array of ints, so we can work around bugs ...
@@ -627,6 +621,23 @@ js9Electron.resize = js9Electron.argv.width === undefined && js9Electron.argv.he
 js9Electron.width = js9Electron.argv.width !== undefined ? js9Electron.argv.width : js9Electron.cmdlineOpts.width;
 js9Electron.height = js9Electron.argv.height !== undefined ? js9Electron.argv.height : js9Electron.cmdlineOpts.height;
 js9Electron.savedir = js9Electron.argv.savedir || js9Electron.cmdlineOpts.savedir;
+
+// Check whether we are in Voyager mode
+js9Electron.Voyager = js9Electron.argv.voyager || js9Electron.cmdlineOpts.voyager;
+if (!js9Electron.Voyager) {
+    if (process.env.JS9_GUI_MODE && process.env.JS9_GUI_MODE.match(/voyager/i)) {
+        js9Electron.Voyager = true;
+    }
+}
+
+// Check whether root dir should be switched to process.cwd
+js9Electron.localRootDir = js9Electron.argv.local_root || js9Electron.cmdlineOpts.local_root;
+if (!js9Electron.localRootDir) { // check environment variable
+    if (process.env.JS9_LOCAL_ROOT && process.env.JS9_LOCAL_ROOT.match(/yes|true/i)) {
+        js9Electron.localRootDir=true;
+    }
+}
+
 
 // the list of files to load
 js9Electron.files = js9Electron.argv._;
