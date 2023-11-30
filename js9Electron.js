@@ -629,6 +629,9 @@ if (!js9Electron.Voyager) {
         js9Electron.Voyager = true;
     }
 }
+if (js9Electron.Voyager) {
+    process.env.JS9_Voyager='heck-yes'; // for passing to renderer via js9ElectronPreload
+}
 
 // Check whether root dir should be switched to process.cwd
 js9Electron.localRootDir = js9Electron.argv.local_root || js9Electron.cmdlineOpts.local_root;
@@ -637,7 +640,9 @@ if (!js9Electron.localRootDir) { // check environment variable
         js9Electron.localRootDir=true;
     }
 }
-
+if (js9Electron.localRootDir) {
+    process.env.JS9_LOCAL_ROOT='heck-yes'; // for passing to renderer via js9ElectronPreload
+}
 
 // the list of files to load
 js9Electron.files = js9Electron.argv._;
