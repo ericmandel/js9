@@ -11967,7 +11967,7 @@ JS9.Fabric.rescaleStrokeWidth = function(scale, sw1){
     // fabric 2+ supports strokeUniform, but not for groups
     // still, it fixes the different strokeWidth problem for rectangular boxes
     if( fabric.major_version >= 2 && this.params &&
-	this.params.shape !== "annulus" && this.params.shape !== "cross") {
+	this.params.shape !== "annulus" && this.params.shape !== "cross" ) {
 	return;
     }
     scale = scale || 1;
