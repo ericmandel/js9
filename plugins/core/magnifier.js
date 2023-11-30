@@ -70,9 +70,9 @@ JS9.Magnifier.bcall = function(...args){
 // html used by the magnifier plugin
 JS9.Magnifier.HTML =
 `${"<span>" +
-"<button type='button' class='JS9Button' onClick='JS9.Magnifier.bcall(this, \"zoomMagnifier\", \"x2\"); return false'>x2</button>" +
-"<button type='button' class='JS9Button' onClick='JS9.Magnifier.bcall(this, \"zoomMagnifier\", \"/2\"); return false'>/2</button>" +
-"<button type='button' class='JS9Button' onClick='JS9.Magnifier.bcall(this, \"zoomMagnifier\", \""}${JS9.Magnifier.opts.zoom}"); return false'>${JS9.Magnifier.opts.zoom}</button>` +
+"<button type='button' class='JS9Button' onClick='JS9.Magnifier.bcall(this, \"zoomMagnifier\", \"x2\"); return false'>×2</button>" +
+"<button type='button' class='JS9Button' onClick='JS9.Magnifier.bcall(this, \"zoomMagnifier\", \"/2\"); return false'>×1/2</button>" +
+"<button type='button' class='JS9Button' onClick='JS9.Magnifier.bcall(this, \"zoomMagnifier\", \""}${JS9.Magnifier.opts.zoom}"); return false'>[${JS9.Magnifier.opts.zoom}]</button>` +
 `</span>`;
 
 // JS9 Magnifier constructor
