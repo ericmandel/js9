@@ -665,6 +665,7 @@ if( window.electron ){
     // Change root to local dir for dialogs?
     JS9.localRootDir=window.electron.guiOpts.localRootDir;
 }
+
 // ---------------------------------------------------------------------
 // JS9 Image object to manage images
 // ---------------------------------------------------------------------
