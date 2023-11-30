@@ -82,13 +82,15 @@ JS9.Panner.bcall = function(...args){
 };
 
 // html used by the panner plugin
-JS9.Panner.HTML =
-"<span>" +
-"<button type='button' class='JS9Button' onClick='JS9.Panner.bcall(this, \"zoomPanner\", \"x2\"); return false'>×2</button>" +
-"<button type='button' class='JS9Button' onClick='JS9.Panner.bcall(this, \"zoomPanner\", \"/2\"); return false'>×1/2</button>" +
-"<button type='button' class='JS9Button' onClick='JS9.Panner.bcall(this, \"zoomPanner\", \"1\"); return false'>1</button>" +
-"<button type='button' class='JS9Button' onClick='JS9.Panner.bcall(this, \"panImage\"); return false'>center</button>" +
-"</span>";
+if (!JS9.Voyager) { // in Voyager mode, turn off panner buttons because
+    JS9.Panner.HTML =   // contextual menu will be used instead for controls
+        "<span>" +
+        "<button type='button' class='JS9Button' onClick='JS9.Panner.bcall(this, \"zoomPanner\", \"x2\"); return false'>×2</button>" +
+        "<button type='button' class='JS9Button' onClick='JS9.Panner.bcall(this, \"zoomPanner\", \"/2\"); return false'>×1/2</button>" +
+        "<button type='button' class='JS9Button' onClick='JS9.Panner.bcall(this, \"zoomPanner\", \"1\"); return false'>1</button>" +
+        "<button type='button' class='JS9Button' onClick='JS9.Panner.bcall(this, \"panImage\"); return false'>center</button>" +
+        "</span>";
+}
 
 // JS9 Panner constructor
 JS9.Panner.init = function(width, height){
