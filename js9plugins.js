@@ -11509,7 +11509,7 @@ JS9.Prefs.regionsSchema = {
 	    "type": "number",
 	    "helper": "region stroke width"
 	},
-	"PTstrokeWidth": {
+	"ptStrokeWidth": {
 	    "type": "number",
 	    "helper": "stroke width for points"
 	},

@@ -13198,7 +13198,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	}
 	break;
     case "point":
-	opts.strokeWidth = JS9.Regions.opts.PTstrokeWidth;
+	opts.strokeWidth = JS9.Regions.opts.ptStrokeWidth;
 	switch(opts.ptshape){
 	case "box":
 	    opts.width = opts.ptsize * 2;
@@ -17078,7 +17078,7 @@ JS9.Regions.opts = {
     panzoom: true,
     tags: "source,include",
     strokeWidth: 2,
-    PTstrokeWidth: 1,
+    ptStrokeWidth: 1,
     // annuli: inner and outer radius, number of annuli
     iradius: 15,
     oradius: 30,
