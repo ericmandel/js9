@@ -4956,8 +4956,8 @@ JS9.Info.init = function(){
     for(i=0; i<opts.length; i++){
 	key = opts[i];
 	// aesthetic condideration: skip wcs display if we have no wcs
-	if( key.match(/^wcs/)            &&
-	    JS9.globalOpts.infoBoxResize &&
+	if( key.match(/^wcspos/)         && // note that we skip only wcspos
+	    JS9.globalOpts.infoBoxResize && // because center and fov can still be reported in terms of pixels (see code added in js9.js near "Define FOV and center in terms of pixels"
 	    this.display.image && !(this.display.image.raw.wcs>0) ){
 	    continue;
 	}
@@ -6512,12 +6512,14 @@ JS9.Magnifier.bcall = function(...args){
 };
 
 // html used by the magnifier plugin
-JS9.Magnifier.HTML =
-`${"<span>" +
-"<button type='button' class='JS9Button' onClick='JS9.Magnifier.bcall(this, \"zoomMagnifier\", \"x2\"); return false'>x2</button>" +
-"<button type='button' class='JS9Button' onClick='JS9.Magnifier.bcall(this, \"zoomMagnifier\", \"/2\"); return false'>/2</button>" +
-"<button type='button' class='JS9Button' onClick='JS9.Magnifier.bcall(this, \"zoomMagnifier\", \""}${JS9.Magnifier.opts.zoom}"); return false'>${JS9.Magnifier.opts.zoom}</button>` +
-`</span>`;
+if (!JS9.Voyager) { // in Voyager mode, turn off magnifier buttons because
+    JS9.Magnifier.HTML =   // contextual menu will be used instead for controls
+        `${"<span>" +
+"<button type='button' class='JS9Button' onClick='JS9.Magnifier.bcall(this, \"zoomMagnifier\", \"x2\"); return false'>×2</button>" +
+"<button type='button' class='JS9Button' onClick='JS9.Magnifier.bcall(this, \"zoomMagnifier\", \"/2\"); return false'>×1/2</button>" +
+"<button type='button' class='JS9Button' onClick='JS9.Magnifier.bcall(this, \"zoomMagnifier\", \""}${JS9.Magnifier.opts.zoom}"); return false'>[${JS9.Magnifier.opts.zoom}]</button>` +
+        `</span>`;
+}
 
 // JS9 Magnifier constructor
 JS9.Magnifier.init = function(width, height){
@@ -10289,13 +10291,15 @@ JS9.Panner.bcall = function(...args){
 };
 
 // html used by the panner plugin
-JS9.Panner.HTML =
-"<span>" +
-"<button type='button' class='JS9Button' onClick='JS9.Panner.bcall(this, \"zoomPanner\", \"x2\"); return false'>x2</button>" +
-"<button type='button' class='JS9Button' onClick='JS9.Panner.bcall(this, \"zoomPanner\", \"/2\"); return false'>/2</button>" +
-"<button type='button' class='JS9Button' onClick='JS9.Panner.bcall(this, \"zoomPanner\", \"1\"); return false'>z1</button>" +
-"<button type='button' class='JS9Button' onClick='JS9.Panner.bcall(this, \"panImage\"); return false'>center</button>" +
-"</span>";
+if (!JS9.Voyager) { // in Voyager mode, turn off panner buttons because
+    JS9.Panner.HTML =   // contextual menu will be used instead for controls
+        "<span>" +
+        "<button type='button' class='JS9Button' onClick='JS9.Panner.bcall(this, \"zoomPanner\", \"x2\"); return false'>×2</button>" +
+        "<button type='button' class='JS9Button' onClick='JS9.Panner.bcall(this, \"zoomPanner\", \"/2\"); return false'>×1/2</button>" +
+        "<button type='button' class='JS9Button' onClick='JS9.Panner.bcall(this, \"zoomPanner\", \"1\"); return false'>1</button>" +
+        "<button type='button' class='JS9Button' onClick='JS9.Panner.bcall(this, \"panImage\"); return false'>center</button>" +
+        "</span>";
+}
 
 // JS9 Panner constructor
 JS9.Panner.init = function(width, height){
@@ -11491,7 +11495,7 @@ JS9.Prefs.regionsSchema = {
 	},
 	"ptshape": {
 	    "type": "string",
-	    "helper": "point shape: box, circle, ellipse"
+	    "helper": "point shape: box, circle, ellipse, +, x"
 	},
 	"ptsize": {
 	    "type": "number",
@@ -11504,6 +11508,10 @@ JS9.Prefs.regionsSchema = {
 	"strokeWidth": {
 	    "type": "number",
 	    "helper": "region stroke width"
+	},
+	"ptStrokeWidth": {
+	    "type": "number",
+	    "helper": "stroke width for points"
 	},
 	"fontFamily": {
 	    "type": "string",
@@ -11980,6 +11988,14 @@ JS9.Prefs.sources = [
     {name: "desktop",  schema: JS9.Prefs.desktopSchema}
 ];
 
+// preferences plugin with just a regions tab
+JS9.Prefs.regions = function(){
+    let sources = JS9.Prefs.sources;
+    JS9.Prefs.sources=[{name: "regions",  schema: JS9.Prefs.regionsSchema}];
+    JS9.Prefs.init.call(this);
+    JS9.Prefs.sources=sources;
+};
+
 // init preference plugin
 JS9.Prefs.init = function(){
     let i, s, obj, key, props, sources, source, id, pid, html, prompt;
@@ -12408,10 +12424,17 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
     }
 };
 
-// add preference plugin into JS9
+// add preference and regionspref plugin into JS9
 JS9.RegisterPlugin(JS9.Prefs.CLASS, JS9.Prefs.NAME, JS9.Prefs.init,
 		   {menu: "file",
 		    menuItem: "Preferences",
+		    help: "help/prefs.html",
+		    winTitle: "User Preferences",
+		    winResize: true,
+		    winDims: [JS9.Prefs.WIDTH, JS9.Prefs.HEIGHT]});
+JS9.RegisterPlugin(JS9.Prefs.CLASS, JS9.Prefs.NAME+"_reg", JS9.Prefs.regions,
+		   {menu: "regions",
+		    menuItem: "prefs...",
 		    help: "help/prefs.html",
 		    winTitle: "User Preferences",
 		    winResize: true,
