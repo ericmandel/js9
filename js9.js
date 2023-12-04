@@ -77,6 +77,11 @@ JS9.URLEXP = /^(https?|ftp):\/\//; // url to determine a web page
 JS9.WCSEXP = /^(fk4|fk5|icrs|galactic|ecliptic|image|physical|linear)$/;
 JS9.REGSIZE = 0;		// 0 -> cdelt, 1 -> ang sep (regions use #0)
 
+JS9.useStatusbarDictionary = false;
+// flag that is used to indicate that expandMacro should further use 
+// the statusbar dictionary to expand its output
+
+    
 // https://hacks.mozilla.org/2013/04/detecting-touch-its-the-why-not-the-how/
 JS9.TOUCHSUPPORTED = ({}.hasOwnProperty.call(window, "ontouchstart") || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
 // modified from:
@@ -267,6 +272,7 @@ JS9.globalOpts = {
     metaClickPan: true,         // metaKey + click pans to mouse position?
     // statusBar: "$mag; $scale($scaleclipping); $img(images/voyager/color_$colormap.png) $colormap; $wcssys; $image",  // status display
     statusBar: "$colorbar; $colormap; $mag; $scale ($scalemin,$scalemax); $wcssys; $image0",  // status display
+    statusBarDictionary: {},
     toolbarTooltips: false,     // display tooltips on toolbar?
     updateTitlebar: true,	// update titlebar when image changes?
     centerDivs: ["JS9Menubar"], // divs which take part in JS9.Display.center()
@@ -5622,9 +5628,9 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	    }
 	    break;
 	}
-        if (useStatusbarDictionary) { // Let user change output as they want
-            if (JS9.Statusbar.dictionary[r]) {
-                r = JS9.Statusbar.dictionary[r];
+        if (JS9.useStatusbarDictionary) {
+            if (JS9.globalOpts.statusBarDictionary[r]) {
+                r = JS9.globalOpts.statusBarDictionary[r];
             }
         }
 	return r;
