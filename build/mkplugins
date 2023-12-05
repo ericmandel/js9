@@ -1,0 +1,10 @@
+#!/bin/bash
+
+echo '"use strict";'
+cat $@ | grep -v '^"use strict";'
+
+# cat $1
+# shift
+# cat $@
+# # cat $@ | grep -v '^"use strict";'
+
