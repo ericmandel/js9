@@ -265,7 +265,8 @@ js9support:	FORCE
 		  cat $$X  > js9support.js; \
 		  echo "plugin files in js9plugins.js: " >> js9support.txt; \
 		  echo $(PLUGINFILES)  >> js9support.txt; \
-		  cat $(PLUGINFILES)   >  js9plugins.js; \
+		  build/mkplugins $(PLUGINFILES)   >  js9plugins.js; \
+		  build/minify js9plugins.js; \
 		  echo "remaking all in one ..."; \
 		  $(BSCR)/mkallinone $(ALLIN1) $(VERSION);)
 

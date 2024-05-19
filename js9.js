@@ -77,6 +77,11 @@ JS9.URLEXP = /^(https?|ftp):\/\//; // url to determine a web page
 JS9.WCSEXP = /^(fk4|fk5|icrs|galactic|ecliptic|image|physical|linear)$/;
 JS9.REGSIZE = 0;		// 0 -> cdelt, 1 -> ang sep (regions use #0)
 
+JS9.useStatusbarDictionary = false;
+// flag that is used to indicate that expandMacro should further use 
+// the statusbar dictionary to expand its output
+
+    
 // https://hacks.mozilla.org/2013/04/detecting-touch-its-the-why-not-the-how/
 JS9.TOUCHSUPPORTED = ({}.hasOwnProperty.call(window, "ontouchstart") || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
 // modified from:
@@ -267,6 +272,7 @@ JS9.globalOpts = {
     metaClickPan: true,         // metaKey + click pans to mouse position?
     // statusBar: "$mag; $scale($scaleclipping); $img(images/voyager/color_$colormap.png) $colormap; $wcssys; $image",  // status display
     statusBar: "$colorbar; $colormap; $mag; $scale ($scalemin,$scalemax); $wcssys; $image0",  // status display
+    statusBarDictionary: {},
     toolbarTooltips: false,     // display tooltips on toolbar?
     updateTitlebar: true,	// update titlebar when image changes?
     centerDivs: ["JS9Menubar"], // divs which take part in JS9.Display.center()
@@ -660,6 +666,10 @@ if( window.electron ){
 	try{ JS9.cmdlineOpts = JSON.parse(window.electron.cmdlineOpts); }
 	catch(e){ delete JS9.cmdlineOpts; }
     }
+    // voyager mode?
+    JS9.Voyager=window.electron.guiOpts.voyager;
+    // Change root to local dir for dialogs?
+    JS9.localRootDir=window.electron.guiOpts.localRootDir;
 }
 
 // ---------------------------------------------------------------------
@@ -5517,6 +5527,46 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 		r = "?";
 	    }
 	    break;
+	case "bin":
+	    // binning factor for image/event file
+	    if( this.binning.bin ){
+		r = this.binning.bin;
+	    } else {
+		r = "?";
+	    }
+	    break;
+	case "flip":
+	    // flip info
+	    if( this.params.flip ){
+                r = this.params.flip;
+	    } else {
+		r = "?";
+	    }
+	    break;
+	case "flipx":
+	    // flipx
+	    if( this.params.flip ){
+                if (this.params.flip.match('x')) {
+                    r = "x";
+                } else {
+                    r = "x-none";
+                }
+	    } else {
+		r = "?";
+	    }
+	    break;
+	case "flipy":
+	    // flipy
+	    if( this.params.flip ){
+                if (this.params.flip.match('y')) {
+                    r = "y";
+                } else {
+                    r = "y-none";
+                }
+	    } else {
+		r = "?";
+	    }
+	    break;
 	default:
 	    // look for keyword in the serialized opts array
 	    if( opts ){
@@ -5578,6 +5628,11 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	    }
 	    break;
 	}
+        if (JS9.useStatusbarDictionary) {
+            if (JS9.globalOpts.statusBarDictionary[r]) {
+                r = JS9.globalOpts.statusBarDictionary[r];
+            }
+        }
 	return r;
     });
     return cmd;
@@ -6424,6 +6479,16 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	    }
 	    obj.object += ")";
 	}
+        // Define FOV and center in terms of pixels; will be redefined
+        // to WCS if WCS is available
+        sect = this.rgb.sect;
+	v1 = (sect.x1 - sect.x0).toFixed(0);
+	v2 = (sect.y1 - sect.y0).toFixed(0);
+	obj.wcsfovpix = `${v1} × ${v2} pix`;
+        obj.racen = (sect.x1 + sect.x0)/2;
+        obj.deccen = (sect.y1 + sect.y0)/2;
+	obj.wcscen = obj.racen + sep1 + obj.deccen;
+
 	// add wcs, if necessary
 	if( this.validWCS() && JS9.isWCSSys(this.params.wcssys) ){
 	    s = JS9.pix2wcs(this.raw.wcs, ipos.x, ipos.y).trim().split(/\s+/);
@@ -13139,6 +13204,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	}
 	break;
     case "point":
+	opts.strokeWidth = JS9.Regions.opts.ptStrokeWidth;
 	switch(opts.ptshape){
 	case "box":
 	    opts.width = opts.ptsize * 2;
@@ -13150,6 +13216,12 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	case "ellipse":
 	    opts.rx = opts.ptsize;
 	    opts.ry = opts.ptsize / 2;
+	    break;
+	case "x":
+	case "+":
+            opts.strokeWidth = 0;
+	    opts.width = opts.ptsize;
+	    opts.height = opts.width;
 	    break;
 	}
 	opts.lockRotation = true;
@@ -13785,7 +13857,29 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	case "point":
 	    // save shape
 	    params.shape = "point";
+            // switch(params.ptshape){
+            // case "x":
+            //     tangle=45;
+            //     break;
+            // default:
+            //     tangle=0;
+            //     break;
+            // }
 	    switch(params.ptshape){
+	    case "x":
+	        params.text = '\u00D7';
+	        opts.fill = opts.stroke;
+                // opts.angle = tangle;
+                opts.fontSize = opts.width*6;
+	        s = new fabric.Text(params.text, opts);
+	        break;
+	    case "+":
+	        params.text = "+";
+                opts.fill = opts.stroke;
+                // opts.angle = tangle;
+                opts.fontSize = opts.width*7;
+	        s = new fabric.Text(params.text, opts);
+	        break;
 	    case "box":
 		s = new fabric.Rect(opts);
 		break;
@@ -16990,6 +17084,7 @@ JS9.Regions.opts = {
     panzoom: true,
     tags: "source,include",
     strokeWidth: 2,
+    ptStrokeWidth: 1,
     // annuli: inner and outer radius, number of annuli
     iradius: 15,
     oradius: 30,

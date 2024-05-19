@@ -1,5 +1,10 @@
 /* global */
 
+let Voyager = (process.env.JS9_Voyager &&
+               process.env.JS9_Voyager==='heck-yes');
+let LocalRoot = (process.env.JS9_LOCAL_ROOT &&
+                 process.env.JS9_LOCAL_ROOT==='heck-yes');
+
 // context isolation must be explicitly turned on because ...
 // ... in 10.0.0, context isolation breaks wasm, so its turned off ...
 if( process.env.JS9_CONTEXTISOLATION !== "true" ){
@@ -19,6 +24,8 @@ if( process.env.JS9_CONTEXTISOLATION !== "true" ){
 	hostFS: process.env.JS9_HOSTFS || "",
 	// cmdline opts
 	cmdlineOpts: process.env.JS9_CMDLINEOPTS || "",
+        // GUI arguments
+        guiOpts: {voyager: Voyager, localRootDir: LocalRoot},
 	// whether multiple instances of the app are running
 	multiElectron: process.env.JS9_MULTIELECTRON === "true" ? true : false,
 	// whether js9 should attempt to resize itself
@@ -50,6 +57,8 @@ contextBridge.exposeInMainWorld(
 	hostFS: process.env.JS9_HOSTFS || "",
 	// cmdline opts
 	cmdlineOpts: process.env.JS9_CMDLINEOPTS || "",
+        // GUI arguments
+        guiOpts: {voyager: Voyager, localRootDir: LocalRoot},
 	// whether multiple instances of the app are running
 	multiElectron: process.env.JS9_MULTIELECTRON === "true" ? true : false,
 	// whether js9 should attempt to resize itself
