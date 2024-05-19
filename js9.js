@@ -666,10 +666,13 @@ if( window.electron ){
 	try{ JS9.cmdlineOpts = JSON.parse(window.electron.cmdlineOpts); }
 	catch(e){ delete JS9.cmdlineOpts; }
     }
-    // voyager mode?
-    JS9.Voyager=window.electron.guiOpts.voyager;
-    // Change root to local dir for dialogs?
-    JS9.localRootDir=window.electron.guiOpts.localRootDir;
+    // guiOpts used mainly by Voyager
+    if( window.electron.guiOpts ){
+	// voyager mode?
+	JS9.Voyager=window.electron.guiOpts.voyager;
+	// change root to local dir for dialogs?
+	JS9.localRootDir=window.electron.guiOpts.localRootDir;
+    }
 }
 
 // ---------------------------------------------------------------------
