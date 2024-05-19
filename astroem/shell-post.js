@@ -24,7 +24,7 @@ var Astroem = {
       vheap: Module["HEAPU8"],
       vmalloc: Module["_malloc"],
       vmemcpy: Module["writeArrayToMemory"],
-      vstrcpy: Module["writeAsciiToMemory"],
+      vstrcpy: Module["stringToAscii"],
       vfree: Module["_free"],
       gzopen: Module.cwrap('gzopen', 'number', ['string', 'string']),
       gzread: Module.cwrap('gzread', 'number', ['number', 'number', 'number']),
