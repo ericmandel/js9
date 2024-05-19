@@ -40,7 +40,7 @@ EMOPTS =	-s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1 -sSTACK_SIZE=5MB $(EM
 # -s BINARYEN_EXTRA_PASSES=--one-caller-inline-max-function-size=1
 # can't use mem file: we don't know where the mem file will resides
 # (moved out of compiler switches because this gives warning as of v2.0.32)
-# NB: v3.1.55 no longer supports memory-init-file:
+# NB: as of v3.1.59, emscripten no longer supports memory-init-file:
 # MEMOPTS =	--memory-init-file 0
 MEMOPTS =
 # javascript instead of wasm:
