@@ -81,7 +81,7 @@ usage(){
   printf "    -a                        # start JS9 app (requires Electron.js)\n"
   printf "    --cmds [js9 commands]     # JS9 commands to execute after loading images\n"
   printf "    --cmdfile [file]          # file of commands to execute after loading images\n"
-  printf "    --debug  [true|false]     # bring up Chrome debugger\n"
+  printf "    --deb    [true|false]     # bring up Chrome debugger\n"
   printf "    --eval   [true|false]     # enable eval (def: false, not recommended)\n"
   printf "    --height [h]              # height of app\n"
   printf "    --helper [true|false]     # whether to start up helper app (def: true)\n"

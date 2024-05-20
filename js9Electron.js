@@ -608,7 +608,8 @@ if( fs.existsSync(js9Electron.userPrefs) ){
 js9Electron.cmds = js9Electron.argv.cmds || js9Electron.cmdlineOpts.cmds;
 js9Electron.cmdfile = js9Electron.argv.cmdfile || js9Electron.cmdlineOpts.cmdfile;
 js9Electron.doHelper = isTrue(js9Electron.argv.helper, js9Electron.cmdlineOpts.doHelper);
-js9Electron.debug = isTrue(js9Electron.argv.debug, js9Electron.cmdlineOpts.debug);
+// change --debug to --deb, as the former does not work any longer!
+js9Electron.debug = isTrue(js9Electron.argv.deb, js9Electron.cmdlineOpts.debug);
 js9Electron.icon = js9Electron.argv.icon || js9Electron.cmdlineOpts.icon;
 js9Electron.hostfs = isTrue(js9Electron.argv.hostfs, js9Electron.cmdlineOpts.hostfs);
 js9Electron.merge = js9Electron.argv.merge|| js9Electron.cmdlineOpts.merge;
