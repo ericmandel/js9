@@ -1,4 +1,3 @@
-"use strict";
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
     /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
     /*globals $, JS9, Option */ 
@@ -898,6 +897,7 @@
 
 /*globals $, JS9 */
 
+"use strict";
 
 (function() {
 
@@ -1253,6 +1253,7 @@
 
 /*global $, JS9, sprintf */
 
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Blend = {};
@@ -1641,6 +1642,7 @@ JS9.RegisterPlugin(JS9.Blend.CLASS, JS9.Blend.NAME, JS9.Blend.init,
 
 /*global $, JS9, sprintf */
 
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Blink = {};
@@ -1990,6 +1992,7 @@ JS9.RegisterPlugin(JS9.Blink.CLASS, JS9.Blink.NAME, JS9.Blink.init,
 
 /*global JS9, $, sprintf, tinycolor */
 
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Cmaps = {};
@@ -2648,6 +2651,7 @@ JS9.RegisterPlugin(JS9.Cmaps.CLASS, JS9.Cmaps.NAME, JS9.Cmaps.init,
 
 /*global $, JS9 */
 
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Colorbar = {};
@@ -2972,6 +2976,7 @@ JS9.RegisterPlugin(JS9.Colorbar.CLASS, JS9.Colorbar.NAME, JS9.Colorbar.init,
 
 /*global $, JS9, sprintf */
 
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Color = {};
@@ -3511,6 +3516,7 @@ JS9.RegisterPlugin(JS9.Color.CLASS, JS9.Color.NAME,
 
 /*global $, JS9 */
 
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Console = {};
@@ -3766,6 +3772,7 @@ JS9.RegisterPlugin("JS9", "Console", JS9.Console.init,
 
 /*global $, JS9, sprintf */
 
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Cube = {};
@@ -4205,6 +4212,7 @@ JS9.RegisterPlugin(JS9.Cube.CLASS, JS9.Cube.NAME, JS9.Cube.init,
 
 /*global $, JS9, sprintf */
 
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Divs = {};
@@ -4339,6 +4347,7 @@ JS9.RegisterPlugin(JS9.Divs.CLASS, JS9.Divs.NAME, JS9.Divs.init,
 
 /*global $, JS9, sprintf */
 
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Filters = {};
@@ -4675,6 +4684,7 @@ JS9.RegisterPlugin(JS9.Filters.CLASS, JS9.Filters.NAME,
 
 /*global $, JS9, sprintf */
 
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Imarith = {};
@@ -4896,6 +4906,7 @@ JS9.RegisterPlugin(JS9.Imarith.CLASS, JS9.Imarith.NAME, JS9.Imarith.init,
 
 /*global $, JS9, jQuery, sprintf */
 
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Info = {};
@@ -5285,6 +5296,7 @@ JS9.RegisterPlugin("JS9", "Info", JS9.Info.init,
 
 /*global $, JS9, sprintf, fabric */
 
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Keyboard = {};
@@ -6146,6 +6158,7 @@ JS9.RegisterPlugin(JS9.Keyboard.CLASS, JS9.Keyboard.NAME,
 
 /*global $, JS9, sprintf */
 
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Layers = {};
@@ -6435,6 +6448,7 @@ JS9.RegisterPlugin(JS9.Layers.CLASS, JS9.Layers.NAME, JS9.Layers.init,
 
 /*global $, JS9, fabric */
 
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Magnifier = {};
@@ -6730,6 +6744,7 @@ JS9.RegisterPlugin(JS9.Magnifier.CLASS, JS9.Magnifier.NAME, JS9.Magnifier.init,
 
 /*global $, JS9 */
 
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Mef = {};
@@ -6920,6 +6935,7 @@ JS9.RegisterPlugin(JS9.Mef.CLASS, JS9.Mef.NAME, JS9.Mef.init,
 
 /*global $, JS9, sprintf */
 
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Menubar = {};
@@ -10197,6 +10213,7 @@ JS9.RegisterPlugin("JS9", "Menubar", JS9.Menubar.init,
 
 /*global $, JS9 */
 
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Panner = {};
@@ -10812,6 +10829,7 @@ JS9.RegisterPlugin(JS9.Panner.CLASS, JS9.Panner.NAME, JS9.Panner.init,
 
 /*global $, JS9, sprintf */
 
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.PanZoom = {};
@@ -11314,6 +11332,7 @@ JS9.RegisterPlugin(JS9.PanZoom.CLASS, JS9.PanZoom.NAME,
 
 /*global $, JS9, ddtabcontent */
 
+"use strict";
 
 // To specify the JS9 display instance to link to a given PREFS div,
 // use the HTML5 dataset syntax:
@@ -12426,6 +12445,7 @@ JS9.RegisterPlugin(JS9.Prefs.CLASS, JS9.Prefs.NAME+"_reg", JS9.Prefs.regions,
 
 /*global $, JS9, sprintf */
 
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.ScaleLimits = {};
@@ -12940,6 +12960,7 @@ JS9.RegisterPlugin(JS9.ScaleLimits.CLASS, JS9.ScaleLimits.NAME,
 
 /*global $, JS9, sprintf */
 
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Separate = {};
@@ -13241,6 +13262,7 @@ JS9.RegisterPlugin(JS9.Separate.CLASS, JS9.Separate.NAME, JS9.Separate.init,
 
 /*global $, JS9 */
 
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Statusbar = {};
@@ -13493,6 +13515,7 @@ JS9.RegisterPlugin(JS9.Statusbar.CLASS, JS9.Statusbar.NAME, JS9.Statusbar.init,
 
 /*global JS9, $ */
 
+"use strict";
 
 JS9.Sync = {};
 JS9.Sync.CLASS = "JS9";     // class of plugins (1st part of div class)
@@ -14117,6 +14140,7 @@ JS9.RegisterPlugin(JS9.Sync.CLASS, JS9.Sync.NAME, JS9.Sync.init,
 
 /*global JS9, $, sprintf */
 
+"use strict";
 
 JS9.SyncUI = {};
 JS9.SyncUI.CLASS = "JS9";     // class of plugins (1st part of div class)
@@ -14579,6 +14603,7 @@ JS9.RegisterPlugin(JS9.SyncUI.CLASS, JS9.SyncUI.NAME, JS9.SyncUI.init,
 
 /*global $, JS9 */
 
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Toolbar = {};
@@ -17564,6 +17589,7 @@ b",i,"*=d\
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
 /*globals $, JS9 */ 
 
+"use strict";
 
 
 (function() {
@@ -17634,6 +17660,7 @@ b",i,"*=d\
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, continue: true */
 /*globals $, JS9, greg */ 
 
+"use strict";
 
 
 (function () {
@@ -17749,6 +17776,7 @@ b",i,"*=d\
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
 /*globals $, JS9 */ 
 
+"use strict";
 
 
 (function() {
@@ -17832,6 +17860,7 @@ b",i,"*=d\
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
 /*globals $, JS9 */ 
 
+"use strict";
 
 
 (function() {
@@ -17924,6 +17953,7 @@ b",i,"*=d\
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
 /*globals $, JS9, require */ 
 
+"use strict";
 
 
 (function() {
